@@ -1,0 +1,4 @@
+#4mhz crystal
+avrdude -p m8 -c stk200 -U hfuse:w:0xc9:m -U lfuse:w:0xef:m
+#1mhz internal oscilator (factory default)
+avrdude -p m8 -c stk200 -U hfuse:w:0xd9:m -U lfuse:w:0xe1:m
