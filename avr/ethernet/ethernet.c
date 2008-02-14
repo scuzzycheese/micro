@@ -110,7 +110,8 @@ int main()
 
 
 	//hello_world_init();
-	httpd_init();
+	//httpd_init();
+	web_init();
 	char data[100];
 	while(1)
 	{
