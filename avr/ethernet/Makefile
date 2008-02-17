@@ -13,13 +13,6 @@ PSOCK = ../uip/uip/psock.c
 CLOCK = clock-arch.c
 TIMER = ../uip/uip/timer.c
 
-#===MODULES===
-INDEX = webserver/oloader/index.c
-INDEXO = webserver/oloader/index.o
-IMAGE = webserver/oloader/image.c
-IMAGEO = webserver/oloader/image.o
-MODULES = ${INDEXO} ${IMAGEO}
-
 UART = uart.c
 
 ENC28J60 = enc28j60.c
@@ -34,7 +27,12 @@ AVRLIBPATH = -I../avrlib/
 MYPATH = -I. ${GENPATH}
 LIBPATH = ${AVRLIBINCLUDES} ${UIPLIBPATH} ${AVRLIBPATH} ${MYPATH}
 
-
+#===MODULES===
+INDEX = pages/index.c
+INDEXO = pages/index.o
+IMAGE = pages/image.c
+IMAGEO = pages/image.o
+MODULES = ${INDEXO} ${IMAGEO}
 
 
 all:uip service avrlib uart ethernet hash dynaloader modules
@@ -53,13 +51,13 @@ uart: uart.c uart.h
 hash:
 	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine libhash/libhash.c -o libhash/libhash.o
 dynaloader:
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine dynaloader.c -o dynaloader.o
+	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine dynaloader.c -o dynaloader.o ${LIBPATH}
 
 
 
 modules:
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine ${INDEX} -o ${INDEXO}
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine ${IMAGE} -o ${IMAGEO}
+	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine ${INDEX} -o ${INDEXO} ${LIBPATH}
+	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine ${IMAGE} -o ${IMAGEO} ${LIBPATH}
 
 
 

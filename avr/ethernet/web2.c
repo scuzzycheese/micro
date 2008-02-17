@@ -1,6 +1,9 @@
 #include "web2.h"
 #include "uip.h"
 #include <string.h>
+#include "dynaloader.h"
+
+extern dynld fileObject;
 
 static int handle_connection(struct web_state *ws);
 
@@ -37,12 +40,23 @@ static int handle_connection(struct web_state *ws)
 
 	if(ws->inputbuffer[1] == ISO_space)
 	{
-		strncpy(ws->filename, "index.html", sizeof(ws->filename));
+		strncpy(ws->filename, "/index.html", sizeof(ws->filename));
 	}
 	else
 	{
-		ws->inputbuf[PSOCK_DATALEN(&ws->p) - 1] = 0;
-		strncpy(ws->filename, &ws->inputbuf[0], sizeof(ws->filename));
+		ws->inputbuffer[PSOCK_DATALEN(&ws->p) - 1] = 0;
+		strncpy(ws->filename, &ws->inputbuffer[0], sizeof(ws->filename));
+	}
+
+	//Send headers. This mechanism needs to be more complex, but it's ok for now
+	PSOCK_SEND_STR(&ws->p, "HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n");
+
+	struct accessHolder *comm = NULL;
+	comm = fileObject->fetchPage(fileObject, ws->filename);
+	if(comm)
+	{
+		comm->run(NULL, ws->p);
+		return 1;
 	}
 
 

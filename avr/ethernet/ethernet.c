@@ -14,8 +14,8 @@
 #include "dynaloader.h"
 
 /*include the module loader prototypes*/
-#include "webserver/oloader/index.h"
-#include "webserver/oloader/image.h"
+#include "pages/index.h"
+#include "pages/image.h"
 
 //FUSES - HFUSE:99 LFUSE:EF
 

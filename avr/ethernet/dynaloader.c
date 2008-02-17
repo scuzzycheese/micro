@@ -14,7 +14,7 @@ dynld newDynaloaderObject()
 	return returnObj;
 }
 
-void registerPage(dynld this, char *name, void (*run)(struct httpd_fs_file *file))
+void registerPage(dynld this, char *name, int (*run)(char **vars, struct psock p))
 {
 	struct accessHolder *newFile = malloc(sizeof(struct accessHolder));
 	newFile->run = run;

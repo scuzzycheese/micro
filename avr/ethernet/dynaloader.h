@@ -1,14 +1,14 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include "libhash/libhash.h"
-#include "webserver/httpd-fs.h"
+#include "uip.h"
 
 #ifndef GENERAL_H
 #define GENERAL_H
 
 struct accessHolder
 {
-	void (*run)(struct httpd_fs_file *file);
+	int (*run)(char **vars, struct psock p);
 };
 
 
@@ -20,7 +20,7 @@ struct accessHolder
 		{
 			hshObj files;
 
-			void (*registerPage)(struct dynaloader *, char *name, void (*run)(struct httpd_fs_file *file));
+			void (*registerPage)(struct dynaloader *, char *name, int (*run)(char **vars, struct psock p));
 			struct accessHolder *(*fetchPage)(struct dynaloader *, const char *name);
 			void (*destruct)(struct dynaloader *);
 		};
@@ -30,7 +30,7 @@ struct accessHolder
 		dynld newDynaloaderObject();
 		
 		/*METHODS*/
-		void registerPage(dynld, char *name, void (*run)(struct httpd_fs_file *file));
+		void registerPage(dynld, char *name, int (*run)(char **vars, struct psock p));
 		struct accessHolder *fetchPage(dynld, const char *name);
 
 		/*DESTRUCTOR*/
