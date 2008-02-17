@@ -22,7 +22,32 @@ void web_appcall(void)
 static int handle_connection(struct web_state *ws)
 {
 	PSOCK_BEGIN(&ws->p);
-	PSOCK_SEND_STR(&ws->p, "blah");
+
+	PSOCK_READTO(&ws->p, ISO_space);
+	if(strncmp(ws->inputbuffer, "GET ", 4) != 0)
+	{
+		PSOCK_CLOSE_EXIT(&ws->p);
+	}
+
+	PSOCK_READTO(&ws->p, ISO_space);
+	if(ws->inputbuffer[0] != ISO_slash)
+	{
+		PSOCK_CLOSE_EXIT(&ws->p);
+	}
+
+	if(ws->inputbuffer[1] == ISO_space)
+	{
+		strncpy(ws->filename, "index.html", sizeof(ws->filename));
+	}
+	else
+	{
+		ws->inputbuf[PSOCK_DATALEN(&ws->p) - 1] = 0;
+		strncpy(ws->filename, &ws->inputbuf[0], sizeof(ws->filename));
+	}
+
+
+	//need to do more parsing here
+
 	PSOCK_CLOSE(&ws->p);
 	PSOCK_END(&ws->p);
 }
