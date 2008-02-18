@@ -4,8 +4,14 @@
 //This function will soon take an char ** of input vars
 int callFunc(char **vars, struct psock p)
 {
+	PSOCK_BEGIN(&p);
 
+	writeLn("I get hit\r\n");
 	PSOCK_SEND_STR(&p, "hello");
+
+	//PSOCK_CLOSE(&p);
+	PSOCK_END(&p);
+}
 
 /*
 	DDRC = 0xFF;
@@ -40,4 +46,3 @@ int callFunc(char **vars, struct psock p)
 		light = 0;
 	}
 	*/
-}

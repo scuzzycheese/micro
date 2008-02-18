@@ -51,18 +51,19 @@ static int handle_connection(struct web_state *ws)
 	//Send headers. This mechanism needs to be more complex, but it's ok for now
 	PSOCK_SEND_STR(&ws->p, "HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n");
 
+
 	struct accessHolder *comm = NULL;
 	comm = fileObject->fetchPage(fileObject, ws->filename);
 	if(comm)
 	{
+		writeLn("found our function\r\n");
 		comm->run(NULL, ws->p);
-		return 1;
 	}
 
-
+	PSOCK_END(&ws->p);
 	//need to do more parsing here
 
-	PSOCK_CLOSE(&ws->p);
-	PSOCK_END(&ws->p);
+	//PSOCK_CLOSE(&ws->p);
+	//PSOCK_END(&ws->p);
 }
 
