@@ -19,6 +19,12 @@ typedef struct web_state
 	char filename[20];
 } uip_tcp_appstate_t;
 
+typedef struct wrtDta
+{
+	char *data;
+	int state;
+} writeData;
+
 void web_appcall(void);
 #ifndef UIP_APPCALL
 #define UIP_APPCALL web_appcall

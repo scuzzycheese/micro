@@ -6,10 +6,32 @@ int callFunc(char **vars, struct psock p)
 {
 	PSOCK_BEGIN(&p);
 
-	writeLn("I get hit\r\n");
-	PSOCK_SEND_STR(&p, "hello");
+	DDRC = 0xFF;
+	static int light = 0;
 
-	//PSOCK_CLOSE(&p);
+	PSOCK_SEND_STR(&p, "<h1>Atmega 644 webserver</h1>");
+	PSOCK_SEND_STR(&p, "<b>Stats:</b><br/>");
+	PSOCK_SEND_STR(&p, "\tCHIP: Atmel Atmega 644 20Mhz 4Kb RAM.<br />");
+	PSOCK_SEND_STR(&p, "\tNIC: Microchip ENC28J60.<br />");
+	PSOCK_SEND_STR(&p, "\tTCP/IP stack: uIP<br />");
+	PSOCK_SEND_STR(&p, "\tIP: 192.168.0.40<br />");
+	PSOCK_SEND_STR(&p, "<a href=\"index.html\">");
+
+	if(!light)
+	{
+		PSOCK_SEND_STR(&p, "Switch Light Off");
+		PORTC = 2;
+		light = 1;
+	}
+	else
+	{
+		PSOCK_SEND_STR(&p, "Switch Light On");
+		PORTC &= ~(2);
+		light = 0;
+	}
+	PSOCK_SEND_STR(&p, "</a>");
+
+	PSOCK_CLOSE(&p);
 	PSOCK_END(&p);
 }
 

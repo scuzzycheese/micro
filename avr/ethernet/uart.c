@@ -32,7 +32,7 @@ void writeLnLen(char *data, int len)
 {
 	while(len --)
 	{
-		putChar(*data);
+		putChar(*(data ++));
 	}
 }
 

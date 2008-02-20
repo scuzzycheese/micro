@@ -20,6 +20,20 @@ void web_appcall(void)
 		PSOCK_INIT(&ws->p, ws->inputbuffer, sizeof(ws->inputbuffer));
 	}
 	handle_connection(ws);
+
+	struct accessHolder *comm = NULL;
+	comm = fileObject->fetchPage(fileObject, ws->filename);
+	if(comm)
+	{
+		comm->run(NULL, ws->p);
+	}
+	else
+	{
+		writeLn("404\r\n");
+		//404?
+	}
+
+
 }
 
 static int handle_connection(struct web_state *ws)
@@ -45,25 +59,12 @@ static int handle_connection(struct web_state *ws)
 	else
 	{
 		ws->inputbuffer[PSOCK_DATALEN(&ws->p) - 1] = 0;
-		strncpy(ws->filename, &ws->inputbuffer[0], sizeof(ws->filename));
+		strncpy(ws->filename, ws->inputbuffer, sizeof(ws->filename));
 	}
 
 	//Send headers. This mechanism needs to be more complex, but it's ok for now
 	PSOCK_SEND_STR(&ws->p, "HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n");
 
-
-	struct accessHolder *comm = NULL;
-	comm = fileObject->fetchPage(fileObject, ws->filename);
-	if(comm)
-	{
-		writeLn("found our function\r\n");
-		comm->run(NULL, ws->p);
-	}
-
 	PSOCK_END(&ws->p);
-	//need to do more parsing here
-
-	//PSOCK_CLOSE(&ws->p);
-	//PSOCK_END(&ws->p);
 }
 
