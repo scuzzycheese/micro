@@ -65,7 +65,7 @@ int main()
 	fileObject = newDynaloaderObject();
 	/*register our files with the fileObject*/
 	fileObject->registerPage(fileObject, "/index.html", callFunc);
-	fileObject->registerPage(fileObject, "/me.jpg", loadImage);
+	//fileObject->registerPage(fileObject, "/me.jpg", loadImage);
 
 	int i;
 

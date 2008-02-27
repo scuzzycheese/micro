@@ -18,20 +18,9 @@ void web_appcall(void)
 	if(uip_connected())
 	{
 		PSOCK_INIT(&ws->p, ws->inputbuffer, sizeof(ws->inputbuffer));
+		PSOCK_INIT(&ws->po, ws->inputbuffer, sizeof(ws->inputbuffer));
 	}
 	handle_connection(ws);
-
-	struct accessHolder *comm = NULL;
-	comm = fileObject->fetchPage(fileObject, ws->filename);
-	if(comm)
-	{
-		comm->run(NULL, ws->p);
-	}
-	else
-	{
-		writeLn("404\r\n");
-		//404?
-	}
 
 
 }
@@ -65,6 +54,19 @@ static int handle_connection(struct web_state *ws)
 	//Send headers. This mechanism needs to be more complex, but it's ok for now
 	PSOCK_SEND_STR(&ws->p, "HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n");
 
+	pageFunc comm = fileObject->fetchPage(fileObject, ws->filename);
+	if(comm)
+	{
+		//PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
+		PT_WAIT_THREAD(&((&ws->p)->pt), callFunc(NULL, ws));
+	}
+	else
+	{
+		writeLn("404\r\n");
+		//404?
+	}
+
+	PSOCK_CLOSE(&ws->p);
 	PSOCK_END(&ws->p);
 }
 

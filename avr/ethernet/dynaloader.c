@@ -14,16 +14,14 @@ dynld newDynaloaderObject()
 	return returnObj;
 }
 
-void registerPage(dynld this, char *name, int (*run)(char **vars, struct psock p))
+void registerPage(dynld this, char *name, pageFunc page)
 {
-	struct accessHolder *newFile = malloc(sizeof(struct accessHolder));
-	newFile->run = run;
-	this->files->addIndexString(this->files, name, newFile);
+	this->files->addIndexString(this->files, name, page);
 }
 
-struct accessHolder *fetchPage(dynld this, const char *name)
+pageFunc fetchPage(dynld this, const char *name)
 {
-	return (struct accessHolder *)this->files->findIndexString(this->files, (char *)name);
+	return (pageFunc)this->files->findIndexString(this->files, (char *)name);
 }
 
 void dynObjDestruct(dynld this)

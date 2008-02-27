@@ -6,11 +6,7 @@
 #ifndef GENERAL_H
 #define GENERAL_H
 
-struct accessHolder
-{
-	int (*run)(char **vars, struct psock p);
-};
-
+typedef int (*pageFunc)(char **vars, struct web_state *ws);
 
 /*FAKE CLASSES*/
 	/*CLASS dynaloader*/
@@ -20,8 +16,8 @@ struct accessHolder
 		{
 			hshObj files;
 
-			void (*registerPage)(struct dynaloader *, char *name, int (*run)(char **vars, struct psock p));
-			struct accessHolder *(*fetchPage)(struct dynaloader *, const char *name);
+			void (*registerPage)(struct dynaloader *, char *name, pageFunc);
+			pageFunc (*fetchPage)(struct dynaloader *, const char *name);
 			void (*destruct)(struct dynaloader *);
 		};
 		typedef struct dynaloader *dynld;
@@ -30,8 +26,8 @@ struct accessHolder
 		dynld newDynaloaderObject();
 		
 		/*METHODS*/
-		void registerPage(dynld, char *name, int (*run)(char **vars, struct psock p));
-		struct accessHolder *fetchPage(dynld, const char *name);
+		void registerPage(dynld, char *name, pageFunc);
+		pageFunc fetchPage(dynld, const char *name);
 
 		/*DESTRUCTOR*/
 		void dynObjDestruct(dynld);
