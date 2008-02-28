@@ -57,6 +57,7 @@ static int handle_connection(struct web_state *ws)
 	pageFunc comm = fileObject->fetchPage(fileObject, ws->filename);
 	if(comm)
 	{
+		//NOTE: have to figure out why this is not working 100%
 		//PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
 		PT_WAIT_THREAD(&((&ws->p)->pt), callFunc(NULL, ws));
 	}
