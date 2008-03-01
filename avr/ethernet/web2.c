@@ -3,12 +3,19 @@
 #include <string.h>
 #include "dynaloader.h"
 
-extern dynld fileObject;
+#include "pages/index.h"
+
 
 static int handle_connection(struct web_state *ws);
 
+dynld fileObj;
 void web_init(void)
 {
+	//create a dynaloader file object
+	fileObj = newDynaloaderObject();
+	//register pages with the dynaloader object
+	fileObj->registerPage(fileObj, "/index.html", callFunc);
+
 	uip_listen(HTONS(80));
 }
 
@@ -21,8 +28,6 @@ void web_appcall(void)
 		PSOCK_INIT(&ws->po, ws->inputbuffer, sizeof(ws->inputbuffer));
 	}
 	handle_connection(ws);
-
-
 }
 
 static int handle_connection(struct web_state *ws)
@@ -54,7 +59,10 @@ static int handle_connection(struct web_state *ws)
 	//Send headers. This mechanism needs to be more complex, but it's ok for now
 	PSOCK_SEND_STR(&ws->p, "HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n");
 
-	pageFunc comm = fileObject->fetchPage(fileObject, ws->filename);
+	writeLn("PAGE REGUEST: ");
+	writeLn(ws->filename);
+	writeLn("\r\n");
+	pageFunc comm = fileObj->fetchPage(fileObj, ws->filename);
 	if(comm)
 	{
 		//NOTE: have to figure out why this is not working 100%

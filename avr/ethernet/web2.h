@@ -1,8 +1,8 @@
-#include "uipopt.h"
-#include "psock.h"
-
 #ifndef WEB2H
 #define WEB2H
+
+#include "uipopt.h"
+#include "psock.h"
 
 #define ISO_nl      0x0a
 #define ISO_space   0x20

@@ -2,7 +2,7 @@ CHIP=atmega644
 #DEBUG= -DDEBUGSOCK
 OPT = -Os -mcall-prologues
 
-GENPATH = -Iwebserver
+GENPATH =
 
 UIPF = ../uip/uip/uip.c
 UIPARP = ../uip/uip/uip_arp.c

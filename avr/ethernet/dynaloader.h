@@ -1,10 +1,10 @@
+#ifndef GENERAL_H
+#define GENERAL_H
+
 #include <stdlib.h>
 #include <inttypes.h>
 #include "libhash/libhash.h"
 #include "uip.h"
-
-#ifndef GENERAL_H
-#define GENERAL_H
 
 typedef int (*pageFunc)(char **vars, struct web_state *ws);
 

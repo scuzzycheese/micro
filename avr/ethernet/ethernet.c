@@ -11,12 +11,6 @@
 #include "timer.h"
 #include "enc28j60.h"
 
-#include "dynaloader.h"
-
-/*include the module loader prototypes*/
-#include "pages/index.h"
-#include "pages/image.h"
-
 //FUSES - HFUSE:99 LFUSE:EF
 
 void WDT_off(void) __attribute__((naked)) __attribute__((section(".init3")));
@@ -58,15 +52,8 @@ void delay_ms(unsigned int ms)
 	}
 }
 
-dynld fileObject;
-
 int main()
 {
-	fileObject = newDynaloaderObject();
-	/*register our files with the fileObject*/
-	fileObject->registerPage(fileObject, "/index.html", callFunc);
-	//fileObject->registerPage(fileObject, "/me.jpg", loadImage);
-
 	int i;
 
 	struct timer periodic_timer, arp_timer;
