@@ -1,19 +1,10 @@
 #include <stdio.h>
 
-struct PTSTATE
+struct CORO_STATE
 {
 	int state;
 	void *resume;
 };
-
-int main()
-{
-	while(1)
-	{
-		func1();
-		func2();
-	}
-}
 
 int yielder()
 {
@@ -28,24 +19,29 @@ int yielder()
 	return 0;
 }
 
+#define CORO_START static struct CORO_STATE pt = {0, NULL}; if(pt.resume) { printf("Resuming\n"); goto *pt.resume; }
+#define CORO_YIELD { __label__ resume; resume: pt.resume = &&resume; } if(yielder()) return 0
+
+
+int main()
+{
+	while(1)
+	{
+		func1();
+		func2();
+	}
+}
+
+
 int func1()
 {
-	static struct PTSTATE pt = {0, NULL};
+	CORO_START;
 	int static state = 0;
 	int static blah = 0;
-	if(pt.resume)
-	{
-		printf("trying to resume function 1\n");
-		goto *pt.resume;
-	}
 	printf("I should not get called when resuming\n");
 	while(1)
 	{
-		{
-			__label__ resume;
-			resume: pt.resume = &&resume;
-		}
-		if(yielder()) return 0;
+		CORO_YIELD;
 		printf("hello from func1: %d\n", blah ++);
 		sleep(1);
 	}
@@ -53,22 +49,13 @@ int func1()
 
 int func2()
 {
-	static struct PTSTATE pt = {0, NULL};
+	CORO_START;
 	int static state = 0;
 	int static blah = 0;
-	if(pt.resume)
-	{
-		printf("trying to resume function 2\n");
-		goto *pt.resume;
-	}
 	printf("I should not get called when resuming\n");
 	while(1)
 	{
-		{
-			__label__ resume;
-			resume: pt.resume = &&resume;
-		}
-		if(yielder()) return 0;
+		CORO_YIELD;
 		printf("hello from func2: %d\n", blah ++);
 		sleep(1);
 	}
