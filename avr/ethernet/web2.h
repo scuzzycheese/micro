@@ -3,6 +3,7 @@
 
 #include "uipopt.h"
 #include "psock.h"
+#include "config.h"
 
 #define ISO_nl      0x0a
 #define ISO_space   0x20

@@ -1,7 +1,14 @@
 #ifndef HASHH
-#define HASHH true
+#define HASHH
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#include "config.h"
+
+//ptType should be defined in config.h
+#ifndef ptType
+#define ptType void *
 #endif
 
 
@@ -17,7 +24,7 @@ struct hashIndex
 {
 	struct hashIndex *next;
 
-	void *data;
+	ptType data;
 	char *key;
 };
 /*just create a nice little data type that we can access */
@@ -44,10 +51,10 @@ typedef struct hashIndex **hIndex;
 			struct hashIndex **hashData;
 
 			unsigned int (*hashKey)(char *, int32_t, int32_t);	
-			void (*addIndex)(struct hashObject *, char *, int, void *);
-			void (*addIndexString)(struct hashObject *, char *, void *);
-			void *(*findIndex)(struct hashObject *, char *, int);
-			void *(*findIndexString)(struct hashObject *, char *);
+			void (*addIndex)(struct hashObject *, char *, int, ptType);
+			void (*addIndexString)(struct hashObject *, char *, ptType);
+			ptType (*findIndex)(struct hashObject *, char *, int);
+			ptType (*findIndexString)(struct hashObject *, char *);
 			void (*destruct)(struct hashObject *);
 		};
 		/*use a nice little handle*/
@@ -67,9 +74,9 @@ typedef struct hashIndex **hIndex;
 		 * @param hshObj myHash - This is a required features since this is NOT C++, but fake objects made user friendly
 		 * @param char* &myKeyAsInt - This is the key, as an integer, it can really be anything you want, just cast it correctly
 		 * @param int sizeof(int) - This is the size of the key, here it's an integer, hence sizeof(int).
-		 * @param void* myData - This is the data you want to point to, it can be anything
+		 * @param ptType myData - This is the data you want to point to, it can be anything
 		 */
-		void addIndex(hshObj, char *, int, void *);
+		void addIndex(hshObj, char *, int, ptType);
 		/**
 		 * This method also adds an index to the hash, but it takes a string as the key.
 		 * You pass a pointer to the data you want to store.<br/>
@@ -78,9 +85,9 @@ typedef struct hashIndex **hIndex;
 		 *
 		 * @param hshObj myHash - This is a required features since this is NOT C++, but fake objects made user friendly
 		 * @param char* "myDataInTheHash" - The key as a string. it MUST be null terminated otherwise it will break things in a nasty way
-		 * @param void* myData - This is the data you want to point to, it can be anything
+		 * @param ptType myData - This is the data you want to point to, it can be anything
 		 */
-		void addIndexString(hshObj, char *, void *);
+		void addIndexString(hshObj, char *, ptType);
 		/**
 		 * This method finds an index against the hash and returns a pointer to the data<br/>
 		 * eg:<br/>
@@ -90,7 +97,7 @@ typedef struct hashIndex **hIndex;
 		 * @param char* &myKeyAsInt - This is the key, as an integer, it can really be anything you want, just cast it correctly
 		 * @param int sizeof(int) - This is the size of the key, here it's an integer, hence sizeof(int).
 		 */
-		void *findIndex(hshObj, char *, int);
+		ptType findIndex(hshObj, char *, int);
 		/**
 		 * This method finds an index against the hash and returns a pointer to the data,
 		 * but takes a string as the key.<br/>
@@ -100,7 +107,7 @@ typedef struct hashIndex **hIndex;
 		 * @param hshObj myHash - This is a required features since this is NOT C++, but fake objects made user friendly
 		 * @param char* "myDataInTheHash" - The key as a string. it MUST be null terminated otherwise it will break things in a nasty way
 		 */
-		void *findIndexString(hshObj, char *);
+		ptType findIndexString(hshObj, char *);
 		/**
 		 * NOTE: NOT IMPLIMENTED YET!
 		 * This method deletes a hash entry from the index and frees up it's memory inheranty.<br/>

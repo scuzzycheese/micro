@@ -35,8 +35,8 @@ IMAGEO = pages/image.o
 MODULES = ${INDEXO} ${IMAGEO}
 
 
-all:uip service avrlib uart ethernet hash dynaloader modules
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -o ethernet.elf ethernet.o uip.o avrlib.o service.o uart.o libhash/libhash.o dynaloader.o ${MODULES} -lm ${LIBPATH}
+all:uip service avrlib uart ethernet hash modules
+	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -o ethernet.elf ethernet.o uip.o avrlib.o service.o uart.o libhash/libhash.o ${MODULES} -lm ${LIBPATH}
 
 ethernet: ethernet.c
 	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c ethernet.c -o ethernet.o ${LIBPATH}
@@ -49,9 +49,7 @@ avrlib:
 uart: uart.c uart.h
 	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine ${UARTSTUFF} -o uart.o ${AVRLIBINCLUDES} ${MYPATH}
 hash:
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine libhash/libhash.c -o libhash/libhash.o
-dynaloader:
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine dynaloader.c -o dynaloader.o ${LIBPATH}
+	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine libhash/libhash.c -o libhash/libhash.o ${MYPATH}
 
 
 
@@ -71,4 +69,4 @@ install-dragon: ethernet.elf
 	avrdude -p m644 -c dragon_isp -P usb -e -U flash:w:ethernet.hex
 
 clean:
-	rm -Rf uip.o service.o avrlib.o uart.o ethernet.o ethernet.elf ethernet.hex libhash/libhash.o dynaloader.o ${MODULES}
+	rm -Rf uip.o service.o avrlib.o uart.o ethernet.o ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}

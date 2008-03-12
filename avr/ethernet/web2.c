@@ -1,20 +1,19 @@
 #include "web2.h"
 #include "uip.h"
 #include <string.h>
-#include "dynaloader.h"
 
+#include <stdio.h>
 #include "pages/index.h"
-
+#include "libhash/libhash.h"
 
 static int handle_connection(struct web_state *ws);
 
-dynld fileObj;
+//dynld fileObj;
+hshObj fls;
 void web_init(void)
 {
-	//create a dynaloader file object
-	fileObj = newDynaloaderObject();
-	//register pages with the dynaloader object
-	fileObj->registerPage(fileObj, "/index.html", callFunc);
+	fls = newHashObject();
+	fls->addIndexString(fls, "/index.html", callFunc);
 
 	uip_listen(HTONS(80));
 }
@@ -62,12 +61,22 @@ static int handle_connection(struct web_state *ws)
 	writeLn("PAGE REGUEST: ");
 	writeLn(ws->filename);
 	writeLn("\r\n");
-	pageFunc comm = fileObj->fetchPage(fileObj, ws->filename);
+	//pageFunc comm = fileObj->fetchPage(fileObj, ws->filename);
+	pageFunc comm = fls->findIndexString(fls, ws->filename);
 	if(comm)
 	{
+		char addBuff[50];
+		sprintf(addBuff, "BEFORE comm: %p\r\ncallFunc: %p\r\n\r\n", comm, callFunc);
+		writeLn(addBuff);
+		//comm = callFunc;
+		//sprintf(addBuff, "AFTER: comm: %p\r\ncallFunc: %p\r\n\r\n", comm, callFunc);
+		//writeLn(addBuff);
+
 		//NOTE: have to figure out why this is not working 100%
-		//PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
-		PT_WAIT_THREAD(&((&ws->p)->pt), callFunc(NULL, ws));
+		PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
+		//PT_WAIT_THREAD(&((&ws->p)->pt), callFunc(NULL, ws));
+
+
 	}
 	else
 	{

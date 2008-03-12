@@ -4,6 +4,7 @@
 //This function will soon take an char ** of input vars
 int callFunc(char **vars, struct web_state *ws)
 {
+	writeLn("entering index\r\n");
 	PSOCK_BEGIN(&ws->po);
 	DDRC = 0xFF;
 	static int light = 0;

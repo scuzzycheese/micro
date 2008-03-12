@@ -57,17 +57,17 @@ void hashDestruct(hshObj this)
 }
 
 /*this takes a NULL terminated string*/
-void *findIndexString(hshObj this, char *key)
+ptType findIndexString(hshObj this, char *key)
 {
 	return this->findIndex(this, key, strlen(key));
 }
 
-void *findIndex(hshObj this, char *key, int keyLength)
+ptType findIndex(hshObj this, char *key, int keyLength)
 {
 	/*give us a handle to work with.*/
 	struct hashIndex *indexHash = this->hashData[this->hashKey(key, keyLength, HASHKEYSIZE)];
 
-	void *retData = NULL;
+	ptType retData = NULL;
 
 	/*loop through the linked list the hash address points to*/
 	while(indexHash)
@@ -83,12 +83,12 @@ void *findIndex(hshObj this, char *key, int keyLength)
 }
 
 /*this takes a NULL terminated string*/
-void addIndexString(hshObj this, char *key, void *data)
+void addIndexString(hshObj this, char *key, ptType data)
 {
 	return this->addIndex(this, key, strlen(key), data);
 }
 
-void addIndex(hshObj this, char *key, int keyLength, void *data)
+void addIndex(hshObj this, char *key, int keyLength, ptType data)
 {
 	/*prcalculate the value we are looking for in the hash*/
 	/*this makes sense from a performance point of view*/
