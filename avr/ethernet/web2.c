@@ -61,22 +61,13 @@ static int handle_connection(struct web_state *ws)
 	writeLn("PAGE REGUEST: ");
 	writeLn(ws->filename);
 	writeLn("\r\n");
-	//pageFunc comm = fileObj->fetchPage(fileObj, ws->filename);
+
+	//NOTE: This line causes a bug in GCC, BUG 27192
+	//WORKAROUND: don't let the compiler optimise
 	pageFunc comm = fls->findIndexString(fls, ws->filename);
 	if(comm)
 	{
-		char addBuff[50];
-		sprintf(addBuff, "BEFORE comm: %p\r\ncallFunc: %p\r\n\r\n", comm, callFunc);
-		writeLn(addBuff);
-		//comm = callFunc;
-		//sprintf(addBuff, "AFTER: comm: %p\r\ncallFunc: %p\r\n\r\n", comm, callFunc);
-		//writeLn(addBuff);
-
-		//NOTE: have to figure out why this is not working 100%
 		PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
-		//PT_WAIT_THREAD(&((&ws->p)->pt), callFunc(NULL, ws));
-
-
 	}
 	else
 	{

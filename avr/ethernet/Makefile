@@ -1,6 +1,7 @@
 CHIP=atmega644
 #DEBUG= -DDEBUGSOCK
-OPT = -Os -mcall-prologues
+#OPT = -Os -mcall-prologues
+OPT = -mcall-prologues
 
 GENPATH =
 
