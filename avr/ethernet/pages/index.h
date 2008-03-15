@@ -5,6 +5,6 @@
 #include "uipopt.h"
 #include "uip.h"
 
-int callFunc(char **vars, struct web_state *ws);
+int callFunc(int argc, char **argv, struct web_state *ws);
 
 #endif

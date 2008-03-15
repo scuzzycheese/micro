@@ -67,7 +67,7 @@ static int handle_connection(struct web_state *ws)
 	pageFunc comm = fls->findIndexString(fls, ws->filename);
 	if(comm)
 	{
-		PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
+		PT_WAIT_THREAD(&((&ws->p)->pt), comm(0, NULL, ws));
 	}
 	else
 	{
