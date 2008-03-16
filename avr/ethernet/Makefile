@@ -63,11 +63,11 @@ modules:
 
 install: ethernet.elf
 	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
-	avrdude -p m644 -c stk200 -e -E noreset -U flash:w:ethernet.hex
+	avrdude -y -p m644 -c stk200 -e -E noreset -U flash:w:ethernet.hex
 
 install-dragon: ethernet.elf
 	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
-	avrdude -p m644 -c dragon_isp -P usb -e -U flash:w:ethernet.hex
+	avrdude -y -p m644 -c dragon_isp -P usb -e -U flash:w:ethernet.hex
 
 clean:
 	rm -Rf uip.o service.o avrlib.o uart.o ethernet.o ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}
