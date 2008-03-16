@@ -12,12 +12,13 @@
 #define ISO_period  0x2e
 #define ISO_slash   0x2f
 #define ISO_colon   0x3a
+#define ISO_question 0x3f 
 
 typedef struct web_state
 {
 	struct psock p, po;
 	char inputbuffer[100];
-	char filename[20];
+	char filename[80];
 } uip_tcp_appstate_t;
 
 typedef struct wrtDta

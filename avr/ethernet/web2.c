@@ -62,6 +62,14 @@ static int handle_connection(struct web_state *ws)
 	writeLn(ws->filename);
 	writeLn("\r\n");
 
+/*
+	char *req = ws->filename;
+	while(*(req ++))
+	{
+		if(*req == ISO_question) *req = 0;
+	}
+*/
+
 	//NOTE: This line causes a bug in GCC, BUG 27192
 	//WORKAROUND: don't let the compiler optimise
 	pageFunc comm = fls->findIndexString(fls, ws->filename);
