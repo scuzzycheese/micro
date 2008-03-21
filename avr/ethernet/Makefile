@@ -1,7 +1,10 @@
-CHIP=atmega644
+CC = avr-gcc
+CCX86 = gcc
+CHIP = -mmcu=atmega644
 #DEBUG= -DDEBUGSOCK
 #OPT = -Os -mcall-prologues
 OPT = -mcall-prologues
+OPTX86 = -DX86
 
 GENPATH =
 
@@ -13,6 +16,7 @@ SERVICE = web2.c
 PSOCK = ../uip/uip/psock.c
 CLOCK = clock-arch.c
 TIMER = ../uip/uip/timer.c
+
 
 UART = uart.c
 
@@ -37,28 +41,41 @@ MODULES = ${INDEXO} ${IMAGEO}
 
 
 all:uip service avrlib uart ethernet hash modules
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -o ethernet.elf ethernet.o uip.o avrlib.o service.o uart.o libhash/libhash.o ${MODULES} -lm ${LIBPATH}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf ethernet.o uip.o avrlib.o service.o uart.o libhash/libhash.o ${MODULES} -lm ${LIBPATH}
 
 ethernet: ethernet.c
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c ethernet.c -o ethernet.o ${LIBPATH}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c ethernet.c -o ethernet.o ${LIBPATH}
 uip: 
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine ${UIPSTUFF} -o uip.o ${AVRLIBINCLUDES} ${UIPLIBPATH} ${MYPATH}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${UIPSTUFF} -o uip.o ${AVRLIBINCLUDES} ${UIPLIBPATH} ${MYPATH}
 service:
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine ${SERVICE} -o service.o ${AVRLIBINCLUDES} ${UIPLIBPATH} ${MYPATH}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${SERVICE} -o service.o ${AVRLIBINCLUDES} ${UIPLIBPATH} ${MYPATH}
 avrlib:
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine ${AVRLIBSTUFF} -o avrlib.o ${AVRLIBINCLUDES} ${AVRLIBPATH} ${MYPATH}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${AVRLIBSTUFF} -o avrlib.o ${AVRLIBINCLUDES} ${AVRLIBPATH} ${MYPATH}
 uart: uart.c uart.h
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine ${UARTSTUFF} -o uart.o ${AVRLIBINCLUDES} ${MYPATH}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${UARTSTUFF} -o uart.o ${AVRLIBINCLUDES} ${MYPATH}
 hash:
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine libhash/libhash.c -o libhash/libhash.o ${MYPATH}
-
-
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine libhash/libhash.c -o libhash/libhash.o ${MYPATH}
 
 modules:
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine ${INDEX} -o ${INDEXO} ${LIBPATH}
-	avr-gcc ${DEBUG} ${OPT} -mmcu=${CHIP} -c -combine ${IMAGE} -o ${IMAGEO} ${LIBPATH}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${INDEX} -o ${INDEXO} ${LIBPATH}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${IMAGE} -o ${IMAGEO} ${LIBPATH}
 
+x86:uip-x86 service-x86 uart-x86 ethernet-x86 hash-x86 modules-x86
+	${CCX86} ${DEBUG} ${OPTX86} ${CHIP} -o ethernet ethernet.o uip.o service.o uart.o libhash/libhash.o pages/index.o -lm 
 
+ethernet-x86: ethernet.c
+	${CCX86} ${DEBUG} ${OPTX86} -c ethernet.c -o ethernet.o ${UIPLIBPATH} ${MYPATH}
+uip-x86: 
+	${CCX86} ${DEBUG} ${OPTX86} -c -combine ${UIPSTUFF} -o uip.o ${UIPLIBPATH} ${MYPATH}
+service-x86:
+	${CCX86} ${DEBUG} ${OPTX86} -c -combine ${SERVICE} -o service.o ${UIPLIBPATH} ${MYPATH}
+uart-x86: uart.c uart.h
+	${CCX86} ${DEBUG} ${OPTX86} -c -combine ${UARTSTUFF} -o uart.o ${MYPATH}
+hash-x86:
+	${CCX86} ${DEBUG} ${OPTX86} -c -combine libhash/libhash.c -o libhash/libhash.o ${MYPATH}
+
+modules-x86:
+	${CCX86} ${DEBUG} ${OPTX86} -c -combine pages/index-x86.c -o ${INDEXO} ${UIPLIBPATH} ${MYPATH} 
 
 
 install: ethernet.elf
@@ -70,4 +87,4 @@ install-dragon: ethernet.elf
 	avrdude -y -p m644 -c dragon_isp -P usb -e -U flash:w:ethernet.hex
 
 clean:
-	rm -Rf uip.o service.o avrlib.o uart.o ethernet.o ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}
+	rm -Rf uip.o service.o avrlib.o uart.o ethernet.o ethernet ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}

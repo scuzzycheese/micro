@@ -1,3 +1,10 @@
+#ifdef X86
+
+#define usart_init(); 
+#define writeLn(x) printf(x)
+#define writeLnLen(x);
+
+#else
 #include "FCPU.h"
 #include <avr/interrupt.h>
 
@@ -7,3 +14,4 @@ void usart_init();
 inline void putChar(uint8_t c);
 void writeLn(char *strn);
 void writeLnLen(char *data, int len);
+#endif

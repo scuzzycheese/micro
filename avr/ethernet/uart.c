@@ -1,5 +1,6 @@
 #include "uart.h"
 
+#ifndef X86
 void usart_init()
 {
 	unsigned int baudRate = SET_BAUD(38400);
@@ -35,4 +36,4 @@ void writeLnLen(char *data, int len)
 		putChar(*(data ++));
 	}
 }
-
+#endif

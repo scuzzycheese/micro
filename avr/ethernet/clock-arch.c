@@ -19,6 +19,23 @@
  * This file is part SPI2CF port of the uIP TCP/IP stack.
  */
 
+
+#include "clock-arch.h"
+
+#ifdef X86
+#include <sys/time.h>
+#include <time.h>
+clock_time_t clock_time(void)
+{
+  struct timeval tv;
+  struct timezone tz;
+
+  gettimeofday(&tv, &tz);
+
+  return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
+#else
+
 #include "uip-conf.h"
 #include "clock.h"
 
@@ -55,11 +72,9 @@ void clock_init(void) {
   sei();
 }
 
-
-
-/*---------------------------------------------------------------------------*/
 clock_time_t
 clock_time(void) {
   return ticks;
 }
-/*---------------------------------------------------------------------------*/
+
+#endif

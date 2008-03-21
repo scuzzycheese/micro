@@ -4,6 +4,11 @@
 extern "C" {
 #endif
 
+#ifdef X86
+typedef int int32_t;
+typedef unsigned int uint32_t;
+#endif
+
 #include "config.h"
 
 //ptType should be defined in config.h

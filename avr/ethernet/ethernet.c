@@ -1,18 +1,30 @@
-#include "uart.h"
+#ifdef X86
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/tcp.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdio.h>
+#else
 #include "global.h"
 #include <util/delay.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/wdt.h>
-#include <inttypes.h>
+#include "enc28j60.h"
+#endif
 
+#include <inttypes.h>
 #include "uip.h"
 #include "uip_arp.h"
 #include "timer.h"
-#include "enc28j60.h"
+#include "uart.h"
+
 
 //FUSES - HFUSE:99 LFUSE:EF
 
+#ifndef X86
 void WDT_off(void) __attribute__((naked)) __attribute__((section(".init3")));
 void WDT_off(void) 
 { 
@@ -27,18 +39,21 @@ void WDT_off(void)
 	WDTCSR = 0x00; 
 	sei();
 }
-
+#endif
 
 #define BUF ((struct uip_eth_hdr *)&uip_buf[0])
-
 #define ETHERNET_MIN_PACKET_LENGTH	0x3C
 #define ETHERNET_HEADER_LENGTH		0x0E
-
 #define IP_TCP_HEADER_LENGTH 40
 #define TOTAL_HEADER_LENGTH (IP_TCP_HEADER_LENGTH+ETHERNET_HEADER_LENGTH)
 
-
-
+#ifdef X86
+void delay_ms(unsigned int ms)
+{
+	//This may be problematic if you wanna use this for more than one second
+	usleep(1000 * ms);
+}
+#else
 void delay_ms(unsigned int ms)
 /* delay for a minimum of <ms> */
 {
@@ -51,6 +66,20 @@ void delay_ms(unsigned int ms)
 		ms--;
 	}
 }
+#endif
+
+#ifdef X86
+int linSock;
+#define enc28j60PacketReceive(BFSZ, buffr) read(linSock, buffr, BFSZ)
+#define enc28j60PacketSend(BFSZ, buffr) write(linSock, buffr, BFSZ)
+void socketInit()
+{
+	if((linSock = socket(PF_INET, SOCK_RAW, IPPROTO_TCP)) == -1)
+	{
+		perror("ERROR: ");
+	}
+}
+#endif
 
 int main()
 {
@@ -58,17 +87,23 @@ int main()
 
 	struct timer periodic_timer, arp_timer;
  
+	#ifndef X86
 	/*reset our ethernet chip*/
 	DDRD = 0xFF;
 	PORTD = 0x00;
 	delay_ms(100);
 	DDRD = 0x00;
+	#endif
 
+	#ifndef X86
 	usart_init();
 	clock_init();
 	enc28j60Init();
 	delay_ms(10);
 	enc28j60RegDump();
+	#else
+	socketInit();
+	#endif
 
 	uip_init();
 

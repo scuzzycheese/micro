@@ -1,6 +1,8 @@
 #include <string.h>
 #include <stdlib.h>
+#ifndef X86
 #include <avr/io.h>
+#endif
 
 /*my own defines and structures*/
 #include "libhash.h"
