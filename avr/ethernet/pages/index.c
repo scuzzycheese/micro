@@ -2,7 +2,7 @@
 #include <avr/io.h>
 
 //This function will soon take an char ** of input vars
-int callFunc(int argc, char **argv, struct web_state *ws)
+int callFunc(char **argv, struct web_state *ws)
 {
 	PSOCK_BEGIN(&ws->po);
 	DDRC = 0xFF;
