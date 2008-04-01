@@ -29,6 +29,11 @@
 #include "uart.h"
 #include "config.h"
 
+#ifdef DEBUGSOCK
+#include <stdio.h>
+#include <stdlib.h>
+#endif
+
 
 //FUSES - HFUSE:99 LFUSE:EF
 
@@ -94,6 +99,7 @@ int main()
 	int i;
 
 	struct timer periodic_timer, arp_timer;
+
  
 	#ifndef X86
 	/*reset our ethernet chip*/
@@ -105,6 +111,12 @@ int main()
 
 	#ifndef X86
 	usart_init();
+	#ifdef DEBUGSOCK
+	char tst[15];
+	sprintf(tst, "MCUSR: %d\r\n", MCUSR);
+	MCUSR = 0;
+	writeLn(tst);
+	#endif
 	clock_init();
 	enc28j60Init();
 	delay_ms(10);
@@ -168,9 +180,6 @@ int main()
 	while(1)
 	{
 		uip_len = enc28j60PacketReceive(UIP_BUFSIZE, uip_buf);
-		#ifdef DEBUGSOCK
-		writeLn("Got packet\r\n");
-		#endif
 		if(uip_len > 0)
 		{
 			#ifdef DEBUGSOCK
