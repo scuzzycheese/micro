@@ -1,10 +1,11 @@
 CC = avr-gcc
 CCX86 = gcc
-CHIP = -mmcu=atmega644
+CHIP = -mmcu=atmega644p
 #DEBUG= -DDEBUGSOCK
+DEBUG= 
 #OPT = -Os -mcall-prologues
 OPT = -mcall-prologues
-OPTX86 = -DX86
+OPTX86 = -g3 -DX86
 
 GENPATH =
 
@@ -84,7 +85,7 @@ install: ethernet.elf
 
 install-dragon: ethernet.elf
 	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
-	avrdude -y -p m644 -c dragon_isp -P usb -e -U flash:w:ethernet.hex
+	avrdude -y -p m644p -c dragon_isp -P usb -e -U flash:w:ethernet.hex
 
 clean:
 	rm -Rf uip.o service.o avrlib.o uart.o ethernet.o ethernet ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}

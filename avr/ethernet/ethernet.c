@@ -6,6 +6,13 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <netpacket/packet.h>
+#include <net/ethernet.h>
+#include <sys/socket.h>
 #else
 #include "global.h"
 #include <util/delay.h>
@@ -20,6 +27,7 @@
 #include "uip_arp.h"
 #include "timer.h"
 #include "uart.h"
+#include "config.h"
 
 
 //FUSES - HFUSE:99 LFUSE:EF
@@ -74,7 +82,7 @@ int linSock;
 #define enc28j60PacketSend(BFSZ, buffr) write(linSock, buffr, BFSZ)
 void socketInit()
 {
-	if((linSock = socket(PF_INET, SOCK_RAW, IPPROTO_TCP)) == -1)
+	if((linSock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) == -1)
 	{
 		perror("ERROR: ");
 	}
@@ -111,20 +119,40 @@ int main()
 	timer_set(&arp_timer, CLOCK_SECOND * 10);
 
 	struct uip_eth_addr eaddr;	
+#ifdef X86
+	eaddr.addr[0] = ETHADDR0;
+	eaddr.addr[1] = ETHADDR1;
+	eaddr.addr[2] = ETHADDR2;
+	eaddr.addr[3] = ETHADDR3;
+	eaddr.addr[4] = ETHADDR4;
+	eaddr.addr[5] = ETHADDR5;
+#else
 	eaddr.addr[0] = '0';
 	eaddr.addr[1] = 'F';
 	eaddr.addr[2] = 'F';
 	eaddr.addr[3] = 'I';
 	eaddr.addr[4] = 'C';
 	eaddr.addr[5] = 'E';
+#endif
+
 	uip_setethaddr(eaddr);
 
+	#ifdef DEBUGSOCK
+	char macData[100];
+	int maci;
+	for(maci = 0; maci < 6; maci ++)
+	{
+		sprintf(macData, "MAC%d: %X\r\n", maci, eaddr.addr[maci]);
+		writeLn(macData);
+	}
+	#endif
+
 	uip_ipaddr_t ipaddr;
-	writeLn("IP ADDRESS: 192.168.0.40\r\n");
-	uip_ipaddr(ipaddr, 192,168,0,40);
+	writeLn("IP ADDRESS: 192.168.1.40\r\n");
+	uip_ipaddr(ipaddr, 192,168,1,40);
 	uip_sethostaddr(ipaddr);
-	writeLn("DEFAULT GW: 192.168.0.1\r\n");
-	uip_ipaddr(ipaddr, 192,168,0,1);
+	writeLn("DEFAULT GW: 192.168.1.1\r\n");
+	uip_ipaddr(ipaddr, 192,168,1,1);
 	uip_setdraddr(ipaddr);
 	writeLn("SUBNET MSK: 255.255.255.0\r\n");
 	uip_ipaddr(ipaddr, 255,255,255,0);
@@ -134,10 +162,15 @@ int main()
 	//hello_world_init();
 	//httpd_init();
 	web_init();
+	#ifdef DEBUGSOCK
 	char data[100];
+	#endif
 	while(1)
 	{
 		uip_len = enc28j60PacketReceive(UIP_BUFSIZE, uip_buf);
+		#ifdef DEBUGSOCK
+		writeLn("Got packet\r\n");
+		#endif
 		if(uip_len > 0)
 		{
 			#ifdef DEBUGSOCK
@@ -182,6 +215,9 @@ int main()
 					writeLn(" Done!\r\n");
 					#endif
 				}
+				#ifdef DEBUGSOCK
+				else writeLn("uip_len is not bigger than 0\r\n");
+				#endif
 			}
 		}
 		else if(timer_expired(&periodic_timer))
