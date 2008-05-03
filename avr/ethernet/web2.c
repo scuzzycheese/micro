@@ -72,11 +72,13 @@ static int handle_connection(struct web_state *ws)
 
 	//NOTE: This line causes a bug in GCC, BUG 27192
 	//WORKAROUND: don't let the compiler optimise
-	pageFunc comm = fls->findIndexString(fls, ws->filename);
+	//pageFunc comm = fls->findIndexString(fls, ws->filename);
+	pageFunc comm = callFunc;
 	if(comm)
 	{
-		PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
-		//PT_WAIT_THREAD(&((&ws->p)->pt), callFunc(NULL, ws));
+		writeLn("Calling the page\r\n");
+		//PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
+		PT_WAIT_THREAD(&((&ws->p)->pt), callFunc(NULL, ws));
 	}
 	else
 	{

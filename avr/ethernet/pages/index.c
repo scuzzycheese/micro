@@ -8,6 +8,8 @@ int callFunc(char **vars, struct web_state *ws)
 	DDRC = 0xFF;
 	static int light = 0;
 
+	writeLn("Inside the page\r\n");
+
 	PSOCK_SEND_STR(&ws->po, "<h1>Atmega 644 webserver</h1>");
 	PSOCK_SEND_STR(&ws->po, "<b>Stats:</b><br/>");
 	PSOCK_SEND_STR(&ws->po, "\tCHIP: Atmel Atmega 644 20Mhz 4Kb RAM.<br />");

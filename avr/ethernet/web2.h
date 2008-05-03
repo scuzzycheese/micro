@@ -19,7 +19,7 @@ typedef struct web_state
 {
 	struct psock p, po;
 	char inputbuffer[100];
-	char filename[20];
+	char filename[80];
 } uip_tcp_appstate_t;
 
 typedef struct wrtDta
