@@ -38,15 +38,32 @@ void delay_us(unsigned int n)
 	}
 }
 
-#define D5 851
-#define E5 758
-#define Fsh5 675
-#define G5 637
 #define A5 568
 #define B5 506
 #define C6 477
+#define D5 851
+#define E5 758
+#define F5 716
+#define Fsh5 675
+#define G5 637
 #define D6 425
+#define C5 956
 #define DUR 40
+
+int tune2[][2] =
+{
+	{G5, DUR * 2},
+	{B5, DUR * 2},
+	{C5, DUR * 2},
+	{B5, DUR * 2},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+};
 
 int tune1[][2] = 
 {
