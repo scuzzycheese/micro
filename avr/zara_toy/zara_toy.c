@@ -73,7 +73,8 @@ int tune1[][2] =
 	{B5, DUR},
 	{G5, DUR},
 	{A5, DUR},
-	{G5, 2 * DUR}
+	{G5, 2 * DUR},
+	{0, 0}
 }; 
 
 void play_tone(uint16_t delay, uint8_t duration)
@@ -99,9 +100,8 @@ int main(void)
 
 	while(1)
 	{
-		int tuneLen = sizeof(tune1) / 2;
 		int tunePlace = 0;
-		while(tunePlace < tuneLen)
+		while(tune1[tunePlace][1])
 		{
 			play_tone(tune1[tunePlace][0], tune1[tunePlace][1]);
 			tunePlace ++;
