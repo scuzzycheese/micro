@@ -110,28 +110,49 @@ void play_tone(uint16_t delay, uint8_t duration)
 	}
 }
 
+#define MOTOR_ON PORTC |= 1 << 5
+#define MOTOR_OFF PORTC &= ~(1 << 5);
+
 /* new style */
 int main(void)
 {
 	DDRC = 0xFF;
 	DDRD = 0xFF;
+	
+	//Enable the input of these pins for the switch state controller
+	DDRD &= ~(1 << 2);
+	DDRD &= ~(1 << 3);
+
+	//Turn on the output pin for the switch state controller
+	PORTD = 1 << 4;
 
 	PORTC = 0;
+	//Always turn on the motor
+	//MOTOR_ON;
 
 	while(1)
 	{
 		int tunePlace = 0;
 		while(tune1[tunePlace][1])
 		{
-			//play_tone(tune1[tunePlace][0], tune1[tunePlace][1]);
+			//I'm going to add the state detection in this loop, it should be
+			//accurate enough for a simple toy
+			//NOTE: I don't need to bother with detecting the first state on the
+			//switch, because the motor will ALWAYs turn, according to the controll
+			//images on the switch
+			if(PIND & (1 << 2)) 
+			{
+				//play_tone(tune1[tunePlace][0], tune1[tunePlace][1]);
+				PORTD |= 1 << 5;	
+			}
+			else
+			{
+				PORTD &= ~(1 << 5);
+			}
+
 			tunePlace ++;
 		}
 		delay_ms(1000);
-		PORTD = 1 << 5;	
-		PORTC |= 1 << 5;
-		delay_ms(1000);
-		PORTD = 0;
-		PORTC &= ~(1 << 5);
 	}
 
 	return 0;
