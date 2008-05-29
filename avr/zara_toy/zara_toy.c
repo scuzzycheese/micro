@@ -102,9 +102,9 @@ void play_tone(uint16_t delay, uint8_t duration)
 	
 	while(cycles > 0)
 	{
-		PORTC |= 1 << 3;
+		PORTC |= 1 << 2;
 		delay_us(delay);
-		PORTC &= ~(1 << 3);
+		PORTC &= ~(1 << 2);
 		delay_us(delay);
 		cycles --;
 	}
@@ -114,16 +114,24 @@ void play_tone(uint16_t delay, uint8_t duration)
 int main(void)
 {
 	DDRC = 0xFF;
+	DDRD = 0xFF;
+
+	PORTC = 0;
 
 	while(1)
 	{
 		int tunePlace = 0;
 		while(tune1[tunePlace][1])
 		{
-			play_tone(tune1[tunePlace][0], tune1[tunePlace][1]);
+			//play_tone(tune1[tunePlace][0], tune1[tunePlace][1]);
 			tunePlace ++;
 		}
 		delay_ms(1000);
+		PORTD = 1 << 5;	
+		PORTC |= 1 << 5;
+		delay_ms(1000);
+		PORTD = 0;
+		PORTC &= ~(1 << 5);
 	}
 
 	return 0;
