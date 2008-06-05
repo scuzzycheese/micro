@@ -107,7 +107,7 @@ typedef struct hashIndex **hIndex;
 		 * This method finds an index against the hash and returns a pointer to the data,
 		 * but takes a string as the key.<br/>
 		 * eg:<br/>
-		 * 	<b>myData = myHash->findIndex(myHash, "myDataInTheHash");</b>
+		 * 	<b>myData = myHash->findIndexString(myHash, "myDataInTheHash");</b>
 		 *
 		 * @param hshObj myHash - This is a required features since this is NOT C++, but fake objects made user friendly
 		 * @param char* "myDataInTheHash" - The key as a string. it MUST be null terminated otherwise it will break things in a nasty way
