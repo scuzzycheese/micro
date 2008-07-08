@@ -1,39 +1,9 @@
-#include "uart.h"
-#include <avr/interrupt.h>
-#include <avr/io.h>
-#include <avr/wdt.h>
-#include <util/delay.h>
 #include <stdio.h>
-//FUSES - HFUSE:99 LFUSE:EF
-
-void WDT_off(void) __attribute__((naked)) __attribute__((section(".init3")));
-void WDT_off(void) 
-{ 
-	cli();
-	wdt_reset();
-	/* Clear WDRF in MCUSR */ 
-	MCUSR &= ~(1<<WDRF); 
-	/* Write logical one to WDCE and WDE */ 
-	/* Keep old prescaler setting to prevent unintentional time-out */ 
-	WDTCSR |= (1<<WDCE) | (1<<WDE); 
-	/* Turn off WDT */ 
-	WDTCSR = 0x00; 
-	sei();
-}
+#include <windows.h>
+#include <setjmp.h>
 
 
-void delay_ms(unsigned int ms)
-/* delay for a minimum of <ms> */
-{
-	// we use a calibrated macro. This is more
-	// accurate and not so much compiler dependent
-	// as self made code.
-	while(ms)
-	{
-		_delay_ms(0.96);
-		ms--;
-	}
-}
+jmp_buf tsk[3], mainTsk[3], mainTask;
 
 struct CORO_STATE
 {
@@ -54,62 +24,75 @@ int yielder()
 	return 0;
 }
 
-#define CORO_START static struct CORO_STATE pt = {0, NULL}; if(pt.resume) { writeLn("Resuming\r\n"); goto *pt.resume; }
+#define CORO_START static struct CORO_STATE pt = {0, NULL}; if(pt.resume) { printf("Resuming\r\n"); goto *pt.resume; }
 #define CORO_YIELD { __label__ resume; resume: pt.resume = &&resume; } if(yielder()) return 0
 
+int func1(int tskNo);
+int func2(int tskNo);
 
-int func1();
-int func2();
 int main()
 {
 
-	usart_init();
+	stackPrint();
 
-	int (*coFunc1)() = func1;
-	int (*coFunc2)() = func2;
+	return 0;
+	if(!setjmp(mainTask)) func1(0);
+	if(!setjmp(mainTask)) func1(1);
+
+
 	while(1)
 	{
-		coFunc1();
-		coFunc2();
-		//func1();
-		//func2();
+		//func1(0);
+		//func1(1);
+		printf("Main\n");
+		if(!setjmp(mainTask)) longjmp(tsk[0], 1);
+		if(!setjmp(mainTask)) longjmp(tsk[1], 1);
 	}
 }
 
 
-int func1()
+int func1(int tn)
 {
-	CORO_START;
-	int static state = 0;
-	int static blah = 0;
-	writeLn("I should not get called when resuming\r\n");
+	char space[10000];
+	space[9999] = 1;
+	//CORO_START;
+	int state = 0;
+	int blah = 0;
+	int tskNo = tn;
+	printf("I should not get called when resuming: %d\n", tskNo);
 	while(1)
 	{
-		CORO_YIELD;
 
-		char buffer[20];
-		sprintf(buffer, "hello from func1: %d\r\n", blah ++);
-		writeLn(buffer);
+		if(!setjmp(tsk[tskNo])) longjmp(mainTask, 1);
+		
+		/*
+		if(!setjmp(tsk[tskNo]))
+		{
+			CORO_YIELD;
+			longjmp(tsk[tskNo], 0);
+		}
+		*/
 
-		//delay_ms(1000);
+		printf("hello from func1(%d): %d\r\n", tskNo, blah ++);
 	}
 }
 
-int func2()
+int func2(int tskNo)
 {
 	CORO_START;
-	int static state = 0;
-	int static blah = 0;
-	writeLn("I should not get called when resuming\r\n");
+	int state = 0;
+	int blah = 0;
+	printf("I should not get called when resuming\r\n");
 	while(1)
 	{
-		CORO_YIELD;
+		//if(!setjmp(childTask2))
+		{
+			CORO_YIELD;
+			//longjmp(childTask2, 1);
+		}
 
 		char buffer[20];
-		sprintf(buffer, "hello from func2: %d\r\n", blah ++);
-		writeLn(buffer);
-
-		//delay_ms(1000);
+		printf("hello from func2: %d\r\n", blah ++);
 	}
 }
 
