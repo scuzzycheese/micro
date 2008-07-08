@@ -7,9 +7,7 @@ format:
 _stackPrint:
 	pushl %ebp
 	movl %esp,%ebp
-	pushl $0 
-#	movl 8(%ebp),%edx
-#	addl $10,%edx
+	pushl $format
 	call _printf
 	movl $0,%eax
 	leave
