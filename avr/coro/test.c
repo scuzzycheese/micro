@@ -44,13 +44,22 @@ int main(int argc, char **argv)
 	char c = 'b';
 	stack_growth(&c);
 
-	int esp = 0;
-	int ebp = 0;
-
-	__asm__ ("movl %%esp, %%eax\n"
-				"movl %%ebp, %%ebx\n" : "=a"(esp), "=b"(ebp));
-	printf("ESP OUTER: %d\n", esp);
-	printf("EBP OUTER: %d\n", ebp);
+	int stackData[20];
+	//Save our registers!
+	__asm__
+	(
+		"movl %%ebx, (%%eax)\n" 
+		"movl %%esi, (4)(%%eax)\n"
+		"movl %%edi, (8)(%%eax)\n"
+		"movl %%esp, (12)(%%eax)\n"
+		"movl %%ecx, (16)(%%eax)\n"
+		"movl %%ebp, (20)(%%eax)\n"
+		
+		:
+		:"a"(stackData)
+	);
+	printf("ESP OUTER: %d\n", stackData[3]);
+	printf("EBP OUTER: %d\n", stackData[5]);
 
 	stackPrint();
 
