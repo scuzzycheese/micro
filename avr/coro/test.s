@@ -1,13 +1,27 @@
 .data
 format:
-	.string "hello"
+	.string "EBP: %d\nESP: %d\nEDI: %d\n"
 
 .text
 .global _stackPrint
 _stackPrint:
 	pushl %ebp
-	movl %esp,%ebp
+	movl %esp, %ebp
+
+	#movl %edi, %eax
+	#pushl %eax
+	pushl %edi
+
+	#movl %esp, %eax
+	#pushl %eax
+	pushl %esp
+
+	#movl %ebp, %eax
+	#pushl %eax
+	pushl %ebp
+
 	pushl $format
+
 	call _printf
 	movl $0,%eax
 	leave

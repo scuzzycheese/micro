@@ -30,8 +30,34 @@ int yielder()
 int func1(int tskNo);
 int func2(int tskNo);
 
-int main()
+//a simple method to determine the direction of the stack growth.
+void stack_growth(char *function_parameter)
 {
+	char local;
+	if(&local > function_parameter) printf("The stack grows up\n");
+	else printf("The stack grows down\n");
+}
+
+
+int main(int argc, char **argv)
+{
+
+	char c = 'b';
+	stack_growth(&c);
+
+	int esp1 = 0;
+	int ebp1 = 0;
+	int esp2 = 0;
+	int ebp2 = 0;
+
+	__asm__ ("movl %%esp, %%eax\n"
+				"movl %%ebp, %%ebx\n" : "=a"(esp1), "=b"(ebp1));
+	__asm__ ("movl %%esp, %%eax\n"
+				"movl %%ebp, %%ebx\n" : "=a"(esp2), "=b"(ebp2));
+	printf("ESP1: %d\n", esp1);
+	printf("EBP1: %d\n", ebp1);
+	printf("ESP2: %d\n", esp2);
+	printf("EBP3: %d\n", ebp2);
 
 	stackPrint();
 
