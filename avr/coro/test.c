@@ -38,11 +38,21 @@ void stack_growth(char *function_parameter)
 	else printf("The stack grows down\n");
 }
 
+void blah()
+{
+}
+
 int main(int argc, char **argv)
 {
 
 	char c = 'b';
 	stack_growth(&c);
+
+	//Allocate roughly 10k
+	void *newStackBegPointer = malloc(10000);
+	void *newStackData = newStackBegPointer + 9999;
+	//Because on an intel, our stack grows down, we need to place this pointer at the end of the allocated space
+	printf("NEW STACK SPACE ADDRESS: %X\n", newStackData);
 
 	int stackData[20];
 	//Save our registers!
@@ -58,10 +68,41 @@ int main(int argc, char **argv)
 		:
 		:"a"(stackData)
 	);
-	printf("ESP OUTER: %d\n", stackData[3]);
-	printf("EBP OUTER: %d\n", stackData[5]);
+	printf("ESP OUTER: %X\n", stackData[3]);
+	printf("EBP OUTER: %X\n", stackData[5]);
+	int ESP = stackData[3];
+	int EBP = stackData[5];
 
+
+	//Set out stack to point to the allocated space, see if it works
+	__asm__
+	(
+		"movl %%eax, %%ebp\n"
+		"movl %%eax, %%esp\n"
+		
+		:
+		:"a"(newStackData)
+	);
+	blah();
+	//Restore our stack pointers
+	__asm__
+	(
+		//"movl (%%eax), %%ebx\n"
+		//"movl (4)(%%eax), %%esi\n"
+		//"movl (8)(%%eax), %%edi\n"
+		"movl (12)(%%eax), %%esp\n"
+		"movl (16)(%%eax), %%ecx\n"
+		"movl (20)(%%eax), %%ebp\n"
+		
+		:
+		:"a"(stackData)
+	);
+
+
+	printf("finished stack manipulation\n");
+	
 	stackPrint();
+	printf("Finished calling stackPrint()\n");
 
 	return 0;
 	if(!setjmp(mainTask)) func1(0);

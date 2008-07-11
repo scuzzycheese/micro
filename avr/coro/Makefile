@@ -1,8 +1,9 @@
 all: asm
-	gcc -o test test.c a.out
+	gcc -g3 -o test test.c a.out
 
-asm:
+asm: 
 	as test.s
 
 clean:
 	rm test.exe
+	rm a.out

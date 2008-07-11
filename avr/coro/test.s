@@ -14,6 +14,9 @@ _stackPrint:
 	pushl $format
 
 	call _printf
-	movl $0,%eax
-	leave
-	RET
+
+	#(leave)set esp = ebp then pop ebp off the stack (esp + 4)
+	movl %ebp, %esp
+	popl %ebp
+
+	ret
