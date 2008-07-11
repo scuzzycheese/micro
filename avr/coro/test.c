@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include <windows.h>
+#include <stdlib.h>
+//#include <windows.h>
 #include <setjmp.h>
 
 
@@ -40,6 +41,7 @@ void stack_growth(char *function_parameter)
 
 void blah()
 {
+	printf("hello from blah()\n");
 }
 
 int main(int argc, char **argv)
@@ -54,7 +56,7 @@ int main(int argc, char **argv)
 	//Because on an intel, our stack grows down, we need to place this pointer at the end of the allocated space
 	printf("NEW STACK SPACE ADDRESS: %X\n", newStackData);
 
-	int stackData[20];
+	static int stackData[20];
 	//Save our registers!
 	__asm__
 	(

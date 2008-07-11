@@ -1,5 +1,5 @@
 all: asm
-	gcc -g3 -o test test.c a.out
+	gcc -g3 -o test a.out test.c
 
 asm: 
 	as test.s
