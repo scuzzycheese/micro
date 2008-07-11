@@ -2,6 +2,7 @@
 #include <stdlib.h>
 //#include <windows.h>
 #include <setjmp.h>
+#include "coroData.h"
 
 
 jmp_buf tsk[3], mainTsk[3], mainTask;
@@ -41,6 +42,10 @@ void stack_growth(char *function_parameter)
 
 void blah()
 {
+
+	int blah[1000];
+	blah[999] = 6;
+
 	printf("hello from blah()\n");
 }
 
@@ -56,54 +61,31 @@ int main(int argc, char **argv)
 	//Because on an intel, our stack grows down, we need to place this pointer at the end of the allocated space
 	printf("NEW STACK SPACE ADDRESS: %X\n", newStackData);
 
-	static int stackData[20];
+	static int stackData[8];
 	//Save our registers!
-	__asm__
-	(
-		"movl %%ebx, (%%eax)\n" 
-		"movl %%esi, (4)(%%eax)\n"
-		"movl %%edi, (8)(%%eax)\n"
-		"movl %%esp, (12)(%%eax)\n"
-		"movl %%ecx, (16)(%%eax)\n"
-		"movl %%ebp, (20)(%%eax)\n"
-		
-		:
-		:"a"(stackData)
-	);
+	regSave(stackData);
+
+
 	printf("ESP OUTER: %X\n", stackData[3]);
 	printf("EBP OUTER: %X\n", stackData[5]);
-	int ESP = stackData[3];
-	int EBP = stackData[5];
+	//int ESP = stackData[3];
+	//int EBP = stackData[5];
 
 
-	//Set out stack to point to the allocated space, see if it works
-	__asm__
-	(
-		"movl %%eax, %%ebp\n"
-		"movl %%eax, %%esp\n"
-		
-		:
-		:"a"(newStackData)
-	);
+	//Set our stack to point to the allocated space, see if it works
+	setStack(newStackData);
 	blah();
+	stackPrint();
 	//Restore our stack pointers
-	__asm__
-	(
-		//"movl (%%eax), %%ebx\n"
-		//"movl (4)(%%eax), %%esi\n"
-		//"movl (8)(%%eax), %%edi\n"
-		"movl (12)(%%eax), %%esp\n"
-		"movl (16)(%%eax), %%ecx\n"
-		"movl (20)(%%eax), %%ebp\n"
-		
-		:
-		:"a"(stackData)
-	);
+	regRestore(stackData);
 
 
 	printf("finished stack manipulation\n");
-	
+
+	free(newStackBegPointer);
+
 	stackPrint();
+	
 	printf("Finished calling stackPrint()\n");
 
 	return 0;
