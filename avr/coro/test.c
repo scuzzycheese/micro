@@ -61,23 +61,20 @@ int main(int argc, char **argv)
 	//Because on an intel, our stack grows down, we need to place this pointer at the end of the allocated space
 	printf("NEW STACK SPACE ADDRESS: %X\n", newStackData);
 
-	static int stackData[8];
+	//This needs to be static otherwise we end up with an interesting problem
+	//that we can't get back to this data once the stack has been changed (duh)
+	static coStData stackData;
+
 	//Save our registers!
-	regSave(stackData);
-
-
-	printf("ESP OUTER: %X\n", stackData[3]);
-	printf("EBP OUTER: %X\n", stackData[5]);
-	//int ESP = stackData[3];
-	//int EBP = stackData[5];
-
-
+	regSave(&stackData);
 	//Set our stack to point to the allocated space, see if it works
 	setStack(newStackData);
-	blah();
-	stackPrint();
+	stackData.jmpTo = blah;
+	jmpToAdd(stackData.jmpTo);
+	//call our routine
+	//blah();
 	//Restore our stack pointers
-	regRestore(stackData);
+	regRestore(&stackData);
 
 
 	printf("finished stack manipulation\n");

@@ -2,6 +2,29 @@
 #define CORODATAH
 
 
+typedef struct
+{
+	int ebx;
+	int esi;
+	int edi;
+	int esp;
+	int ecx;
+	int ebp;
+	int jmpFrom;
+	int jmpTo;
+	int status;
+} coStData;
+
+static int stackData[9];
+
+#define jmpToAdd(add) __asm__ \
+	( \
+		"jmpl %%eax" \
+		\
+		: \
+		:"a"(add) \
+	)
+
 #define setStack(sp) __asm__ \
 	( \
 		"movl %%eax, %%ebp\n" \
