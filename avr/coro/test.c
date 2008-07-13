@@ -40,20 +40,30 @@ void stack_growth(char *function_parameter)
 	else printf("The stack grows down\n");
 }
 
+static coStData stackData;
+
 void blah()
 {
 
 	int blah[1000];
 	blah[999] = 6;
 
-	printf("hello from blah()\n");
+	printf("Starting blah()\n");
+
+	stackData.status = 1;
+	getExecAdd(stackData.jmpTo, 1);	
+	jmpToAdd(stackData.jmpFrom);
+
+	printf("Ending blah()\n");
 }
+
 
 int main(int argc, char **argv)
 {
 
 	char c = 'b';
 	stack_growth(&c);
+	
 
 	//Allocate roughly 10k
 	void *newStackBegPointer = malloc(10000);
@@ -63,16 +73,28 @@ int main(int argc, char **argv)
 
 	//This needs to be static otherwise we end up with an interesting problem
 	//that we can't get back to this data once the stack has been changed (duh)
-	static coStData stackData;
+
+	printf("OFFSET: %d\n", OFFSET(coStData, ebx));
 
 	//Save our registers!
 	regSave(&stackData);
 	//Set our stack to point to the allocated space, see if it works
-	setStack(newStackData);
+
+	stackData.status = 0;
 	stackData.jmpTo = blah;
-	jmpToAdd(stackData.jmpTo);
-	//call our routine
-	//blah();
+
+	//the order of these next few lines, is very important
+	setStack(newStackData);
+	getExecAdd(stackData.jmpFrom, 0);
+	if(stackData.status == 0)
+	{
+		callToAdd(stackData.jmpTo);
+	}
+	else
+	{
+		//save the old stack data
+		//maybe
+	}
 	//Restore our stack pointers
 	regRestore(&stackData);
 
