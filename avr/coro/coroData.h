@@ -54,7 +54,7 @@ typedef struct
 //this will result in EAX being trashed
 //This would be so much easier if I just had access to the current
 //execution address(thanks intel)
-#define getExecAdd(add,num) __asm__ \
+#define getExecAdd(add,num) __asm__ __volatile__ \
 ( \
 	"call getEIP" #num "\n" \
 	"pushl $0\n" \

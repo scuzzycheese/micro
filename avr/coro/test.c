@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <windows.h>
+//#include <windows.h>
 #include <setjmp.h>
 #include "coroData.h"
 
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
 			regSave(&routineRegs);
 		}
 		regRestore(&mainRegs);
-		Sleep(1000);
+		sleep(1);
 		printf("End loop\n");
 	}
 	
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
 
 	free(newStackBegPointer);
 
-	stackPrint();
+	//stackPrint();
 	
 	printf("Finished calling stackPrint()\n");
 
