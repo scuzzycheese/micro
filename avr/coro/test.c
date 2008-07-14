@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include <windows.h>
+#include <windows.h>
 #include <setjmp.h>
 #include "coroData.h"
 
@@ -40,7 +40,8 @@ void stack_growth(char *function_parameter)
 	else printf("The stack grows down\n");
 }
 
-static coStData stackData;
+__volatile__ static coStData mainRegs;
+__volatile__ static coStData routineRegs;
 
 void blah()
 {
@@ -50,11 +51,19 @@ void blah()
 
 	printf("Starting blah()\n");
 
-	stackData.status = 1;
-	getExecAdd(stackData.jmpTo, 1);	
-	jmpToAdd(stackData.jmpFrom);
+	while(1)
+	{
+		printf("looping in blah()\n");
 
-	printf("Ending blah()\n");
+		//This should be wrapped up in a yield
+		setStatus(routineRegs.status, JMPFROM, JMPFROMROUTINE);
+		getExecAdd(routineRegs.retAdd, 0);
+		if(getStatus(routineRegs.status, JMPFROM) == JMPFROMROUTINE)
+		{
+			jmpToAdd(mainRegs.retAdd);
+		}
+	}
+
 }
 
 
@@ -76,28 +85,44 @@ int main(int argc, char **argv)
 
 	printf("OFFSET: %d\n", OFFSET(coStData, ebx));
 
-	//Save our registers!
-	regSave(&stackData);
-	//Set our stack to point to the allocated space, see if it works
+	//set up the status for our routine, and where it begins
+	setStatus(routineRegs.status, JMPFROM, JMPFROMMAIN);
+	setStatus(routineRegs.status, CALLTYPE, CALL);
+	routineRegs.retAdd = blah;
 
-	stackData.status = 0;
-	stackData.jmpTo = blah;
-
-	//the order of these next few lines, is very important
-	setStack(newStackData);
-	getExecAdd(stackData.jmpFrom, 0);
-	if(stackData.status == 0)
+	while(1)
 	{
-		callToAdd(stackData.jmpTo);
+		printf("Begin loop\n");
+		regSave(&mainRegs);
+		setStatus(routineRegs.status, JMPFROM, JMPFROMMAIN);
+		getExecAdd(mainRegs.retAdd, 1);
+		printf("STATUS: %d - %d\n", getStatus(routineRegs.status, JMPFROM), JMPFROMMAIN);
+		if(getStatus(routineRegs.status, JMPFROM) == JMPFROMMAIN)
+		{
+			printf("GOT IN\n");
+			if(getStatus(routineRegs.status, CALLTYPE) == CALL)
+			{
+				//We should onyl get in here once per routine,
+				//there after we jmp back, not call back
+				setStatus(routineRegs.status, CALLTYPE, JMP);
+				setStack(newStackData);
+				callToAdd(routineRegs.retAdd);
+			}
+			else
+			{
+				regRestore(&routineRegs);
+				jmpToAdd(routineRegs.retAdd);
+			}
+		}
+		else
+		{
+			regSave(&routineRegs);
+		}
+		regRestore(&mainRegs);
+		Sleep(1000);
+		printf("End loop\n");
 	}
-	else
-	{
-		//save the old stack data
-		//maybe
-	}
-	//Restore our stack pointers
-	regRestore(&stackData);
-
+	
 
 	printf("finished stack manipulation\n");
 

@@ -3,8 +3,8 @@ format:
 	.string "EBP: %X\nESP: %X\n"
 
 .text
-.global stackPrint
-stackPrint:
+.global _stackPrint
+_stackPrint:
 	pushl %ebp
 	movl %esp, %ebp
 
@@ -13,7 +13,7 @@ stackPrint:
 
 	pushl $format
 
-	call printf
+	call _printf
 
 	#(leave)set esp = ebp then pop ebp off the stack (esp + 4)
 	movl %ebp, %esp

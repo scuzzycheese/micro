@@ -10,10 +10,25 @@ typedef struct
 	int esp;
 	int ecx;
 	int ebp;
-	int jmpFrom;
-	int jmpTo;
-	int status;
+	int retAdd;
+	char status;
 } coStData;
+
+
+//Different status depending on where we jump from
+#define JMPFROMMAIN 0
+#define JMPFROMROUTINE 1
+
+//Different jump types
+#define CALL 0
+#define JMP 1
+
+//bitfields to define where abouts we are in the call
+#define JMPFROM 0
+#define CALLTYPE 1
+
+#define setStatus(chr,field,value) chr |= (value << field)
+#define getStatus(chr,field) chr & (1 << field)
 
 
 #define OFFSET(obj,mem) (int)&(((obj *)NULL)->mem)
