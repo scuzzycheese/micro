@@ -45,13 +45,10 @@ __volatile__ static coStData routineRegs;
 
 void blah()
 {
-
-	int blah[1000];
-	blah[999] = 6;
-
+	int count = 0;
 	printf("Starting blah()\n");
 
-	while(1)
+	while(count < 6)
 	{
 		printf("looping in blah()\n");
 
@@ -62,7 +59,9 @@ void blah()
 		{
 			jmpToAdd(mainRegs.retAdd);
 		}
+		count ++;
 	}
+	//I need to add some assembly, to make this routine "unschedule"
 
 }
 
