@@ -66,7 +66,7 @@ void blah(int i)
 #ifdef WIN32
 		Sleep(1000);
 #else
-		sleep(1);
+		//sleep(1);
 #endif
 		count ++;
 	}
@@ -100,12 +100,14 @@ int main(int argc, char **argv)
 
 	printf("OFFSET: %d\n", OFFSET(coStData, ebx));
 
+	//set up the info required for routine 0
 	routineRegs[0].jmpStatus = JMPFROMMAIN;
 	routineRegs[0].callStatus = CALL;
 	routineRegs[0].finished = 0;
 	routineRegs[0].sheduled = 1;
 	routineRegs[0].retAdd = blah;
 
+	//set up the info required for routine 1
 	routineRegs[1].jmpStatus = JMPFROMMAIN;
 	routineRegs[1].callStatus = CALL;
 	routineRegs[1].finished = 0;
@@ -141,6 +143,10 @@ int main(int argc, char **argv)
 			}
 			else
 			{
+				//in theory, this should not be called, if the task is unsheduled or finished(tho finished doesn't really matter)
+				//because it'll be saving the registers of another routine to it's own store, which is bad.
+				//TODO: I have to figure out how to let a thread unshedule ittself, but stull get it to save it's
+				//registers (this may require the thread always saving it's own registers)
 				regSave(&routineRegs[routineId]);
 			}
 			regRestore(&mainRegs);
