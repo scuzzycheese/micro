@@ -43,28 +43,37 @@ void stack_growth(char *function_parameter)
 }
 
 __volatile__ static coStData mainRegs;
-__volatile__ static coStData routineRegs;
+__volatile__ static coStData routineRegs[2];
+static int routineId;
 
-void blah()
+void blah(int i)
 {
 	int count = 0;
 	printf("Starting blah()\n");
 
 	while(count < 6)
 	{
-		printf("looping in blah()\n");
+		printf("looping in blah() routineId: %d count: %d\n", routineId, count);
 
 		//This should be wrapped up in a yield
-		routineRegs.jmpStatus = JMPFROMROUTINE;
-		getExecAdd(routineRegs.retAdd, 0);
-		if(routineRegs.jmpStatus == JMPFROMROUTINE)
+		routineRegs[routineId].jmpStatus = JMPFROMROUTINE;
+		getExecAdd(routineRegs[routineId].retAdd, 0);
+		if(routineRegs[routineId].jmpStatus == JMPFROMROUTINE)
 		{
 			jmpToAdd(mainRegs.retAdd);
 		}
+
+#ifdef WIN32
+		Sleep(1000);
+#else
+		sleep(1);
+#endif
 		count ++;
 	}
+	
+	//This stuff needs to be wrapped in a macro
 	//we are finished.
-	routineRegs.finished = 1;
+	routineRegs[routineId].finished = 1;
 	//i think it's always safe to jump back
 	jmpToAdd(mainRegs.retAdd);
 }
@@ -75,10 +84,14 @@ int main(int argc, char **argv)
 	char c = 'b';
 	stack_growth(&c);
 	
+	//Allocate roughly 10k per thread
+	void *newStackBegPointer[2]; 
+	newStackBegPointer[0] = malloc(10000);
+	newStackBegPointer[1] = malloc(10000);
+	void *newStackData[2];
+	newStackData[0] = newStackBegPointer[0] + 9999;
+	newStackData[1] = newStackBegPointer[1] + 9999;
 
-	//Allocate roughly 10k
-	void *newStackBegPointer = malloc(10000);
-	void *newStackData = newStackBegPointer + 9999;
 	//Because on an intel, our stack grows down, we need to place this pointer at the end of the allocated space
 	printf("NEW STACK SPACE ADDRESS: %X\n", newStackData);
 
@@ -87,52 +100,59 @@ int main(int argc, char **argv)
 
 	printf("OFFSET: %d\n", OFFSET(coStData, ebx));
 
-	routineRegs.jmpStatus = JMPFROMMAIN;
-	routineRegs.callStatus = CALL;
-	routineRegs.finished = 0;
-	routineRegs.sheduled = 1;
-	routineRegs.retAdd = blah;
+	routineRegs[0].jmpStatus = JMPFROMMAIN;
+	routineRegs[0].callStatus = CALL;
+	routineRegs[0].finished = 0;
+	routineRegs[0].sheduled = 1;
+	routineRegs[0].retAdd = blah;
+
+	routineRegs[1].jmpStatus = JMPFROMMAIN;
+	routineRegs[1].callStatus = CALL;
+	routineRegs[1].finished = 0;
+	routineRegs[1].sheduled = 1;
+	routineRegs[1].retAdd = blah;
 
 	while(1)
 	{
-		printf("Begin loop\n");
-		regSave(&mainRegs);
-		routineRegs.jmpStatus = JMPFROMMAIN;
-		getExecAdd(mainRegs.retAdd, 1);
-		//This might be a few too many checks
-		if(routineRegs.jmpStatus == JMPFROMMAIN && !(routineRegs.finished) && routineRegs.sheduled)
+		for(routineId = 0; routineId < 2; routineId ++)
 		{
-			if(routineRegs.callStatus == CALL)
+			printf("Begin loop\n");
+			regSave(&mainRegs);
+			routineRegs[routineId].jmpStatus = JMPFROMMAIN;
+			getExecAdd(mainRegs.retAdd, 1);
+			//This might be a few too many checks
+			if(routineRegs[routineId].jmpStatus == JMPFROMMAIN && !(routineRegs[routineId].finished) && routineRegs[routineId].sheduled)
 			{
-				//We should onyl get in here once per routine,
-				//there after we jmp back, not call back
-				routineRegs.callStatus = JMP;
-				setStack(newStackData);
-				callToAdd(routineRegs.retAdd);
+				if(routineRegs[routineId].callStatus == CALL)
+				{
+					//We should onyl get in here once per routine,
+					//there after we jmp back, not call back
+					routineRegs[routineId].callStatus = JMP;
+					//point the stack to the new data
+					setStack(newStackData[routineId]);
+					//call our function
+					callToAdd(routineRegs[routineId].retAdd);
+				}
+				else
+				{
+					regRestore(&routineRegs[routineId]);
+					jmpToAdd(routineRegs[routineId].retAdd);
+				}
 			}
 			else
 			{
-				regRestore(&routineRegs);
-				jmpToAdd(routineRegs.retAdd);
+				regSave(&routineRegs[routineId]);
 			}
+			regRestore(&mainRegs);
+			printf("End loop\n");
 		}
-		else
-		{
-			regSave(&routineRegs);
-		}
-		regRestore(&mainRegs);
-#ifdef WIN32
-		Sleep(1000);
-#else
-		sleep(1);
-#endif
-		printf("End loop\n");
 	}
+		
 	
-
 	printf("finished stack manipulation\n");
 
-	free(newStackBegPointer);
+	free(newStackBegPointer[0]);
+	free(newStackBegPointer[1]);
 
 	//stackPrint();
 	
