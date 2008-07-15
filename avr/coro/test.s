@@ -13,7 +13,7 @@ stackPrint:
 
 	pushl $format
 
-	call printf
+	call _printf
 
 	#(leave)set esp = ebp then pop ebp off the stack (esp + 4)
 	movl %ebp, %esp

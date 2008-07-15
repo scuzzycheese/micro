@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include <windows.h>
+#include <windows.h>
 #include <setjmp.h>
 #include "coroData.h"
 
@@ -56,16 +56,15 @@ void blah()
 		printf("looping in blah()\n");
 
 		//This should be wrapped up in a yield
-		setStatus(routineRegs.status, JMPFROM, JMPFROMROUTINE);
+		routineRegs.jmpStatus = JMPFROMROUTINE;
 		getExecAdd(routineRegs.retAdd, 0);
-		if(getStatus(routineRegs.status, JMPFROM) == JMPFROMROUTINE)
+		if(routineRegs.jmpStatus == JMPFROMROUTINE)
 		{
 			jmpToAdd(mainRegs.retAdd);
 		}
 	}
 
 }
-
 
 int main(int argc, char **argv)
 {
@@ -85,26 +84,23 @@ int main(int argc, char **argv)
 
 	printf("OFFSET: %d\n", OFFSET(coStData, ebx));
 
-	//set up the status for our routine, and where it begins
-	setStatus(routineRegs.status, JMPFROM, JMPFROMMAIN);
-	setStatus(routineRegs.status, CALLTYPE, CALL);
+	routineRegs.jmpStatus = JMPFROMMAIN;
+	routineRegs.callStatus = CALL;
 	routineRegs.retAdd = blah;
 
 	while(1)
 	{
 		printf("Begin loop\n");
 		regSave(&mainRegs);
-		setStatus(routineRegs.status, JMPFROM, JMPFROMMAIN);
+		routineRegs.jmpStatus, JMPFROMMAIN;
 		getExecAdd(mainRegs.retAdd, 1);
-		printf("STATUS: %d - %d\n", getStatus(routineRegs.status, JMPFROM), JMPFROMMAIN);
-		if(getStatus(routineRegs.status, JMPFROM) == JMPFROMMAIN)
+		if(routineRegs.jmpStatus == JMPFROMMAIN)
 		{
-			printf("GOT IN\n");
-			if(getStatus(routineRegs.status, CALLTYPE) == CALL)
+			if(routineRegs.jmpStatus == CALL)
 			{
 				//We should onyl get in here once per routine,
 				//there after we jmp back, not call back
-				setStatus(routineRegs.status, CALLTYPE, JMP);
+				routineRegs.callStatus = JMP;
 				setStack(newStackData);
 				callToAdd(routineRegs.retAdd);
 			}
@@ -119,7 +115,7 @@ int main(int argc, char **argv)
 			regSave(&routineRegs);
 		}
 		regRestore(&mainRegs);
-		sleep(1);
+		Sleep(1000);
 		printf("End loop\n");
 	}
 	
