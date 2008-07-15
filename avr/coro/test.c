@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <windows.h>
 #include <setjmp.h>
 #include "coroData.h"
 
+#ifdef WIN32
+	#include <windows.h>
+#endif
 
 jmp_buf tsk[3], mainTsk[3], mainTask;
 
@@ -61,8 +63,10 @@ void blah()
 		}
 		count ++;
 	}
-	//I need to add some assembly, to make this routine "unschedule"
-
+	//we are finished.
+	routineRegs.finished = 1;
+	//i think it's always safe to jump back
+	jmpToAdd(mainRegs.retAdd);
 }
 
 int main(int argc, char **argv)
@@ -85,6 +89,8 @@ int main(int argc, char **argv)
 
 	routineRegs.jmpStatus = JMPFROMMAIN;
 	routineRegs.callStatus = CALL;
+	routineRegs.finished = 0;
+	routineRegs.scheduled = 1;
 	routineRegs.retAdd = blah;
 
 	while(1)
@@ -93,7 +99,8 @@ int main(int argc, char **argv)
 		regSave(&mainRegs);
 		routineRegs.jmpStatus = JMPFROMMAIN;
 		getExecAdd(mainRegs.retAdd, 1);
-		if(routineRegs.jmpStatus == JMPFROMMAIN)
+		//This might be a few too many checks
+		if(routineRegs.jmpStatus == JMPFROMMAIN && !(routineRegs.finished) && routineRegs.sheduled)
 		{
 			if(routineRegs.callStatus == CALL)
 			{
@@ -114,7 +121,11 @@ int main(int argc, char **argv)
 			regSave(&routineRegs);
 		}
 		regRestore(&mainRegs);
+#ifdef WIN32
 		Sleep(1000);
+#else
+		sleep(1);
+#endif
 		printf("End loop\n");
 	}
 	

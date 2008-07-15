@@ -13,6 +13,8 @@ typedef struct
 	int retAdd;
 	char jmpStatus;
 	char callStatus;
+	char finished;
+	char sheduled;
 } coStData;
 
 
