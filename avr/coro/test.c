@@ -92,11 +92,11 @@ int main(int argc, char **argv)
 	{
 		printf("Begin loop\n");
 		regSave(&mainRegs);
-		routineRegs.jmpStatus, JMPFROMMAIN;
+		routineRegs.jmpStatus = JMPFROMMAIN;
 		getExecAdd(mainRegs.retAdd, 1);
 		if(routineRegs.jmpStatus == JMPFROMMAIN)
 		{
-			if(routineRegs.jmpStatus == CALL)
+			if(routineRegs.callStatus == CALL)
 			{
 				//We should onyl get in here once per routine,
 				//there after we jmp back, not call back
