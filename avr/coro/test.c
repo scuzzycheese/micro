@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 	routineRegs.jmpStatus = JMPFROMMAIN;
 	routineRegs.callStatus = CALL;
 	routineRegs.finished = 0;
-	routineRegs.scheduled = 1;
+	routineRegs.sheduled = 1;
 	routineRegs.retAdd = blah;
 
 	while(1)
