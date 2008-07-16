@@ -78,9 +78,14 @@ void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize)
 	regs->SP = regs->mallocStack + (stackSize - 1);
 }
 
-
-void fibres_start(__volatile__ coStData *routineRegs)
+//TODO:
+//		The scheduler needs to be more dynamic (routineId) and more...
+void fibres_start(__volatile__ coStData *rRegs)
 {
+	//This is a nasty hack, to make this work
+	static __volatile__ coStData *routineRegs;
+	routineRegs = rRegs;
+
 	printf("blah: \t\t\t\t%X\n", blah);
 	printf("routineRegs[0].retAdd: \t\t%X\n", routineRegs[routineId].retAdd);
 	printf("routineRegs[0].mallocStack: \t%X\n", routineRegs[routineId].mallocStack);
@@ -140,50 +145,6 @@ int main(int argc, char **argv)
 	//start the fibres
 	fibres_start(routineRegs);
 
-
-
-
-	printf("blah: \t\t\t\t%X\n", blah);
-	printf("routineRegs[0].retAdd: \t\t%X\n", routineRegs[routineId].retAdd);
-	printf("routineRegs[0].mallocStack: \t%X\n", routineRegs[routineId].mallocStack);
-	printf("routineRegs[0].SP: \t\t%X\n", routineRegs[routineId].SP);
-
-	while(1)
-	{
-		for(routineId = 0; routineId < 2; routineId ++)
-		{
-			printf("Begin loop\n");
-			regSave(&mainRegs);
-			routineRegs[routineId].jmpStatus = JMPFROMMAIN;
-			getExecAdd(mainRegs.retAdd);
-			//This might be a few too many checks
-			if(routineRegs[routineId].jmpStatus == JMPFROMMAIN && !(routineRegs[routineId].finished) && routineRegs[routineId].sheduled)
-			{
-				if(routineRegs[routineId].callStatus == CALL)
-				{
-					//We should onyl get in here once per routine,
-					//there after we jmp back, not call back
-					routineRegs[routineId].callStatus = JMP;
-					//point the stack to the new data
-					setStack(routineRegs[routineId].SP);
-					//call our function
-					callToAdd(routineRegs[routineId].retAdd);
-				}
-				else
-				{
-					regRestore(&routineRegs[routineId]);
-					jmpToAdd(routineRegs[routineId].retAdd);
-				}
-			}
-			regRestore(&mainRegs);
-			printf("End loop\n");
-		}
-	}
-
-
-	
-		
-	
 	printf("finished stack manipulation\n");
 
 	//free(newStackBegPointer[0]);
