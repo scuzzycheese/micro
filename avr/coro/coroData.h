@@ -1,6 +1,7 @@
 #ifndef CORODATAH
 #define CORODATAH
 
+typedef void (*fibreType)();
 
 typedef struct
 {
@@ -10,11 +11,13 @@ typedef struct
 	int esp;
 	int ecx;
 	int ebp;
-	int retAdd;
+	fibreType retAdd;
 	char jmpStatus;
 	char callStatus;
 	char finished;
 	char sheduled;
+	void *SP;
+	void *mallocStack;
 } coStData;
 
 

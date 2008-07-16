@@ -29,7 +29,7 @@ int flog(int id)
 	return id;
 }
 
-void blah(int i)
+void blah()
 {
 	int count = 0;
 	printf("Starting blah()\n");
@@ -67,41 +67,86 @@ void blah(int i)
 	jmpToAdd(mainRegs.retAdd);
 }
 
+void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize)
+{
+	regs->jmpStatus = JMPFROMMAIN;
+	regs->callStatus = CALL;
+	regs->finished = 0;
+	regs->sheduled = 1;
+	regs->retAdd = rAdd;
+	regs->mallocStack = malloc(stackSize);
+	regs->SP = regs->mallocStack + (stackSize - 1);
+}
+
+
+void fibres_start(__volatile__ coStData *routineRegs)
+{
+	printf("blah: \t\t\t\t%X\n", blah);
+	printf("routineRegs[0].retAdd: \t\t%X\n", routineRegs[routineId].retAdd);
+	printf("routineRegs[0].mallocStack: \t%X\n", routineRegs[routineId].mallocStack);
+	printf("routineRegs[0].SP: \t\t%X\n", routineRegs[routineId].SP);
+	while(1)
+	{
+		for(routineId = 0; routineId < 2; routineId ++)
+		{
+			printf("Begin loop\n");
+			regSave(&mainRegs);
+			routineRegs[routineId].jmpStatus = JMPFROMMAIN;
+			getExecAdd(mainRegs.retAdd);
+			//This might be a few too many checks
+			if(routineRegs[routineId].jmpStatus == JMPFROMMAIN && !(routineRegs[routineId].finished) && routineRegs[routineId].sheduled)
+			{
+				if(routineRegs[routineId].callStatus == CALL)
+				{
+					//We should onyl get in here once per routine,
+					//there after we jmp back, not call back
+					routineRegs[routineId].callStatus = JMP;
+					//point the stack to the new data
+					setStack(routineRegs[routineId].SP);
+					//call our function
+					callToAdd(routineRegs[routineId].retAdd);
+				}
+				else
+				{
+					regRestore(&routineRegs[routineId]);
+					jmpToAdd(routineRegs[routineId].retAdd);
+				}
+			}
+			regRestore(&mainRegs);
+			printf("End loop\n");
+		}
+	}
+}
+
+
 int main(int argc, char **argv)
 {
 
 	char c = 'b';
 	stack_growth(&c);
 	
-	//Allocate roughly 10k per thread
-	void *newStackBegPointer[2]; 
-	newStackBegPointer[0] = malloc(10000);
-	newStackBegPointer[1] = malloc(10000);
-	void *newStackData[2];
-	newStackData[0] = newStackBegPointer[0] + 9999;
-	newStackData[1] = newStackBegPointer[1] + 9999;
-
 	//Because on an intel, our stack grows down, we need to place this pointer at the end of the allocated space
-	printf("NEW STACK SPACE ADDRESS: %X\n", newStackData);
+	//printf("NEW STACK SPACE ADDRESS: %X\n", newStackData);
 
 	//This needs to be static otherwise we end up with an interesting problem
 	//that we can't get back to this data once the stack has been changed (duh)
 
 	printf("OFFSET: %d\n", OFFSET(coStData, ebx));
 
-	//set up the info required for routine 0
-	routineRegs[0].jmpStatus = JMPFROMMAIN;
-	routineRegs[0].callStatus = CALL;
-	routineRegs[0].finished = 0;
-	routineRegs[0].sheduled = 1;
-	routineRegs[0].retAdd = blah;
+	//set up the fibres
+	fibre_create(&(routineRegs[0]), blah, 1000);
+	fibre_create(&(routineRegs[1]), blah, 1000);
 
-	//set up the info required for routine 1
-	routineRegs[1].jmpStatus = JMPFROMMAIN;
-	routineRegs[1].callStatus = CALL;
-	routineRegs[1].finished = 0;
-	routineRegs[1].sheduled = 1;
-	routineRegs[1].retAdd = blah;
+	//start the fibres
+	fibres_start(routineRegs);
+
+
+
+
+	printf("blah: \t\t\t\t%X\n", blah);
+	printf("routineRegs[0].retAdd: \t\t%X\n", routineRegs[routineId].retAdd);
+	printf("routineRegs[0].mallocStack: \t%X\n", routineRegs[routineId].mallocStack);
+	printf("routineRegs[0].SP: \t\t%X\n", routineRegs[routineId].SP);
 
 	while(1)
 	{
@@ -120,7 +165,7 @@ int main(int argc, char **argv)
 					//there after we jmp back, not call back
 					routineRegs[routineId].callStatus = JMP;
 					//point the stack to the new data
-					setStack(newStackData[routineId]);
+					setStack(routineRegs[routineId].SP);
 					//call our function
 					callToAdd(routineRegs[routineId].retAdd);
 				}
@@ -130,25 +175,19 @@ int main(int argc, char **argv)
 					jmpToAdd(routineRegs[routineId].retAdd);
 				}
 			}
-			else
-			{
-				//in theory, this should not be called, if the task is unsheduled or finished(tho finished doesn't really matter)
-				//because it'll be saving the registers of another routine to it's own store, which is bad.
-				//TODO: I have to figure out how to let a thread unshedule ittself, but stull get it to save it's
-				//registers (this may require the thread always saving it's own registers)
-				//UPDATE: I think it's better to let the routine handle the saving of it's registers and stack information
-				//regSave(&routineRegs[routineId]);
-			}
 			regRestore(&mainRegs);
 			printf("End loop\n");
 		}
 	}
+
+
+	
 		
 	
 	printf("finished stack manipulation\n");
 
-	free(newStackBegPointer[0]);
-	free(newStackBegPointer[1]);
+	//free(newStackBegPointer[0]);
+	//free(newStackBegPointer[1]);
 
 	//stackPrint();
 	
