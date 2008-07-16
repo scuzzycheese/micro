@@ -43,7 +43,7 @@ void blah(int i)
 
 		//This should be wrapped up in a yield
 		routineRegs[routineId].jmpStatus = JMPFROMROUTINE;
-		getExecAdd(routineRegs[routineId].retAdd, 0);
+		getExecAdd(routineRegs[routineId].retAdd);
 		if(routineRegs[routineId].jmpStatus == JMPFROMROUTINE)
 		{
 			//I think it's safer for the routine to save it's own registers and stack data
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 			printf("Begin loop\n");
 			regSave(&mainRegs);
 			routineRegs[routineId].jmpStatus = JMPFROMMAIN;
-			getExecAdd(mainRegs.retAdd, 1);
+			getExecAdd(mainRegs.retAdd);
 			//This might be a few too many checks
 			if(routineRegs[routineId].jmpStatus == JMPFROMMAIN && !(routineRegs[routineId].finished) && routineRegs[routineId].sheduled)
 			{
