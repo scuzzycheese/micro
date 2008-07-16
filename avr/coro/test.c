@@ -46,6 +46,12 @@ __volatile__ static coStData mainRegs;
 __volatile__ static coStData routineRegs[2];
 static int routineId;
 
+int flog(int id)
+{
+	printf("HI FROM FLOG: %d\n", id);
+	return id;
+}
+
 void blah(int i)
 {
 	int count = 0;
@@ -53,20 +59,26 @@ void blah(int i)
 
 	while(count < 6)
 	{
+		//for some reason, printf behaves strangely in windows when it has a new stack.
+		//sounds like hackery jiggery going on underneith
 		printf("looping in blah() routineId: %d count: %d\n", routineId, count);
+		flog(routineId);
 
 		//This should be wrapped up in a yield
 		routineRegs[routineId].jmpStatus = JMPFROMROUTINE;
 		getExecAdd(routineRegs[routineId].retAdd, 0);
 		if(routineRegs[routineId].jmpStatus == JMPFROMROUTINE)
 		{
+			//I think it's safer for the routine to save it's own registers and stack data
+			//it means that it can self unschedule
+			regSave(&routineRegs[routineId]);
 			jmpToAdd(mainRegs.retAdd);
 		}
 
 #ifdef WIN32
 		Sleep(1000);
 #else
-		//sleep(1);
+		sleep(1);
 #endif
 		count ++;
 	}
@@ -147,7 +159,8 @@ int main(int argc, char **argv)
 				//because it'll be saving the registers of another routine to it's own store, which is bad.
 				//TODO: I have to figure out how to let a thread unshedule ittself, but stull get it to save it's
 				//registers (this may require the thread always saving it's own registers)
-				regSave(&routineRegs[routineId]);
+				//UPDATE: I think it's better to let the routine handle the saving of it's registers and stack information
+				//regSave(&routineRegs[routineId]);
 			}
 			regRestore(&mainRegs);
 			printf("End loop\n");
