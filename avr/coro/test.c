@@ -18,6 +18,27 @@ int flog(int id)
 	return id;
 }
 
+
+void fibre_yield()
+{
+	routineRegs[routineId].jmpStatus = JMPFROMROUTINE;
+	getExecAdd(routineRegs[routineId].retAdd);
+	if(routineRegs[routineId].jmpStatus == JMPFROMROUTINE)
+	{
+		//I think it's safer for the routine to save it's own registers and stack data
+		//it means that it can self unschedule
+		regSave(&routineRegs[routineId]);
+		jmpToAdd(mainRegs.retAdd);
+	}
+}
+
+void fibre_end()
+{
+	routineRegs[routineId].finished = 1;
+	//i think it's always safe to jump back
+	jmpToAdd(mainRegs.retAdd);
+}
+
 void blah()
 {
 	int count = 0;
@@ -30,31 +51,14 @@ void blah()
 		printf("looping in blah() routineId: %d count: %d\n", routineId, count);
 		flog(routineId);
 
-		//This should be wrapped up in a yield
-		routineRegs[routineId].jmpStatus = JMPFROMROUTINE;
-		getExecAdd(routineRegs[routineId].retAdd);
-		if(routineRegs[routineId].jmpStatus == JMPFROMROUTINE)
-		{
-			//I think it's safer for the routine to save it's own registers and stack data
-			//it means that it can self unschedule
-			regSave(&routineRegs[routineId]);
-			jmpToAdd(mainRegs.retAdd);
-		}
+		fibre_yield();
 
-#ifdef WIN32
-		Sleep(1000);
-#else
-		sleep(1);
-#endif
 		count ++;
 	}
-	
-	//This stuff needs to be wrapped in a macro
-	//we are finished.
-	routineRegs[routineId].finished = 1;
-	//i think it's always safe to jump back
-	jmpToAdd(mainRegs.retAdd);
+	//if you don't put this on, it's all gonna be bad!
+	fibre_end();
 }
+
 
 void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize, int *coRoSem)
 {
