@@ -7,17 +7,6 @@
 	#include <windows.h>
 #endif
 
-jmp_buf tsk[3], mainTsk[3], mainTask;
-
-
-
-//a simple method to determine the direction of the stack growth.
-void stack_growth(char *function_parameter)
-{
-	char local;
-	if(&local > function_parameter) printf("The stack grows up\n");
-	else printf("The stack grows down\n");
-}
 
 __volatile__ static coStData mainRegs;
 __volatile__ static coStData routineRegs[2];
@@ -67,7 +56,7 @@ void blah()
 	jmpToAdd(mainRegs.retAdd);
 }
 
-void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize)
+void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize, int *coRoSem)
 {
 	regs->jmpStatus = JMPFROMMAIN;
 	regs->callStatus = CALL;
@@ -76,23 +65,26 @@ void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize)
 	regs->retAdd = rAdd;
 	regs->mallocStack = malloc(stackSize);
 	regs->SP = regs->mallocStack + (stackSize - 1);
+
+	(*coRoSem) ++;
 }
 
 //TODO:
 //		The scheduler needs to be more dynamic (routineId) and more...
-void fibres_start(__volatile__ coStData *rRegs)
+void fibres_start(__volatile__ coStData *rRegs, int *coRoSem)
 {
-	//This is a nasty hack, to make this work
+	//This is a nasty hack, to make sure that nothing
+	//we access is on a stack (which we can't get to)
 	static __volatile__ coStData *routineRegs;
 	routineRegs = rRegs;
 
-	printf("blah: \t\t\t\t%X\n", blah);
-	printf("routineRegs[0].retAdd: \t\t%X\n", routineRegs[routineId].retAdd);
-	printf("routineRegs[0].mallocStack: \t%X\n", routineRegs[routineId].mallocStack);
-	printf("routineRegs[0].SP: \t\t%X\n", routineRegs[routineId].SP);
-	while(1)
+	int numOfRoutines = (*coRoSem);
+
+	//This is the sheduler, it needs lots of work
+	//and carefully
+	while((*coRoSem))
 	{
-		for(routineId = 0; routineId < 2; routineId ++)
+		for(routineId = 0; routineId < numOfRoutines; routineId ++)
 		{
 			printf("Begin loop\n");
 			regSave(&mainRegs);
@@ -118,6 +110,12 @@ void fibres_start(__volatile__ coStData *rRegs)
 				}
 			}
 			regRestore(&mainRegs);
+			if(routineRegs[routineId].finished)
+			{
+				//now that our routine is finished, get rid of it's stack
+				free(routineRegs[routineId].mallocStack);
+				(*coRoSem) --;
+			}
 			printf("End loop\n");
 		}
 	}
@@ -127,32 +125,15 @@ void fibres_start(__volatile__ coStData *rRegs)
 int main(int argc, char **argv)
 {
 
-	char c = 'b';
-	stack_growth(&c);
-	
-	//Because on an intel, our stack grows down, we need to place this pointer at the end of the allocated space
-	//printf("NEW STACK SPACE ADDRESS: %X\n", newStackData);
-
-	//This needs to be static otherwise we end up with an interesting problem
-	//that we can't get back to this data once the stack has been changed (duh)
-
-	printf("OFFSET: %d\n", OFFSET(coStData, ebx));
-
+	int crs = 0;
 	//set up the fibres
-	fibre_create(&(routineRegs[0]), blah, 1000);
-	fibre_create(&(routineRegs[1]), blah, 1000);
+	fibre_create(&(routineRegs[0]), blah, 1000, &crs);
+	fibre_create(&(routineRegs[1]), blah, 1000, &crs);
 
 	//start the fibres
-	fibres_start(routineRegs);
+	fibres_start(routineRegs, &crs);
 
-	printf("finished stack manipulation\n");
-
-	//free(newStackBegPointer[0]);
-	//free(newStackBegPointer[1]);
-
-	//stackPrint();
-	
-	printf("Finished calling stackPrint()\n");
+	printf("Fibres both finished\n");
 
 	return 0;
 }
