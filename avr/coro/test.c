@@ -19,6 +19,7 @@ int flog(int id)
 }
 
 
+//this has to get routineRegs dynamically
 void fibre_yield()
 {
 	routineRegs[routineId].jmpStatus = JMPFROMROUTINE;
@@ -32,6 +33,7 @@ void fibre_yield()
 	}
 }
 
+//this has to get routineRegs dynamically
 void fibre_end()
 {
 	routineRegs[routineId].finished = 1;
@@ -51,6 +53,7 @@ void blah()
 		printf("looping in blah() routineId: %d count: %d\n", routineId, count);
 		flog(routineId);
 
+		//Let this decide if I should yield or not
 		fibre_yield();
 
 		count ++;
