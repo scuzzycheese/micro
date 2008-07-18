@@ -3,6 +3,8 @@
 
 typedef void (*fibreType)();
 
+//if you change the order of this struct, you're gonna have to
+//change the assembler 
 typedef struct
 {
 	int ebx;
