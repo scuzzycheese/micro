@@ -9,8 +9,6 @@
 
 
 __volatile__ static coStData mainRegs;
-__volatile__ static coStData routineRegs[2];
-static int routineId;
 
 int flog(int id)
 {
@@ -20,28 +18,28 @@ int flog(int id)
 
 
 //this has to get routineRegs dynamically
-void fibre_yield()
+void fibre_yield(coStData *rt)
 {
-	routineRegs[routineId].jmpStatus = JMPFROMROUTINE;
-	getExecAdd(routineRegs[routineId].retAdd);
-	if(routineRegs[routineId].jmpStatus == JMPFROMROUTINE)
+	rt->jmpStatus = JMPFROMROUTINE;
+	getExecAdd(rt->retAdd);
+	if(rt->jmpStatus == JMPFROMROUTINE)
 	{
 		//I think it's safer for the routine to save it's own registers and stack data
 		//it means that it can self unschedule
-		regSave(&routineRegs[routineId]);
+		regSave(rt);
 		jmpToAdd(mainRegs.retAdd);
 	}
 }
 
 //this has to get routineRegs dynamically
-void fibre_end()
+void fibre_end(coStData *rt)
 {
-	routineRegs[routineId].finished = 1;
+	rt->finished = 1;
 	//i think it's always safe to jump back
 	jmpToAdd(mainRegs.retAdd);
 }
 
-void blah()
+void blah(coStData *rt)
 {
 	int count = 0;
 	printf("Starting blah()\n");
@@ -50,16 +48,16 @@ void blah()
 	{
 		//for some reason, printf behaves strangely in windows when it has a new stack.
 		//sounds like hackery jiggery going on underneith
-		printf("looping in blah() routineId: %d count: %d\n", routineId, count);
-		flog(routineId);
+		printf("looping in blah() count: %d\n", count);
+		//flog(routineId);
 
 		//Let this decide if I should yield or not
-		fibre_yield();
+		fibre_yield(rt);
 
 		count ++;
 	}
 	//if you don't put this on, it's all gonna be bad!
-	fibre_end();
+	fibre_end(rt);
 }
 
 
@@ -78,14 +76,10 @@ void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize, in
 
 //TODO:
 //		The scheduler needs to be more dynamic (routineId) and more...
-void fibres_start(__volatile__ coStData *rRegs, int *coRoSem)
+void fibres_start(coStData *routineRegs, int *coRoSem)
 {
-	//This is a nasty hack, to make sure that nothing
-	//we access is on a stack (which we can't get to)
-	static __volatile__ coStData *routineRegs;
-	routineRegs = rRegs;
-
 	int numOfRoutines = (*coRoSem);
+	int routineId;
 
 	//This is the sheduler, it needs lots of work
 	//and carefully
@@ -94,9 +88,12 @@ void fibres_start(__volatile__ coStData *rRegs, int *coRoSem)
 		for(routineId = 0; routineId < numOfRoutines; routineId ++)
 		{
 			printf("Begin loop\n");
-			regSave(&mainRegs);
 			routineRegs[routineId].jmpStatus = JMPFROMMAIN;
+
+			regSave(&mainRegs);
 			getExecAdd(mainRegs.retAdd);
+			regRestore(&mainRegs);
+
 			//This might be a few too many checks
 			if(routineRegs[routineId].jmpStatus == JMPFROMMAIN && !(routineRegs[routineId].finished) && routineRegs[routineId].sheduled)
 			{
@@ -105,18 +102,32 @@ void fibres_start(__volatile__ coStData *rRegs, int *coRoSem)
 					//We should onyl get in here once per routine,
 					//there after we jmp back, not call back
 					routineRegs[routineId].callStatus = JMP;
+
+					//copy a pointer to the specific routine's reg data structure
+					//onto it's stack so it's passed in as an argument
+					routineRegs[routineId].SP += sizeof(coStData *);
+					*((coStData **)routineRegs[routineId].SP) = &(routineRegs[routineId]);
+
+					//This is designed to replace to two calls below
+					setStackAndCallToAdd(routineRegs[routineId].SP, routineRegs[routineId].retAdd);
+					/*
 					//point the stack to the new data
 					setStack(routineRegs[routineId].SP);
+
 					//call our function
 					callToAdd(routineRegs[routineId].retAdd);
+					*/
 				}
 				else
 				{
+					//This is designed to replace to two calls below
+					regRestoreAndJmpToAdd(&routineRegs[routineId]);
+					/*
 					regRestore(&routineRegs[routineId]);
 					jmpToAdd(routineRegs[routineId].retAdd);
+					*/
 				}
 			}
-			regRestore(&mainRegs);
 			if(routineRegs[routineId].finished)
 			{
 				//now that our routine is finished, get rid of it's stack
@@ -132,6 +143,7 @@ void fibres_start(__volatile__ coStData *rRegs, int *coRoSem)
 int main(int argc, char **argv)
 {
 
+	coStData routineRegs[2];
 	int crs = 0;
 	//set up the fibres
 	fibre_create(&(routineRegs[0]), blah, 1000, &crs);

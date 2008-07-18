@@ -31,6 +31,27 @@ typedef struct
 
 #define OFFSET(obj,mem) (int)&(((obj *)NULL)->mem)
 
+
+//This is a hopefull combination of setStack and callToAdd
+#define setStackAndCallToAdd(sp,add) __asm__ \
+( \
+	"movl %%eax, %%ebp\n" \
+	"movl %%eax, %%esp\n" \
+	"call *%%ebx\n" \
+	\
+	: \
+	:"a"(sp),"b"(add) \
+)
+
+#define setStack(sp) __asm__ \
+( \
+	"movl %%eax, %%ebp\n" \
+	"movl %%eax, %%esp\n" \
+	\
+	: \
+	:"a"(sp) \
+)
+
 #define callToAdd(add) __asm__ \
 ( \
 	"call *%%eax" \
@@ -63,16 +84,6 @@ typedef struct
 	: \
 )
 
-#define setStack(sp) __asm__ \
-( \
-	"movl %%eax, %%ebp\n" \
-	"movl %%eax, %%esp\n" \
-	\
-	: \
-	:"a"(sp) \
-)
-
-
 #define regSave(buf) __asm__ \
 ( \
 	"movl %%ebx, (%%eax)\n" \
@@ -95,6 +106,21 @@ typedef struct
 	"movl (12)(%%eax), %%esp\n" \
 	"movl (16)(%%eax), %%ecx\n" \
 	"movl (20)(%%eax), %%ebp\n" \
+	\
+	: \
+	:"a"(buf) \
+)
+
+
+#define regRestoreAndJmpToAdd(buf) __asm__ \
+( \
+	"movl (%%eax), %%ebx\n" \
+	"movl (4)(%%eax), %%esi\n" \
+	"movl (8)(%%eax), %%edi\n" \
+	"movl (12)(%%eax), %%esp\n" \
+	"movl (16)(%%eax), %%ecx\n" \
+	"movl (20)(%%eax), %%ebp\n" \
+	"jmp *(24)(%%eax)" \
 	\
 	: \
 	:"a"(buf) \
