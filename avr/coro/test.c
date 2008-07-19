@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <setjmp.h>
 #include "coroData.h"
 
 #ifdef WIN32
@@ -105,7 +104,8 @@ void fibres_start(coStData *routineRegs, int *coRoSem)
 
 					//copy a pointer to the specific routine's reg data structure
 					//onto it's stack so it's passed in as an argument
-					routineRegs[routineId].SP += sizeof(coStData *);
+					//routineRegs[routineId].SP += 4;
+					routineRegs[routineId].SP -= sizeof(coStData *);
 					*((coStData **)routineRegs[routineId].SP) = &(routineRegs[routineId]);
 
 					//This is designed to replace to two calls below
@@ -128,10 +128,11 @@ void fibres_start(coStData *routineRegs, int *coRoSem)
 					*/
 				}
 			}
-			if(routineRegs[routineId].finished)
+			if(routineRegs[routineId].finished && routineRegs[routineId].mallocStack)
 			{
 				//now that our routine is finished, get rid of it's stack
 				free(routineRegs[routineId].mallocStack);
+				routineRegs[routineId].mallocStack = NULL;
 				(*coRoSem) --;
 			}
 			printf("End loop\n");
@@ -146,8 +147,8 @@ int main(int argc, char **argv)
 	coStData routineRegs[2];
 	int crs = 0;
 	//set up the fibres
-	fibre_create(&(routineRegs[0]), blah, 1000, &crs);
-	fibre_create(&(routineRegs[1]), blah, 1000, &crs);
+	fibre_create(&(routineRegs[0]), blah, 10000, &crs);
+	fibre_create(&(routineRegs[1]), blah, 10000, &crs);
 
 	//start the fibres
 	fibres_start(routineRegs, &crs);
