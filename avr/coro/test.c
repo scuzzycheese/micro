@@ -9,13 +9,6 @@
 
 __volatile__ static coStData mainRegs;
 
-int flog(int id)
-{
-	printf("HI FROM FLOG: %d\n", id);
-	return id;
-}
-
-
 //this has to get routineRegs dynamically
 void fibre_yield(coStData *rt)
 {
@@ -73,8 +66,6 @@ void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize, in
 	(*coRoSem) ++;
 }
 
-//TODO:
-//		The scheduler needs to be more dynamic (routineId) and more...
 void fibres_start(coStData *routineRegs, int *coRoSem)
 {
 	int numOfRoutines = (*coRoSem);
@@ -143,8 +134,11 @@ void fibres_start(coStData *routineRegs, int *coRoSem)
 int main(int argc, char **argv)
 {
 
+	printf("Co-Routine storage size: %d\n", sizeof(coStData));
+
 	coStData routineRegs[2];
 	int crs = 0;
+
 	//set up the fibres
 	fibre_create(&(routineRegs[0]), blah, 10000, &crs);
 	fibre_create(&(routineRegs[1]), blah, 10000, &crs);
