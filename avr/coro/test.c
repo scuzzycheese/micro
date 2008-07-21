@@ -104,7 +104,6 @@ void fibres_start(coStData *routineRegs, int *coRoSem)
 
 					//copy a pointer to the specific routine's reg data structure
 					//onto it's stack so it's passed in as an argument
-					//routineRegs[routineId].SP += 4;
 					routineRegs[routineId].SP -= sizeof(coStData *);
 					*((coStData **)routineRegs[routineId].SP) = &(routineRegs[routineId]);
 
