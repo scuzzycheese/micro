@@ -5,7 +5,8 @@ typedef void (*fibreType)();
 
 //if you change the order of this struct, you're gonna have to
 //change the assembler 
-typedef struct
+//NOTE: this is packed, to make it as small as possible
+typedef struct __attribute__ ((__packed__))
 {
 	int ebx;
 	int esi;
@@ -14,14 +15,17 @@ typedef struct
 	int ecx;
 	int ebp;
 	fibreType retAdd;
-	char jmpStatus;
-	char callStatus;
-	char finished;
-	char sheduled;
+	char flags;
+
 	void *SP;
 	void *mallocStack;
 } coStData;
 
+
+#define CALLSTATUS 0
+#define JMPBIT 1
+#define SHEDULED 2
+#define FINISHED 3
 
 //Different status depending on where we jump from
 #define JMPFROMMAIN 0
@@ -32,6 +36,10 @@ typedef struct
 #define JMP 1
 
 #define OFFSET(obj,mem) (int)&(((obj *)NULL)->mem)
+
+#define SETBIT(data,field) (data |= (1 << field))
+#define CLRBIT(data,field) (data &= ~(1 << field))
+#define GETBIT(data,field) ((data & (1 << field)) > 0)
 
 
 //This is a hopefull combination of setStack and callToAdd

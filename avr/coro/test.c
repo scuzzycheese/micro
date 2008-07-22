@@ -12,9 +12,9 @@ __volatile__ static coStData mainRegs;
 //this has to get routineRegs dynamically
 void fibre_yield(coStData *rt)
 {
-	rt->jmpStatus = JMPFROMROUTINE;
+	SETBIT(rt->flags, JMPBIT); // = JMPFROMROUTINE
 	getExecAdd(rt->retAdd);
-	if(rt->jmpStatus == JMPFROMROUTINE)
+	if(GETBIT(rt->flags, JMPBIT) == JMPFROMROUTINE)
 	{
 		//I think it's safer for the routine to save it's own registers and stack data
 		//it means that it can self unschedule
@@ -26,7 +26,7 @@ void fibre_yield(coStData *rt)
 //this has to get routineRegs dynamically
 void fibre_end(coStData *rt)
 {
-	rt->finished = 1;
+	SETBIT(rt->flags, FINISHED);
 	//i think it's always safe to jump back
 	jmpToAdd(mainRegs.retAdd);
 }
@@ -55,10 +55,11 @@ void blah(coStData *rt)
 
 void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize, int *coRoSem)
 {
-	regs->jmpStatus = JMPFROMMAIN;
-	regs->callStatus = CALL;
-	regs->finished = 0;
-	regs->sheduled = 1;
+	CLRBIT(regs->flags, JMPBIT); // = JMPFROMMAIN
+	CLRBIT(regs->flags, CALLSTATUS); // = CALL
+	CLRBIT(regs->flags, FINISHED);
+	SETBIT(regs->flags, SHEDULED);
+
 	regs->retAdd = rAdd;
 	regs->mallocStack = malloc(stackSize);
 	regs->SP = regs->mallocStack + (stackSize - 1);
@@ -78,20 +79,20 @@ void fibres_start(coStData *routineRegs, int *coRoSem)
 		for(routineId = 0; routineId < numOfRoutines; routineId ++)
 		{
 			printf("Begin loop\n");
-			routineRegs[routineId].jmpStatus = JMPFROMMAIN;
+			CLRBIT(routineRegs[routineId].flags, JMPBIT); // = JMPFROMMAIN
 
 			regSave(&mainRegs);
 			getExecAdd(mainRegs.retAdd);
 			regRestore(&mainRegs);
 
 			//This might be a few too many checks
-			if(routineRegs[routineId].jmpStatus == JMPFROMMAIN && !(routineRegs[routineId].finished) && routineRegs[routineId].sheduled)
+			if(GETBIT(routineRegs[routineId].flags, JMPBIT) == JMPFROMMAIN && !GETBIT(routineRegs[routineId].flags, FINISHED) && GETBIT(routineRegs[routineId].flags, SHEDULED))
 			{
-				if(routineRegs[routineId].callStatus == CALL)
+				if(GETBIT(routineRegs[routineId].flags, CALLSTATUS) == CALL)
 				{
 					//We should onyl get in here once per routine,
 					//there after we jmp back, not call back
-					routineRegs[routineId].callStatus = JMP;
+					SETBIT(routineRegs[routineId].flags, CALLSTATUS); // = JMP
 
 					//copy a pointer to the specific routine's reg data structure
 					//onto it's stack so it's passed in as an argument
@@ -118,7 +119,7 @@ void fibres_start(coStData *routineRegs, int *coRoSem)
 					*/
 				}
 			}
-			if(routineRegs[routineId].finished && routineRegs[routineId].mallocStack)
+			if(GETBIT(routineRegs[routineId].flags, FINISHED) && routineRegs[routineId].mallocStack)
 			{
 				//now that our routine is finished, get rid of it's stack
 				free(routineRegs[routineId].mallocStack);
