@@ -36,7 +36,7 @@ void blah(coStData *rt)
 	int count = 0;
 	printf("Starting blah()\n");
 
-	while(count < 6)
+	while(count < 10)
 	{
 		//for some reason, printf behaves strangely in windows when it has a new stack.
 		//sounds like hackery jiggery going on underneith

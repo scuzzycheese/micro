@@ -3,11 +3,11 @@
 
 typedef void (*fibreType)();
 
-//if you change the order of this struct, you're gonna have to
-//change the assembler 
 //NOTE: this is packed, to make it as small as possible
 typedef struct __attribute__ ((__packed__))
 {
+	//the following 7 members have to be in this exact order
+	//at the top of this struct
 	int ebx;
 	int esi;
 	int edi;
