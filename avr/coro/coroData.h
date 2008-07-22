@@ -15,13 +15,15 @@ typedef struct __attribute__ ((__packed__))
 	int ecx;
 	int ebp;
 	fibreType retAdd;
+
+	//These flags contain statuses about the fibre
 	char flags;
 
 	void *SP;
 	void *mallocStack;
 } coStData;
 
-
+//define the bit fields
 #define CALLSTATUS 0
 #define JMPBIT 1
 #define SHEDULED 2
@@ -35,8 +37,10 @@ typedef struct __attribute__ ((__packed__))
 #define CALL 0
 #define JMP 1
 
+//this is to find the offset value of members of structs
 #define OFFSET(obj,mem) (int)&(((obj *)NULL)->mem)
 
+//some helper macros for getting and setting bits
 #define SETBIT(data,field) (data |= (1 << field))
 #define CLRBIT(data,field) (data &= ~(1 << field))
 #define GETBIT(data,field) ((data & (1 << field)) > 0)
