@@ -36,7 +36,7 @@ void blah(coStData *rt)
 	int count = 0;
 	printf("Starting blah()\n");
 
-	while(count < 10)
+	while(count < 4)
 	{
 		//for some reason, printf behaves strangely in windows when it has a new stack.
 		//sounds like hackery jiggery going on underneith
@@ -134,7 +134,6 @@ void fibres_start(coStData *routineRegs, int *coRoSem)
 
 int main(int argc, char **argv)
 {
-
 	printf("Co-Routine storage size: %d\n", sizeof(coStData));
 
 	coStData routineRegs[2];
@@ -147,7 +146,7 @@ int main(int argc, char **argv)
 	//start the fibres
 	fibres_start(routineRegs, &crs);
 
-	printf("Fibres both finished\n");
+	printf("Fibres finished\n");
 
 	return 0;
 }
