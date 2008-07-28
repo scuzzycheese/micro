@@ -132,9 +132,11 @@ int main(int argc, char **argv)
 	coStData routineRegs[2];
 	int crs = 0;
 
+	moo myMoo(4);
+
 	//set up the fibres
-	fibre_create(&(routineRegs[0]), blah, 10000, &crs);
-	fibre_create(&(routineRegs[1]), blah, 10000, &crs);
+	fibre_create(&(routineRegs[0]), myMoo::RunL, 10000, &crs);
+	fibre_create(&(routineRegs[1]), myMoo::RunL, 10000, &crs);
 
 	//start the fibres
 	fibres_start(routineRegs, &crs);

@@ -1,10 +1,12 @@
 #ifndef CORODATAOOH
 #define CORODATAOOH
 
+class moo;
+
 //Some lovely foward declairation
 struct csd;
 
-typedef void (*fibreType)(struct csd *);
+typedef void (moo::*fibreType)(struct csd *);
 
 //NOTE: this is packed, to make it as small as possible
 struct csd 
