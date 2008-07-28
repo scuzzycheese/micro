@@ -1,10 +1,13 @@
 #ifndef CORODATAH
 #define CORODATAH
 
-typedef void (*fibreType)();
+//Some lovely foward declairation
+struct csd;
+
+typedef void (*fibreType)(struct csd *);
 
 //NOTE: this is packed, to make it as small as possible
-typedef struct __attribute__ ((__packed__))
+struct csd 
 {
 	//the following 7 members have to be in this exact order
 	//at the top of this struct
@@ -19,9 +22,11 @@ typedef struct __attribute__ ((__packed__))
 	//These flags contain statuses about the fibre
 	char flags;
 
-	void *SP;
-	void *mallocStack;
-} coStData;
+	char *SP;
+	char *mallocStack;
+} __attribute__ ((__packed__));
+typedef struct csd coStData;
+
 
 //define the bit fields
 #define CALLSTATUS 0

@@ -61,7 +61,7 @@ void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize, in
 	SETBIT(regs->flags, SHEDULED);
 
 	regs->retAdd = rAdd;
-	regs->mallocStack = malloc(stackSize);
+	regs->mallocStack = (char *)malloc(stackSize);
 	regs->SP = regs->mallocStack + (stackSize - 1);
 
 	(*coRoSem) ++;
