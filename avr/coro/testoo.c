@@ -34,7 +34,7 @@ void methodLauncher(coStData *rt)
 }
 
 
-void fibre_create(__volatile__ coStData *regs, moo *obj, int stackSize, int *coRoSem)
+void fibre_create(__volatile__ coStData *regs, baseTest *obj, int stackSize, int *coRoSem)
 {
 	CLRBIT(regs->flags, JMPBIT); // = JMPFROMMAIN
 	CLRBIT(regs->flags, CALLSTATUS); // = CALL
@@ -130,8 +130,8 @@ int main(int argc, char **argv)
 	moo myMoo(4);
 
 	//set up the fibres
-	fibre_create(&(routineRegs[0]), &myMoo, 10000, &crs);
-	fibre_create(&(routineRegs[1]), &myMoo, 10000, &crs);
+	fibre_create(&(routineRegs[0]), (baseTest *)&myMoo, 10000, &crs);
+	fibre_create(&(routineRegs[1]), (baseTest *)&myMoo, 10000, &crs);
 
 	//start the fibres
 	fibres_start(routineRegs, &crs);

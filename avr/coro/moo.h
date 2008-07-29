@@ -6,18 +6,25 @@
 #include "testoo.h"
 #include "coroDataOO.h"
 
-class moo
+
+class baseTest
+{
+	public:
+		virtual void RunL(coStData *rt) = 0;
+};
+
+class moo : baseTest
 {
 	private:
 
-	int internalVal;
+		int internalVal;
 
 	public:
-	moo(int val) : internalVal(val)
-	{
-	}
+		moo(int val) : internalVal(val)
+		{
+		}
 
-	void RunL(coStData *rt);
+		void RunL(coStData *rt);
 };
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef CORODATAOOH
 #define CORODATAOOH
 
-class moo;
+class baseTest;
 
 //Some lovely foward declairation
 struct csd;
@@ -25,7 +25,7 @@ struct csd
 	char flags;
 
 	//This is just a test
-	moo *obj;
+	baseTest *obj;
 
 	char *SP;
 	char *mallocStack;
