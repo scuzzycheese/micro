@@ -1,19 +1,19 @@
 #include "moo.h"
-
+using namespace std;
 void moo::RunL(coStData *rt)
 {
 	int count = 0;
-	printf("Starting RunL()\n");
+	cout << "Starting RunL()" << endl;
 
-	while(count < 4)
+	while(count < 20)
 	{
 		//for some reason, printf behaves strangely in windows when it has a new stack.
 		//sounds like hackery jiggery going on underneith
-		printf("looping in RunL() count: %d, internalVal: %d\n", count, internalVal);
+		cout << "looping in RunL() count: " << count << ", internalVal: " << internalVal << endl;
 		//flog(routineId);
 
 		//Let this decide if I should yield or not
-		fibre_yield(rt);
+		if(count % 2) fibre_yield(rt);
 
 		count ++;
 	}
