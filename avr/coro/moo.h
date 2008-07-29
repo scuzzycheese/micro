@@ -11,6 +11,7 @@ class moo
 
 	int internalVal;
 
+	public:
 	moo(int val) : internalVal(val)
 	{
 	}

@@ -24,36 +24,31 @@ void fibre_end(coStData *rt)
 	jmpToAdd(mainRegs.retAdd);
 }
 
-void blah(coStData *rt)
+
+//We can't execute the RunL method directly in the scheduler, as
+//member function pointers are far more complex than just function
+//pointers, and vary from compiler to compiler on size and complexity
+void methodLauncher(coStData *rt)
 {
-	int count = 0;
-	printf("Starting blah()\n");
-
-	while(count < 4)
-	{
-		//for some reason, printf behaves strangely in windows when it has a new stack.
-		//sounds like hackery jiggery going on underneith
-		printf("looping in blah() count: %d\n", count);
-		//flog(routineId);
-
-		//Let this decide if I should yield or not
-		fibre_yield(rt);
-
-		count ++;
-	}
-	//if you don't put this on, it's all gonna be bad!
-	fibre_end(rt);
+	rt->obj->RunL(rt);
 }
 
 
-void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize, int *coRoSem)
+void fibre_create(__volatile__ coStData *regs, moo *obj, int stackSize, int *coRoSem)
 {
 	CLRBIT(regs->flags, JMPBIT); // = JMPFROMMAIN
 	CLRBIT(regs->flags, CALLSTATUS); // = CALL
 	CLRBIT(regs->flags, FINISHED);
 	SETBIT(regs->flags, SHEDULED);
 
-	regs->retAdd = rAdd;
+	//This is a wrapper system, so that we can launch objects safely
+	//NOTE: this memeber doesn't really need to exist, 
+	//it can just be called directly by the sheduler
+	regs->retAdd = methodLauncher;
+	
+	//object related stuff
+	regs->obj = obj;
+
 	regs->mallocStack = (char *)malloc(stackSize);
 	regs->SP = regs->mallocStack + (stackSize - 1);
 
@@ -135,8 +130,8 @@ int main(int argc, char **argv)
 	moo myMoo(4);
 
 	//set up the fibres
-	fibre_create(&(routineRegs[0]), myMoo::RunL, 10000, &crs);
-	fibre_create(&(routineRegs[1]), myMoo::RunL, 10000, &crs);
+	fibre_create(&(routineRegs[0]), &myMoo, 10000, &crs);
+	fibre_create(&(routineRegs[1]), &myMoo, 10000, &crs);
 
 	//start the fibres
 	fibres_start(routineRegs, &crs);

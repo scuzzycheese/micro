@@ -6,7 +6,7 @@ class moo;
 //Some lovely foward declairation
 struct csd;
 
-typedef void (moo::*fibreType)(struct csd *);
+typedef void (*fibreType)(struct csd *);
 
 //NOTE: this is packed, to make it as small as possible
 struct csd 
@@ -23,6 +23,9 @@ struct csd
 
 	//These flags contain statuses about the fibre
 	char flags;
+
+	//This is just a test
+	moo *obj;
 
 	char *SP;
 	char *mallocStack;

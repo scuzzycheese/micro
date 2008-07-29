@@ -8,6 +8,8 @@
 	#include <windows.h>
 #endif
 
+#include "moo.h"
+
 void fibre_yield(coStData *rt);
 void fibre_end(coStData *rt);
 void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize, int *coRoSem);

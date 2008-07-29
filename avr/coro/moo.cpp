@@ -9,7 +9,7 @@ void moo::RunL(coStData *rt)
 	{
 		//for some reason, printf behaves strangely in windows when it has a new stack.
 		//sounds like hackery jiggery going on underneith
-		printf("looping in RunL() count: %d\n", count);
+		printf("looping in RunL() count: %d, internalVal: %d\n", count, internalVal);
 		//flog(routineId);
 
 		//Let this decide if I should yield or not

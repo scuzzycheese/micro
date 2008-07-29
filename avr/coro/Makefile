@@ -10,5 +10,6 @@ moo.o: moo.cpp moo.h
 	g++ -g3 -c -o moo.o moo.cpp
 
 clean:
-	rm test.exe
-	rm testoo.exe
+	rm -rf test.exe
+	rm -rf testoo.exe
+	rm -rf moo.o
