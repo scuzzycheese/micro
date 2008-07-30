@@ -124,14 +124,16 @@ int main(int argc, char **argv)
 {
 	printf("Co-Routine storage size: %d\n", sizeof(coStData));
 
-	coStData routineRegs[2];
+	coStData routineRegs[3];
 	int crs = 0;
 
 	moo myMoo(4);
+	moo thisAo(10);
 
 	//set up the fibres
 	fibre_create(&(routineRegs[0]), (baseTest *)&myMoo, 10000, &crs);
 	fibre_create(&(routineRegs[1]), (baseTest *)&myMoo, 10000, &crs);
+	fibre_create(&(routineRegs[2]), (baseTest *)&thisAo, 10000, &crs);
 
 	//start the fibres
 	fibres_start(routineRegs, &crs);
