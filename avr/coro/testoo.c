@@ -6,13 +6,16 @@ int main(int argc, char **argv)
 {
 	printf("Co-Routine storage size: %d\n", sizeof(fibre));
 
-	//fibre routineRegs[3];
-
+	//objects to be used in the fibre
 	moo myMoo(4);
 	moo thisAo(10);
 
 	int crs = 0;
+
+	//instantiate our fibre objects
 	fibre fibres[3];
+
+	//configure out fibres
 	fibres[0].setup((baseTest *)&myMoo, 1000, &crs);
 	fibres[1].setup((baseTest *)&myMoo, 1000, &crs);
 	fibres[2].setup((baseTest *)&thisAo, 1000, &crs);
