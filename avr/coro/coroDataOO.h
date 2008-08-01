@@ -4,12 +4,12 @@
 class baseTest;
 
 //Some lovely foward declairation
-struct csd;
+struct fibre;
 
 typedef void (*fibreType)(struct csd *);
 
 //NOTE: this is packed, to make it as small as possible
-struct csd 
+struct fibre
 {
 	//the following 7 members have to be in this exact order
 	//at the top of this struct
@@ -29,8 +29,10 @@ struct csd
 
 	char *SP;
 	char *mallocStack;
+
+	void setup(baseTest *obj, int stackSize, int *coRoSem);
+
 } __attribute__ ((__packed__));
-typedef struct csd coStData;
 
 
 //define the bit fields
