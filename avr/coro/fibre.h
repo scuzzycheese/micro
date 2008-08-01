@@ -6,6 +6,7 @@ class baseTest;
 //Some lovely foward declairation
 struct fibre;
 
+
 typedef void (*fibreType)(fibre *);
 
 //NOTE: this is packed, to make it as small as possible
@@ -32,9 +33,14 @@ struct fibre
 
 	void setup(baseTest *activeObj, int stackSize, int *coRoSem);
 	static void methodLauncher(fibre *rt);
+	static void start(fibre *routineRegs, int *coRoSem);
+	void end();
+	void yield();
 
 } __attribute__ ((__packed__));
 
+//static storage place for main fibre
+__volatile__ static fibre mainRegs;
 
 //define the bit fields
 #define CALLSTATUS 0

@@ -13,11 +13,11 @@ void moo::RunL(fibre *rt)
 		//flog(routineId);
 
 		//Let this decide if I should yield or not
-		if(count % 2) fibre_yield(rt);
+		if(count % 2) rt->yield();
 
 		count ++;
 	}
 	//if you don't put this on, it's all gonna be bad!
 
-	fibre_end(rt);
+	rt->end();
 }
