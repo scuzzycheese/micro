@@ -4,13 +4,13 @@
 #include <stdio.h>
 #include <iostream>
 #include "testoo.h"
-#include "coroDataOO.h"
+#include "fibre.h"
 
 
 class baseTest
 {
 	public:
-		virtual void RunL(coStData *rt) = 0;
+		virtual void RunL(fibre *rt) = 0;
 };
 
 class moo : baseTest
@@ -24,7 +24,7 @@ class moo : baseTest
 		{
 		}
 
-		void RunL(coStData *rt);
+		void RunL(fibre *rt);
 };
 
 #endif

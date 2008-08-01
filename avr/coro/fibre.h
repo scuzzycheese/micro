@@ -1,12 +1,12 @@
-#ifndef CORODATAOOH
-#define CORODATAOOH
+#ifndef FIBREH
+#define FIBREH
 
 class baseTest;
 
 //Some lovely foward declairation
 struct fibre;
 
-typedef void (*fibreType)(struct csd *);
+typedef void (*fibreType)(fibre *);
 
 //NOTE: this is packed, to make it as small as possible
 struct fibre
@@ -30,7 +30,8 @@ struct fibre
 	char *SP;
 	char *mallocStack;
 
-	void setup(baseTest *obj, int stackSize, int *coRoSem);
+	void setup(baseTest *activeObj, int stackSize, int *coRoSem);
+	static void methodLauncher(fibre *rt);
 
 } __attribute__ ((__packed__));
 

@@ -1,9 +1,9 @@
 #include "testoo.h"
 
-__volatile__ static coStData mainRegs;
+__volatile__ static fibre mainRegs;
 
 //this has to get routineRegs dynamically
-void fibre_yield(coStData *rt)
+void fibre_yield(fibre *rt)
 {
 	SETBIT(rt->flags, JMPBIT); // = JMPFROMROUTINE
 	getExecAdd(rt->retAdd);
@@ -17,45 +17,14 @@ void fibre_yield(coStData *rt)
 }
 
 //this has to get routineRegs dynamically
-void fibre_end(coStData *rt)
+void fibre_end(fibre *rt)
 {
 	SETBIT(rt->flags, FINISHED);
 	//i think it's always safe to jump back
 	jmpToAdd(mainRegs.retAdd);
 }
 
-
-//We can't execute the RunL method directly in the scheduler, as
-//member function pointers are far more complex than just function
-//pointers, and vary from compiler to compiler on size and complexity
-void methodLauncher(coStData *rt)
-{
-	rt->obj->RunL(rt);
-}
-
-
-void fibre_create(__volatile__ coStData *regs, baseTest *obj, int stackSize, int *coRoSem)
-{
-	CLRBIT(regs->flags, JMPBIT); // = JMPFROMMAIN
-	CLRBIT(regs->flags, CALLSTATUS); // = CALL
-	CLRBIT(regs->flags, FINISHED);
-	SETBIT(regs->flags, SHEDULED);
-
-	//This is a wrapper system, so that we can launch objects safely
-	//NOTE: this memeber doesn't really need to exist, 
-	//it can just be called directly by the sheduler
-	regs->retAdd = methodLauncher;
-	
-	//object related stuff
-	regs->obj = obj;
-
-	regs->mallocStack = (char *)malloc(stackSize);
-	regs->SP = regs->mallocStack + (stackSize - 1);
-
-	(*coRoSem) ++;
-}
-
-void fibres_start(coStData *routineRegs, int *coRoSem)
+void fibres_start(fibre *routineRegs, int *coRoSem)
 {
 	int numOfRoutines = (*coRoSem);
 	int routineId;
@@ -84,8 +53,8 @@ void fibres_start(coStData *routineRegs, int *coRoSem)
 
 					//copy a pointer to the specific routine's reg data structure
 					//onto it's stack so it's passed in as an argument
-					routineRegs[routineId].SP -= sizeof(coStData *);
-					*((coStData **)routineRegs[routineId].SP) = &(routineRegs[routineId]);
+					routineRegs[routineId].SP -= sizeof(fibre *);
+					*((fibre **)routineRegs[routineId].SP) = &(routineRegs[routineId]);
 
 					//This is designed to replace to two calls below
 					setStackAndCallToAdd(routineRegs[routineId].SP, routineRegs[routineId].retAdd);
@@ -122,9 +91,9 @@ void fibres_start(coStData *routineRegs, int *coRoSem)
 
 int main(int argc, char **argv)
 {
-	printf("Co-Routine storage size: %d\n", sizeof(coStData));
+	printf("Co-Routine storage size: %d\n", sizeof(fibre));
 
-	//coStData routineRegs[3];
+	//fibre routineRegs[3];
 
 	moo myMoo(4);
 	moo thisAo(10);
@@ -136,13 +105,8 @@ int main(int argc, char **argv)
 	fibres[2].setup((baseTest *)&thisAo, 1000, &crs);
 
 
-	//set up the fibres
-	fibre_create(&(routineRegs[0]), (baseTest *)&myMoo, 10000, &crs);
-	fibre_create(&(routineRegs[1]), (baseTest *)&myMoo, 10000, &crs);
-	fibre_create(&(routineRegs[2]), (baseTest *)&thisAo, 10000, &crs);
-
 	//start the fibres
-	fibres_start(routineRegs, &crs);
+	fibres_start(fibres, &crs);
 
 	printf("Fibres finished\n");
 
