@@ -16,3 +16,4 @@ clean:
 	rm -rf test.exe
 	rm -rf testoo.exe
 	rm -rf moo.o
+	rm -rf fibre.o
