@@ -25,12 +25,13 @@ struct fibre
 	//These flags contain statuses about the fibre
 	char flags;
 
-	//This is just a test
+	//this is an instance of the object we are calling the method off
 	baseTest *obj;
 
 	char *SP;
 	char *mallocStack;
 
+	//public methods
 	void setup(baseTest *activeObj, int stackSize, int *coRoSem);
 	static void methodLauncher(fibre *rt);
 	static void start(fibre *routineRegs, int *coRoSem);
