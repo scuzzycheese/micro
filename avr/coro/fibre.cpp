@@ -17,8 +17,6 @@ void fibre::setup(baseTest *activeObj, int stackSize, int *coRoSem)
 	SETBIT(flags, SHEDULED);
 
 	//This is a wrapper system, so that we can launch objects safely
-	//NOTE: this memeber doesn't really need to exist, 
-	//it can just be called directly by the sheduler
 	retAdd = methodLauncher;
 	
 	//object related stuff
