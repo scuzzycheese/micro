@@ -10,7 +10,8 @@
 class baseTest
 {
 	public:
-		virtual void RunL(fibre *rt) = 0;
+		fibre *rt;
+		virtual void RunL() = 0;
 };
 
 class moo : baseTest
@@ -24,7 +25,7 @@ class moo : baseTest
 		{
 		}
 
-		void RunL(fibre *rt);
+		void RunL();
 };
 
 #endif

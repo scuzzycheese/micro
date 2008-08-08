@@ -1,6 +1,6 @@
 #include "moo.h"
 using namespace std;
-void moo::RunL(fibre *rt)
+void moo::RunL()
 {
 	int count = 0;
 	cout << "Starting RunL()" << endl;

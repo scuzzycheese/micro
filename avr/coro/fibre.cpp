@@ -6,7 +6,7 @@
 //pointers, and vary from compiler to compiler on size and complexity
 void fibre::methodLauncher(fibre *rt)
 {
-	rt->obj->RunL(rt);
+	rt->obj->RunL();
 }
 
 void fibre::setup(baseTest *activeObj, int stackSize, int *coRoSem)
@@ -71,6 +71,10 @@ void fibre::start(fibre *routineRegs, int *coRoSem)
 			//This might be a few too many checks
 			if(GETBIT(routineRegs[routineId].flags, JMPBIT) == JMPFROMMAIN && !GETBIT(routineRegs[routineId].flags, FINISHED) && GETBIT(routineRegs[routineId].flags, SHEDULED))
 			{
+				//This is an interesting call, that sets the objects reference to it's
+				//fibre, this is updated dynamically all the time before each call
+				routineRegs[routineId].obj->rt = &(routineRegs[routineId]);
+
 				if(GETBIT(routineRegs[routineId].flags, CALLSTATUS) == CALL)
 				{
 					//We should onyl get in here once per routine,
@@ -81,7 +85,7 @@ void fibre::start(fibre *routineRegs, int *coRoSem)
 					//onto it's stack so it's passed in as an argument
 					routineRegs[routineId].SP -= sizeof(fibre *);
 					*((fibre **)routineRegs[routineId].SP) = &(routineRegs[routineId]);
-
+				
 					//This is designed to replace to two calls below
 					setStackAndCallToAdd(routineRegs[routineId].SP, routineRegs[routineId].retAdd);
 					/*
