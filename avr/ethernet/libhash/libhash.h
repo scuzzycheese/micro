@@ -49,7 +49,7 @@ typedef struct hashIndex **hIndex;
 		 * random data against a key. Very simple to use:<br/>
 		 * 	<b>hshObj myHash = newHashObject();</b>
 		 *
-		 * @author Daine Mamacos <daine.mamacos@complinet.com>
+		 * @author Daine Mamacos <scuzzy@reverseorder.net>
 		 */
 		struct hashObject
 		{
@@ -61,7 +61,7 @@ typedef struct hashIndex **hIndex;
 			ptType (*findIndex)(struct hashObject *, char *, int);
 			ptType (*findIndexString)(struct hashObject *, char *);
 			void (*destruct)(struct hashObject *);
-		};
+		} __attribute__ ((packed));
 		/*use a nice little handle*/
 		typedef struct hashObject *hshObj;
 	

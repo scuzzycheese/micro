@@ -4,7 +4,7 @@ CHIP = -mmcu=atmega644
 #DEBUG= -DDEBUGSOCK
 DEBUG= 
 #OPT = -Os -mcall-prologues
-OPT = -mcall-prologues
+#OPT = -mcall-prologues
 OPTX86 = -g3 -DX86
 
 GENPATH =

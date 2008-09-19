@@ -182,6 +182,19 @@ int main()
 		uip_len = enc28j60PacketReceive(UIP_BUFSIZE, uip_buf);
 		if(uip_len > 0)
 		{
+			/*test
+			int tl = 0;
+			printf("Packet Data: ");
+			fflush(NULL);
+			for(tl = 0; tl < uip_len; tl++)
+			{
+				printf("%X ", uip_buf[tl]);
+				fflush(NULL);
+			}
+			printf("\n");
+			fflush(NULL);
+			test end*/
+
 			#ifdef DEBUGSOCK
 			sprintf(data, "Packet Length: %d\r\n", uip_len);
 			writeLn(data);

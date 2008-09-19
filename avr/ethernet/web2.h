@@ -15,18 +15,18 @@
 #define ISO_colon   0x3a
 #define ISO_question 0x3f 
 
-typedef struct web_state
+typedef struct web_state 
 {
 	struct psock p, po;
 	char inputbuffer[100];
-	char filename[80];
-} uip_tcp_appstate_t;
+	char filename[20];
+} __attribute__ ((packed)) uip_tcp_appstate_t;
 
 typedef struct wrtDta
 {
 	char *data;
 	int state;
-} writeData;
+} __attribute__ ((packed)) writeData;
 
 void web_appcall(void);
 #ifndef UIP_APPCALL

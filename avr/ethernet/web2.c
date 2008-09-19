@@ -8,7 +8,6 @@
 
 static int handle_connection(struct web_state *ws);
 
-//dynld fileObj;
 hshObj fls;
 void web_init(void)
 {
