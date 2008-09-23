@@ -4,10 +4,11 @@
 //This function will soon take an char ** of input vars
 int callFunc(char **vars, struct web_state *ws)
 {
-	
-	char str[3];
+	/*	
+	char str[6];
 	sprintf(str, "%d\r\n", RAMEND - SP);
 	writeLn(str);
+	*/
 	
 
 	PSOCK_BEGIN(&ws->po);
