@@ -12,7 +12,7 @@ hshObj fls;
 void web_init(void)
 {
 	fls = newHashObject();
-	fls->addIndexString(fls, "/index.html", callFunc);
+	fls->addIndexString(fls, "/index.html", indexPage);
 
 	uip_listen(HTONS(80));
 }
@@ -69,15 +69,16 @@ static int handle_connection(struct web_state *ws)
 	}
 */
 
+	//NOTE: This pointer to function still seems to be causing problems
 	//NOTE: This line causes a bug in GCC, BUG 27192
 	//WORKAROUND: don't let the compiler optimise
 	//pageFunc comm = fls->findIndexString(fls, ws->filename);
-	pageFunc comm = callFunc;
+	pageFunc comm = indexPage;
 	if(comm)
 	{
 		writeLn("Calling the page\r\n");
-		//PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
-		PT_WAIT_THREAD(&((&ws->p)->pt), callFunc(NULL, ws));
+		PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
+		//PT_WAIT_THREAD(&((&ws->p)->pt), indexPage(NULL, ws));
 	}
 	else
 	{

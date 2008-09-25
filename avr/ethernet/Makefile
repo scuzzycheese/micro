@@ -3,7 +3,7 @@ CCX86 = gcc
 CHIP = -mmcu=atmega644
 #DEBUG= -DDEBUGSOCK
 DEBUG= 
-#OPT = -Os -mcall-prologues
+OPT = -Os -mcall-prologues
 #OPT = -mcall-prologues
 OPTX86 = -g3 -DX86
 
@@ -49,7 +49,8 @@ ethernet: ethernet.c
 uip: 
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${UIPSTUFF} -o uip.o ${AVRLIBINCLUDES} ${UIPLIBPATH} ${MYPATH}
 service:
-	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${SERVICE} -o service.o ${AVRLIBINCLUDES} ${UIPLIBPATH} ${MYPATH}
+	#don't optimise this module, otherwise it manifests a GCC bug
+	${CC} ${DEBUG} ${CHIP} -c -combine ${SERVICE} -o service.o ${AVRLIBINCLUDES} ${UIPLIBPATH} ${MYPATH}
 avrlib:
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${AVRLIBSTUFF} -o avrlib.o ${AVRLIBINCLUDES} ${AVRLIBPATH} ${MYPATH}
 uart: uart.c uart.h
