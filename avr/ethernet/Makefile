@@ -1,8 +1,7 @@
 CC = avr-gcc
 CCX86 = gcc
 CHIP = -mmcu=atmega644
-#DEBUG= -DDEBUGSOCK
-DEBUG= 
+DEBUG= -DDEBUGSOCK
 OPT = -Os -mcall-prologues
 #OPT = -mcall-prologues
 OPTX86 = -g3 -DX86
@@ -56,7 +55,8 @@ avrlib:
 uart: uart.c uart.h
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${UARTSTUFF} -o uart.o ${AVRLIBINCLUDES} ${MYPATH}
 hash:
-	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine libhash/libhash.c -o libhash/libhash.o ${MYPATH}
+	#don't optimise this module, otherwise it manifests a GCC bug
+	${CC} ${DEBUG} ${CHIP} -c -combine libhash/libhash.c -o libhash/libhash.o ${MYPATH}
 
 modules:
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${INDEX} -o ${INDEXO} ${LIBPATH}

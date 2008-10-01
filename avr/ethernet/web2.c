@@ -77,8 +77,9 @@ static int handle_connection(struct web_state *ws)
 	if(comm)
 	{
 		writeLn("Calling the page\r\n");
-		PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
-		//PT_WAIT_THREAD(&((&ws->p)->pt), indexPage(NULL, ws));
+		asm("nop");
+		//PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
+		PT_WAIT_THREAD(&((&ws->p)->pt), indexPage(NULL, ws));
 	}
 	else
 	{

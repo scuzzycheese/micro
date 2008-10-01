@@ -16,11 +16,11 @@ int indexPage(char **vars, struct web_state *ws)
 	PSOCK_SEND_STR(&ws->po, "\tNIC: Microchip ENC28J60.<br/>");
 	PSOCK_SEND_STR(&ws->po, "\tWebServer: Web2 (Daine Mamacos).<br/>");
 	PSOCK_SEND_STR(&ws->po, "\tTCP/IP stack: uIP<br/>");
-	PSOCK_SEND_STR(&ws->po, "\tIP: 192.168.0.40<br/>");
+	PSOCK_SEND_STR(&ws->po, "\tIP: 192.168.1.40<br/>");
 	if(!light)
 	{
 		PSOCK_SEND_STR(&ws->po, "<a href=\"index.html\">Switch Light Off</a>");
-		PORTC = 2;
+		PORTC |= 2;
 		light = 1;
 	}
 	else
