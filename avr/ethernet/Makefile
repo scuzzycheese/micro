@@ -1,7 +1,7 @@
 CC = avr-gcc
 CCX86 = gcc
 CHIP = -mmcu=atmega644
-DEBUG= -DDEBUGSOCK
+#DEBUG= -DDEBUGSOCK
 OPT = -Os -mcall-prologues
 #OPT = -mcall-prologues
 OPTX86 = -g3 -DX86
@@ -12,7 +12,7 @@ UIPF = ../uip/uip/uip.c
 UIPARP = ../uip/uip/uip_arp.c
 #SERVICE = hello-world.c
 #SERVICE = -Iwebserver webserver/httpd.c webserver/http-strings.c webserver/httpd-fs.c webserver/httpd-cgi.c
-SERVICE = web2.c
+SERVICE = web2.o
 PSOCK = ../uip/uip/psock.c
 CLOCK = clock-arch.c
 TIMER = ../uip/uip/timer.c
@@ -33,34 +33,45 @@ MYPATH = -I. ${GENPATH}
 LIBPATH = ${AVRLIBINCLUDES} ${UIPLIBPATH} ${AVRLIBPATH} ${MYPATH}
 
 #===MODULES===
-INDEX = pages/index.c
-INDEXO = pages/index.o
-IMAGE = pages/image.c
-IMAGEO = pages/image.o
-MODULES = ${INDEXO} ${IMAGEO}
+INDEX = pages/index.o
+IMAGE = pages/image.o
+ERROR404 = pages/404.o
+MODULES = ${INDEX} ${IMAGE} ${ERROR404}
 
 
-all:uip service avrlib uart ethernet hash modules
-	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf ethernet.o uip.o avrlib.o service.o uart.o libhash/libhash.o ${MODULES} -lm ${LIBPATH}
+all:uip.o ${SERVICE} avrlib uart ethernet.o hash ${MODULES}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf ethernet.o uip.o avrlib.o ${SERVICE} uart.o libhash/libhash.o ${MODULES} -lm ${LIBPATH}
 
-ethernet: ethernet.c
+ethernet.o: ethernet.c
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c ethernet.c -o ethernet.o ${LIBPATH}
-uip: 
+
+#this one is complex, and maybe needs all the dependancies figured out
+uip.o: ${UIPSTUFF} 
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${UIPSTUFF} -o uip.o ${AVRLIBINCLUDES} ${UIPLIBPATH} ${MYPATH}
-service:
+
+${SERVICE}: ${SERVICE:.o=.c} ${SERVICE:.o=.h}
 	#don't optimise this module, otherwise it manifests a GCC bug
-	${CC} ${DEBUG} ${CHIP} -c -combine ${SERVICE} -o service.o ${AVRLIBINCLUDES} ${UIPLIBPATH} ${MYPATH}
+	${CC} ${DEBUG} ${CHIP} -c -combine ${SERVICE:.o=.c} -o ${SERVICE} ${AVRLIBINCLUDES} ${UIPLIBPATH} ${MYPATH}
+
 avrlib:
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${AVRLIBSTUFF} -o avrlib.o ${AVRLIBINCLUDES} ${AVRLIBPATH} ${MYPATH}
+
 uart: uart.c uart.h
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${UARTSTUFF} -o uart.o ${AVRLIBINCLUDES} ${MYPATH}
-hash:
+
+hash: libhash/libhash.c libhash/libhash.h
 	#don't optimise this module, otherwise it manifests a GCC bug
 	${CC} ${DEBUG} ${CHIP} -c -combine libhash/libhash.c -o libhash/libhash.o ${MYPATH}
 
-modules:
-	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${INDEX} -o ${INDEXO} ${LIBPATH}
-	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${IMAGE} -o ${IMAGEO} ${LIBPATH}
+#build all our web pages
+${MODULES}: ${@:.o=.c} ${@:.o=.h}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${@:.o=.c} -o $@ ${LIBPATH}
+
+
+
+
+
+
 
 x86:uip-x86 service-x86 uart-x86 ethernet-x86 hash-x86 modules-x86
 	${CCX86} ${DEBUG} ${OPTX86} ${CHIP} -o ethernet ethernet.o uip.o service.o uart.o libhash/libhash.o pages/index.o -lm 
@@ -80,6 +91,10 @@ modules-x86:
 	${CCX86} ${DEBUG} ${OPTX86} -c -combine pages/index-x86.c -o ${INDEXO} ${UIPLIBPATH} ${MYPATH} 
 
 
+
+
+
+
 install: ethernet.elf
 	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
 	avrdude -y -p m644 -c stk200 -e -E noreset -U flash:w:ethernet.hex
@@ -89,4 +104,4 @@ install-dragon: ethernet.elf
 	avrdude -y -p m644 -c dragon_isp -P usb -e -U flash:w:ethernet.hex
 
 clean:
-	rm -Rf uip.o service.o avrlib.o uart.o ethernet.o ethernet ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}
+	rm -Rf uip.o ${SERVICE} avrlib.o uart.o ethernet.o ethernet ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}

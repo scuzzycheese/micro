@@ -7,6 +7,7 @@
 #include "libhash/libhash.h"
 
 static int handle_connection(struct web_state *ws);
+static pageFunc comm = NULL;
 
 hshObj fls;
 void web_init(void)
@@ -54,12 +55,12 @@ static int handle_connection(struct web_state *ws)
 		strncpy(ws->filename, ws->inputbuffer, sizeof(ws->filename));
 	}
 
-	//Send headers. This mechanism needs to be more complex, but it's ok for now
-	PSOCK_SEND_STR(&ws->p, "HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n");
 
+	#ifdef DEBUGSOCK
 	writeLn("PAGE REGUEST: ");
 	writeLn(ws->filename);
 	writeLn("\r\n");
+	#endif
 
 /*
 	char *req = ws->filename;
@@ -69,22 +70,23 @@ static int handle_connection(struct web_state *ws)
 	}
 */
 
-	//NOTE: This pointer to function still seems to be causing problems
 	//NOTE: This line causes a bug in GCC, BUG 27192
 	//WORKAROUND: don't let the compiler optimise
-	//pageFunc comm = fls->findIndexString(fls, ws->filename);
-	pageFunc comm = indexPage;
+	comm = fls->findIndexString(fls, ws->filename);
 	if(comm)
 	{
+		//Send headers. This mechanism needs to be more complex, but it's ok for now
+		PSOCK_SEND_STR(&ws->p, "HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n");
+
+		#ifdef DEBUGSOCK
 		writeLn("Calling the page\r\n");
-		asm("nop");
-		//PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
-		PT_WAIT_THREAD(&((&ws->p)->pt), indexPage(NULL, ws));
+		#endif
+		PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
 	}
 	else
 	{
-		writeLn("404\r\n");
-		//404?
+		PSOCK_SEND_STR(&ws->p, "HTTP/1.0 404 Not Found\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n");
+		PT_WAIT_THREAD(&((&ws->p)->pt), error404(NULL, ws));
 	}
 
 	PSOCK_CLOSE(&ws->p);

@@ -6,9 +6,8 @@ int indexPage(char **vars, struct web_state *ws)
 {
 	PSOCK_BEGIN(&ws->po);
 	DDRC = 0xFF;
-	static int light = 0;
 
-	writeLn("Inside the page\r\n");
+	//writeLn("Inside the page\r\n");
 
 	PSOCK_SEND_STR(&ws->po, "<h1>Atmega 644 webserver</h1>");
 	PSOCK_SEND_STR(&ws->po, "<b>Stats:</b><br/>");
@@ -17,17 +16,15 @@ int indexPage(char **vars, struct web_state *ws)
 	PSOCK_SEND_STR(&ws->po, "\tWebServer: Web2 (Daine Mamacos).<br/>");
 	PSOCK_SEND_STR(&ws->po, "\tTCP/IP stack: uIP<br/>");
 	PSOCK_SEND_STR(&ws->po, "\tIP: 192.168.1.40<br/>");
-	if(!light)
+	if(!(PORTC & (1 << 1)))
 	{
 		PSOCK_SEND_STR(&ws->po, "<a href=\"index.html\">Switch Light Off</a>");
 		PORTC |= 2;
-		light = 1;
 	}
 	else
 	{
 		PSOCK_SEND_STR(&ws->po, "<a href=\"index.html\">Switch Light On</a>");
 		PORTC &= ~(2);
-		light = 0;
 	}
 
 	PSOCK_CLOSE(&ws->po);

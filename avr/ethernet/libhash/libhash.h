@@ -17,7 +17,7 @@ typedef unsigned int uint32_t;
 #endif
 
 
-#define HASHKEYSIZE 10 
+#define HASHKEYSIZE 5 
 
 /**
  * A struct that holds the data inside the hash
