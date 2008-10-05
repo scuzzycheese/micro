@@ -48,9 +48,10 @@ void delay_us(unsigned int n)
 #define G5 637
 #define D6 425
 #define C5 956
-#define DUR 40
+#define NON 0
+#define DUR 4000
 
-int tune2[][2] =
+uint16_t tune2[][2] =
 {
 	{G5, DUR * 2},
 	{B5, DUR * 2},
@@ -65,8 +66,10 @@ int tune2[][2] =
 	{},
 };
 
-int tune1[][2] = 
+uint16_t tune1[][2] = 
 {
+	{D5, DUR}, 
+	{NON, 1}, 
 	{D5, DUR}, 
 	{E5, DUR}, 
 	{D5, DUR}, 
@@ -94,11 +97,9 @@ int tune1[][2] =
 	{0, 0}
 }; 
 
-void play_tone(uint16_t delay, uint8_t duration)
+void play_tone(uint16_t delay, uint16_t duration)
 {
-	uint16_t tmp = 100 * duration;
-	uint16_t delaysm = delay / 50;
-	uint16_t cycles = tmp / delaysm;
+	uint16_t cycles = duration / (delay / 50);
 	
 	while(cycles > 0)
 	{
@@ -132,6 +133,11 @@ int main(void)
 
 	while(1)
 	{
+		MOTOR_ON;
+		delay_ms(250);
+		MOTOR_OFF;
+		delay_ms(250);
+		/*
 		int tunePlace = 0;
 		while(tune1[tunePlace][1])
 		{
@@ -143,16 +149,17 @@ int main(void)
 			if(PIND & (1 << 2)) 
 			{
 				//play_tone(tune1[tunePlace][0], tune1[tunePlace][1]);
-				PORTD |= 1 << 5;	
+				//PORTD |= 1 << 5;	
 			}
 			else
 			{
-				PORTD &= ~(1 << 5);
+				//PORTD &= ~(1 << 5);
 			}
 
 			tunePlace ++;
 		}
 		delay_ms(1000);
+		*/
 	}
 
 	return 0;

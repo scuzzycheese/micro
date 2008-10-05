@@ -288,6 +288,21 @@ uip_arp_arpin(void)
   case HTONS(ARP_REQUEST):
     /* ARP request. If it asked for our address, we send out a
        reply. */
+		/*
+		printf("Dest IP ADDR[0]: %X\n", BUF->dipaddr[0]);
+		printf("Dest IP ADDR[1]: %X\n", BUF->dipaddr[1]);
+		printf("SEQ Dest IP ADDR[0]: %X\n", ((u8_t *)&(BUF->dipaddr[0]))[0]);
+		printf("SEQ Dest IP ADDR[1]: %X\n", ((u8_t *)&(BUF->dipaddr[0]))[1]);
+		printf("SEQ Dest IP ADDR[2]: %X\n", ((u8_t *)&(BUF->dipaddr[1]))[0]);
+		printf("SEQ Dest IP ADDR[3]: %X\n", ((u8_t *)&(BUF->dipaddr[1]))[1]);
+
+		printf("Host IP ADDR[0]: %X\n", uip_hostaddr[0]);
+		printf("Host IP ADDR[1]: %X\n", uip_hostaddr[1]);
+		printf("SEQ Host IP ADDR[0]: %X\n", ((u8_t *)&(uip_hostaddr[0]))[0]);
+		printf("SEQ Host IP ADDR[1]: %X\n", ((u8_t *)&(uip_hostaddr[0]))[1]);
+		printf("SEQ Host IP ADDR[2]: %X\n", ((u8_t *)&(uip_hostaddr[1]))[0]);
+		printf("SEQ Host IP ADDR[3]: %X\n", ((u8_t *)&(uip_hostaddr[1]))[1]);
+		*/
     if(uip_ipaddr_cmp(BUF->dipaddr, uip_hostaddr)) {
       /* First, we register the one who made the request in our ARP
 	 table, since it is likely that we will do more communication

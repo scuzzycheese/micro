@@ -23,12 +23,17 @@ int yielder()
 #define CORO_YIELD { __label__ resume; resume: pt.resume = &&resume; } if(yielder()) return 0
 
 
+int func1();
+int func2();
 int main()
 {
+
+	int (*coFunc1)() = func1;
+	int (*coFunc2)() = func2;
 	while(1)
 	{
-		func1();
-		func2();
+		coFunc1();
+		coFunc2();
 	}
 }
 
