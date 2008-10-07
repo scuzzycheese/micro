@@ -1,6 +1,6 @@
 EAGLE Version 4.16r2 Copyright (c) 1988-2006 CadSoft
 
-Electrical Rule Check for /home/scuzzy/eagle/webserver/webserver.sch at 10/05/2008 02:05:06 
+Electrical Rule Check for /home/scuzzy/devel/micro/pcb/webserver/webserver.sch at 10/07/2008 22:39:10 
 
 WARNING: Sheet 1/1: POWER Pin IC3 AGND connected to GND
 WARNING: Sheet 1/1: POWER Pin IC3 AVCC connected to N$43
