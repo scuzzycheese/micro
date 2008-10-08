@@ -13,6 +13,8 @@
 #include <netpacket/packet.h>
 #include <net/ethernet.h>
 #include <sys/socket.h>
+
+
 #else
 #include "global.h"
 #include <util/delay.h>
@@ -20,6 +22,9 @@
 #include <avr/io.h>
 #include <avr/wdt.h>
 #include "enc28j60.h"
+
+#include <avr/eeprom.h>
+#include <stdio.h>
 #endif
 
 #include <inttypes.h>
@@ -36,6 +41,7 @@
 
 
 //FUSES - HFUSE:99 LFUSE:EF
+//FUSES - HFUSE:91 LFUSE:EF
 
 #ifndef X86
 void WDT_off(void) __attribute__((naked)) __attribute__((section(".init3")));
@@ -159,15 +165,44 @@ int main()
 	}
 	#endif
 
+	//IP address = 0-3 bytes of eeprom
+	//subnet mask = 4-7 bytes of eeprom
+	//default gw = 8-11 bytes of eeprom
+	uint8_t eepromIP[4];
+	eepromIP[0] = eeprom_read_byte((uint8_t *)0);
+	eepromIP[1] = eeprom_read_byte((uint8_t *)1);
+	eepromIP[2] = eeprom_read_byte((uint8_t *)2);
+	eepromIP[3] = eeprom_read_byte((uint8_t *)3);
+
+	uint8_t eepromNM[4];
+	eepromNM[0] = eeprom_read_byte((uint8_t *)4);
+	eepromNM[1] = eeprom_read_byte((uint8_t *)5);
+	eepromNM[2] = eeprom_read_byte((uint8_t *)6);
+	eepromNM[3] = eeprom_read_byte((uint8_t *)7);
+
+	uint8_t eepromDG[4];
+	eepromDG[0] = eeprom_read_byte((uint8_t *)8);
+	eepromDG[1] = eeprom_read_byte((uint8_t *)9);
+	eepromDG[2] = eeprom_read_byte((uint8_t *)10);
+	eepromDG[3] = eeprom_read_byte((uint8_t *)11);
+
+
+	char infoString[50];
+	sprintf(infoString, "IP ADDRESS: %d.%d.%d.%d\r\n", eepromIP[0], eepromIP[1], eepromIP[2], eepromIP[3]);
+	writeLn(infoString);
+	sprintf(infoString, "SUBNET MASK: %d.%d.%d.%d\r\n", eepromNM[0], eepromNM[1], eepromNM[2], eepromNM[3]);
+	writeLn(infoString);
+	sprintf(infoString, "DEFAULT GW: %d.%d.%d.%d\r\n", eepromDG[0], eepromDG[1], eepromDG[2], eepromDG[3]);
+	writeLn(infoString);
+
 	uip_ipaddr_t ipaddr;
-	writeLn("IP ADDRESS: 192.168.1.40\r\n");
-	uip_ipaddr(ipaddr, 192,168,1,40);
+	uip_ipaddr(ipaddr, eepromIP[0], eepromIP[1], eepromIP[2], eepromIP[3]);
 	uip_sethostaddr(ipaddr);
-	writeLn("DEFAULT GW: 192.168.1.1\r\n");
-	uip_ipaddr(ipaddr, 192,168,1,1);
+
+	uip_ipaddr(ipaddr, eepromDG[0], eepromDG[1], eepromDG[2], eepromDG[3]);
 	uip_setdraddr(ipaddr);
-	writeLn("SUBNET MSK: 255.255.255.0\r\n");
-	uip_ipaddr(ipaddr, 255,255,255,0);
+
+	uip_ipaddr(ipaddr, eepromNM[0], eepromNM[1], eepromNM[2], eepromNM[3]);
 	uip_setnetmask(ipaddr);
 
 
