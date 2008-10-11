@@ -92,7 +92,6 @@ static int handle_connection(struct web_state *ws)
 	{
 		if(*req == ISO_equals)
 		{
-			writeLn("found = sign\r\n");
 			*req = 0;
 			req ++;
 			varValue = req;
@@ -101,7 +100,6 @@ static int handle_connection(struct web_state *ws)
 		}
 		if(*req == ISO_amp || !(*req))
 		{
-			writeLn("found & sign\r\n");
 			*req = 0;
 			req ++;
 			varKey = req;
