@@ -1,7 +1,7 @@
 CC = avr-gcc
 CCX86 = gcc
 CHIP = -mmcu=atmega644
-#DEBUG= -DDEBUGSOCK
+DEBUG= -DDEBUGSOCK
 OPT = -Os -mcall-prologues
 #OPT = -mcall-prologues
 OPTX86 = -g3 -DX86

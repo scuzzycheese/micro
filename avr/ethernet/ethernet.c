@@ -168,18 +168,22 @@ int main()
 	//IP address = 0-3 bytes of eeprom
 	//subnet mask = 4-7 bytes of eeprom
 	//default gw = 8-11 bytes of eeprom
+
+	//read the IP addres from eeprom
 	uint8_t eepromIP[4];
 	eepromIP[0] = eeprom_read_byte((uint8_t *)0);
 	eepromIP[1] = eeprom_read_byte((uint8_t *)1);
 	eepromIP[2] = eeprom_read_byte((uint8_t *)2);
 	eepromIP[3] = eeprom_read_byte((uint8_t *)3);
 
+	//read the Netmask addres from eeprom
 	uint8_t eepromNM[4];
 	eepromNM[0] = eeprom_read_byte((uint8_t *)4);
 	eepromNM[1] = eeprom_read_byte((uint8_t *)5);
 	eepromNM[2] = eeprom_read_byte((uint8_t *)6);
 	eepromNM[3] = eeprom_read_byte((uint8_t *)7);
 
+	//read the default GW addres from eeprom
 	uint8_t eepromDG[4];
 	eepromDG[0] = eeprom_read_byte((uint8_t *)8);
 	eepromDG[1] = eeprom_read_byte((uint8_t *)9);

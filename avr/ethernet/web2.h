@@ -14,6 +14,8 @@
 #define ISO_slash   0x2f
 #define ISO_colon   0x3a
 #define ISO_question 0x3f 
+#define ISO_equals  0x3d
+#define ISO_amp 0x26
 
 typedef struct web_state 
 {

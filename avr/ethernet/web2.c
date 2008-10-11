@@ -9,6 +9,9 @@
 static int handle_connection(struct web_state *ws);
 static pageFunc comm = NULL;
 
+//This might be wastefull
+char *getVars[webVarSize * 2];
+
 hshObj fls;
 void web_init(void)
 {
@@ -62,13 +65,58 @@ static int handle_connection(struct web_state *ws)
 	writeLn("\r\n");
 	#endif
 
-/*
+
 	char *req = ws->filename;
 	while(*(req ++))
 	{
 		if(*req == ISO_question) *req = 0;
 	}
-*/
+
+	memset(getVars, 0x00, sizeof(getVars));
+
+	//This is dangrous parsing, that needs to be secured
+	char *varKey = req;
+	char *varValue = NULL;
+
+	//add the first Key to the array
+	int varCount = 0;
+	getVars[varCount] = varKey;
+	varCount ++;
+
+	#ifdef DEBUGSOCK
+	writeLn("varKey at the beginning: ");
+	writeLn(varKey);
+	writeLn("\r\n");
+	#endif
+	while(*(req ++) && varCount < (webVarSize * 2))
+	{
+		if(*req == ISO_equals)
+		{
+			writeLn("found = sign\r\n");
+			*req = 0;
+			req ++;
+			varValue = req;
+			getVars[varCount] = varValue;
+			varCount ++;
+		}
+		if(*req == ISO_amp || !(*req))
+		{
+			writeLn("found & sign\r\n");
+			*req = 0;
+			req ++;
+			varKey = req;
+			#ifdef DEBUGSOCK
+			writeLn("Got Some Vars - KEY: ");
+			writeLn(varKey);
+			writeLn(" VALUE: ");
+			writeLn(varValue);
+			writeLn("\r\n");
+			#endif
+			getVars[varCount] = varKey;
+			varCount ++;
+		}
+	}
+
 
 	//NOTE: This line causes a bug in GCC, BUG 27192
 	//WORKAROUND: don't let the compiler optimise
@@ -81,7 +129,7 @@ static int handle_connection(struct web_state *ws)
 		#ifdef DEBUGSOCK
 		writeLn("Calling the page\r\n");
 		#endif
-		PT_WAIT_THREAD(&((&ws->p)->pt), comm(NULL, ws));
+		PT_WAIT_THREAD(&((&ws->p)->pt), comm(getVars, ws));
 	}
 	else
 	{

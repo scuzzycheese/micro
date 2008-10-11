@@ -7,6 +7,27 @@ int indexPage(char **vars, struct web_state *ws)
 	PSOCK_BEGIN(&ws->po);
 	DDRC = 0xFF;
 
+/*
+	static int counter = 0;
+	while(counter < 10)
+	{
+		if(vars[counter])
+		{
+			PSOCK_SEND_STR(&ws->po, "key: ");
+			PSOCK_SEND_STR(&ws->po, vars[counter]);
+			counter ++;
+			PSOCK_SEND_STR(&ws->po, "<br/> value: ");
+			PSOCK_SEND_STR(&ws->po, vars[counter]);
+			PSOCK_SEND_STR(&ws->po, "<br/>");
+		}
+		counter ++;
+	}
+	//reset the counter
+	counter = 0;
+
+*/
+
+
 	//writeLn("Inside the page\r\n");
 
 	PSOCK_SEND_STR(&ws->po, "<h1>Atmega 644 webserver</h1>");
@@ -16,14 +37,15 @@ int indexPage(char **vars, struct web_state *ws)
 	PSOCK_SEND_STR(&ws->po, "\tWebServer: Web2 (Daine Mamacos).<br/>");
 	PSOCK_SEND_STR(&ws->po, "\tTCP/IP stack: uIP<br/>");
 	PSOCK_SEND_STR(&ws->po, "\tIP: 192.168.1.40<br/>");
-	if(!(PORTC & (1 << 1)))
+	//if(!(PORTC & (1 << 1)))
+	if(strcmp(vars[1], "on") == 0)
 	{
-		PSOCK_SEND_STR(&ws->po, "<a href=\"index.html\">Switch Light Off</a>");
+		PSOCK_SEND_STR(&ws->po, "<a href=\"index.html?light1=off\">Switch Light Off</a>");
 		PORTC |= 2;
 	}
 	else
 	{
-		PSOCK_SEND_STR(&ws->po, "<a href=\"index.html\">Switch Light On</a>");
+		PSOCK_SEND_STR(&ws->po, "<a href=\"index.html?light1=on\">Switch Light On</a>");
 		PORTC &= ~(2);
 	}
 

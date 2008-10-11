@@ -12,6 +12,8 @@ typedef int (*pageFunc)(char **vars, struct web_state *ws);
 //This is for libhash
 #define ptType pageFunc
 
+//this determines how many GET variables the webserver will bother parsing
+#define webVarSize 5
 
 #ifdef X86
 //my linux box's MAC address
