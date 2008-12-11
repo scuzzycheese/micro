@@ -19,7 +19,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include "global.h"
-#include <avr/delay.h>
+#include <util/delay.h>
 
 
 #include "lcd.h"

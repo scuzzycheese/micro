@@ -79,7 +79,7 @@
 
 // LCD display geometry
 // change these definitions to adapt settings
-#define LCD_LINES				4	// visible lines
+#define LCD_LINES				2	// visible lines
 #define LCD_LINE_LENGTH			20	// line length (in characters)
 // cursor position to DDRAM mapping
 #define LCD_LINE0_DDRAMADDR		0x00
