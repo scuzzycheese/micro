@@ -4,6 +4,7 @@
 #include <util/delay.h>
 #include <stdio.h>
 #include "i2c.h"
+#include <avr/interrupt.h>
 
 #include "lcd.h"
 
@@ -34,6 +35,8 @@ uint16_t register_values[18] =
 
 #define SLA_W 0x20 //write address
 #define SLA_R 0x21 //read address
+
+
 
 void delay_ms(unsigned int ms)
 /* delay for a minimum of <ms> */
@@ -183,6 +186,21 @@ uint8_t setRegister(uint8_t regNumber, uint16_t regValue)
 }
 
 
+
+void setAllRegs(uint16_t regVals[])
+{
+	uint8_t i;
+	for(i = 1; i < 18; i ++)
+	{
+		writeLn("Setting Register\r\n");
+		uint8_t setBool = setRegister(i, regVals[i]);
+		if(setBool) writeLn("Device Responding\r\n");
+		else writeLn("Device Not Responding\r\n");
+		delay_ms(1);
+	}
+	setRegister(0, regVals[0]);
+}
+
 void tune()
 {
 
@@ -280,50 +298,64 @@ void tune()
 	writeLn(strOut);
 }
 
-void setAllRegs(uint16_t regVals[])
-{
-	uint8_t i;
-	for(i = 1; i < 18; i ++)
-	{
-		writeLn("Setting Register\r\n");
-		uint8_t setBool = setRegister(i, regVals[i]);
-		if(setBool) writeLn("Device Responding\r\n");
-		else writeLn("Device Not Responding\r\n");
-		delay_ms(1);
-	}
-	setRegister(0, regVals[0]);
-}
-
-
 void seek()
 {
-
 	register_values[2] = 0xB480;
 	register_values[3] = 0xA001;
 	setAllRegs(register_values);
 	register_values[3] = 0xE001;
 	setAllRegs(register_values);
-
 }
 
+#define STATION_STATE 0
+#define VOLUME_STATE 1
+#define NO_STATE 2
+
+#define STATE_UNCHANGED 0
+#define STATE_CHANGED 1
+
+struct displayState
+{
+	uint8_t volume;
+	uint8_t state;
+	uint8_t timer;
+} dispState;
+
+ISR(INT0_vect)
+{
+	cli();
+	if(PINC & 2)
+	{
+		delay_ms(50);
+		if(PINC & 2)
+		{
+			writeLn("button pressed\r\n");
+			
+			dispState.state = VOLUME_STATE;
+			dispState.timer = 255;
+		}
+	}
+	sei();
+}
 
 /* new style */
 int main(void)
 {
 	usart_init();
 	writeLn("Hello from LCD\r\n");
+
+	MCUCR = (1 << ISC01) | (1 << ISC00);
+	//MCUCR = (1 << ISC00);
+
+	GIMSK  |= (1 << INT0);
+	sei();
+
 	i2cInit();
 
 	lcdInit();
 	lcdHome();
-	
-	char *data = "this is an uber test and daine is a rock star";
-	char *datP = data;
-	int dataLen = 0;
-	int counter = 0;
-	char otherData[20];
 
-
+/*
 	setAllRegs(register_values);
 	delay_ms(100);
 
@@ -342,22 +374,51 @@ int main(void)
 	char outStr[20];
 	sprintf(outStr, "R17: %0.4X\r\n");
 	writeLn(outStr);
+*/
+
+
+	dispState.state = STATION_STATE;
+	dispState.timer = 0;
+
+	//enable internal pullup on pin 1 of port C
+	//PORTC |= 2;
+	//output in pin 1 of port C
+	//DDRC |= 2;
+	DDRC = 0;
 
 
 	while(1)
 	{
-		lcdClear();
-		dataLen = strlen(datP);
-		lcdPrintData(datP, (dataLen > 20) ? 20 : dataLen);
-		if(*datP) datP ++;
-		else datP = data;
+		if(dispState.state == STATION_STATE)
+		{
+			lcdClear();
+			lcdGotoXY(0, 0);
+			lcdPrintData("X-FM", 4);
 
-		lcdGotoXY(0, 1);
-		sprintf(otherData, "Counter: %d", counter);
-		lcdPrintData(otherData, strlen(otherData));
-		delay_ms(1000);
-		counter ++;
+			//don't thrash this state
+			dispState.state = NO_STATE;
+		}
+		if(dispState.state == VOLUME_STATE)
+		{
+			lcdClear();
+			lcdGotoXY(0, 0);
+			lcdPrintData("VOLUME", 6);
 
+			//don't thrash this state
+			dispState.state = NO_STATE;
+			dispState.timer = 255;
+		}
+		//decrease the counter, and then drop to the default state
+		if(dispState.timer > 0)
+		{
+			delay_ms(5);
+			dispState.timer --;
+		}
+		else
+		{
+			dispState.timer = 255;
+			dispState.state = STATION_STATE;
+		}
 	}
 
 
