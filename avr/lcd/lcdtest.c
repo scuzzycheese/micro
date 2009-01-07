@@ -67,9 +67,15 @@ void usart_init()
 void putChar(uint8_t c)
 {
 	UDR = c;
-	while(bit_is_clear(UCSRA, TXC));
+	while(!(UCSRA & (1 << TXC)));
 	//clear the bit by writing a 1
 	UCSRA = 1 << TXC;
+}
+
+unsigned char getChar()
+{
+	while(!(UCSRA & (1 << RXC)));
+	return UDR;
 }
 
 void writeLn(char *strn)
@@ -127,19 +133,22 @@ uint16_t getRegister_helper(uint8_t regNumber)
 }
 
 
-uint16_t getRegister(uint8_t regNumber)
+uint16_t getRegister(uint8_t regNumber, uint8_t vola)
 {
-	uint16_t retReg = 0;
+	static uint16_t internalRegs[18]; 
 	//This is crazy, it doesn't work like the docco says
-	uint8_t i;
-	for(i = 0x0; i < 0x1d; i++)
+	if(vola)
 	{
-		uint16_t inReg = getRegister_helper(i);
-		delay_ms(5);
-		if(regNumber == i) retReg = inReg;
+		writeLn("Getting register set (volatile)...\r\n");
+		uint8_t i;
+		for(i = 0x0; i < 0x1d; i++)
+		{
+			internalRegs[i] = getRegister_helper(i);
+			delay_ms(5);
+		}
+		i2cSendStop();
 	}
-	i2cSendStop();
-	return retReg;
+	return internalRegs[regNumber];
 }
 
 
@@ -160,17 +169,17 @@ uint8_t setRegister(uint8_t regNumber, uint16_t regValue)
 	{
 		i2cSendByte(regNumber);
 		i2cWaitForComplete();
-	_delay_us(10);
+		_delay_us(10);
 		
 		uint8_t value = (regValue & 0xFF00) >> 8;
 		i2cSendByte(value);
 		i2cWaitForComplete();
-	_delay_us(10);
+		_delay_us(10);
 
 		value = (regValue & 0x00FF);
 		i2cSendByte(value);
 		i2cWaitForComplete();
-	_delay_us(10);
+		_delay_us(10);
 	}
 	else
 	{
@@ -192,13 +201,14 @@ void setAllRegs(uint16_t regVals[])
 	uint8_t i;
 	for(i = 1; i < 18; i ++)
 	{
-		writeLn("Setting Register\r\n");
+		//writeLn("Setting Register\r\n");
 		uint8_t setBool = setRegister(i, regVals[i]);
-		if(setBool) writeLn("Device Responding\r\n");
-		else writeLn("Device Not Responding\r\n");
+		if(!setBool) writeLn("Device Not Responding\r\n");
 		delay_ms(1);
 	}
-	setRegister(0, regVals[0]);
+	//writeLn("Setting Register\r\n");
+	uint8_t setBool = setRegister(0, regVals[0]);
+	if(!setBool) writeLn("Device Not Responding\r\n");
 }
 
 void tune()
@@ -206,12 +216,11 @@ void tune()
 
 	writeLn("Getting regs...\r\n");
 
-	uint16_t R0 = getRegister(0);
-	uint16_t R1 = getRegister(1);
-	uint16_t R2 = getRegister(2);
-	uint16_t R3 = getRegister(3);
-	uint16_t R17 = getRegister(17);
-
+	uint16_t R0 = getRegister(0, 1);
+	uint16_t R1 = getRegister(1, 0);
+	uint16_t R2 = getRegister(2, 0);
+	uint16_t R3 = getRegister(3, 0);
+	uint16_t R17 = getRegister(17, 0);
 
 	char strOut[20];
 	sprintf(strOut, "REGB0: %0.4X\r\n", R0);
@@ -225,10 +234,8 @@ void tune()
 	sprintf(strOut, "REGB17: %0.4X\r\n", R17);
 	writeLn(strOut);
 
-
 	//(88.40Mhz)
 	uint16_t freq = 194;
-
 
 	writeLn("Done.\r\n");
 
@@ -267,7 +274,7 @@ void tune()
 		setRegister(2, R2);
 
 		writeLn("Waiting for STC...\r\n");
-		while(!(getRegister(17) & 0x0400))
+		while(!(getRegister(17, 1) & 0x0400))
 		{
 			writeLn("Waiting for STC...\r\n");
 			delay_ms(20);
@@ -282,10 +289,10 @@ void tune()
 
 	}
 
-	R1 = getRegister(1);
-	R2 = getRegister(2);
-	R3 = getRegister(3);
-	R17 = getRegister(17);
+	R1 = getRegister(1, 1);
+	R2 = getRegister(2, 0);
+	R3 = getRegister(3, 0);
+	R17 = getRegister(17, 0);
 
 
 	sprintf(strOut, "REGA1: %0.4X\r\n", R1);
@@ -355,27 +362,46 @@ int main(void)
 	lcdInit();
 	lcdHome();
 
-/*
+	//delay_ms(8000);
+
 	setAllRegs(register_values);
+	//ar1000calibration(register_values);
 	delay_ms(100);
 
-	seek();	
-	delay_ms(100);
-
-	
-	while(!(getRegister(17) & 0x0400))
+	//wait for radio to be ready after initialising
+	while(!(getRegister(17, 1) & 0x0400))
 	{
 		writeLn("Waiting for STC...\r\n");
 		delay_ms(20);
 	}
 
-	uint16_t R17 = getRegister(17);
+	//delay_ms(8000);
+	writeLn("Seeking...\r\n");
+	//tune();
+	//seek();	
+	
+	while(!(getRegister(17, 1) & 0x0400))
+	{
+		writeLn("Waiting for STC...\r\n");
+		delay_ms(20);
+	}
 
-	char outStr[20];
-	sprintf(outStr, "R17: %0.4X\r\n");
-	writeLn(outStr);
-*/
+	writeLn("Done!\r\n");
 
+	//we need to do a volatile fetch
+	getRegister(0, 1);
+	uint8_t y;
+	for(y = 0; y < 0x1d; y ++)
+	{
+		char outStr[30];
+		sprintf(outStr, "REG: %0.2d - VAL: %0.4X\r\n", y, getRegister(y, 0));
+		writeLn(outStr);
+	}
+	delay_ms(3000);
+
+
+
+/*
 
 	dispState.state = STATION_STATE;
 	dispState.timer = 0;
@@ -420,7 +446,7 @@ int main(void)
 			dispState.state = STATION_STATE;
 		}
 	}
-
+*/
 
 	return 0;
 }
