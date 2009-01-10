@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include <util/delay.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "lcd.h"
 
@@ -97,12 +98,61 @@ int main(void)
 	lcdInit();
 	lcdHome();
 
+
+	char buff0[20];
+	char buff1[20];
+	char *currBuff = buff0;
+	char *line0 = buff0;
+	char *line1 = buff1;
+
+	memset(buff0, 0x00, 20);
+	memset(buff1, 0x00, 20);
+
 	lcdClear();
 	lcdGotoXY(0, 0);
+	uint8_t counter = 0;
 	while(1)
 	{
+		
 		char let = getChar();
-		lcdPrintData(&let, 1);
+		writeLn("Got Char\r\n");
+		currBuff[counter ++] = let;
+		if(let == 0x0D)
+		{
+			writeLn("Inside if\r\n");
+
+			counter = 0;
+			lcdGotoXY(0, 0);
+			lcdPrintData(line0, 20);
+			lcdGotoXY(0, 1);
+			lcdPrintData(line1, 20);
+
+			//toggle the buffers
+			if(currBuff == buff0)
+			{
+				memset(buff1, 0x00, 20);
+				currBuff = buff1;
+			}
+			if(currBuff == buff1)
+			{
+				memset(buff0, 0x00, 20);
+				currBuff = buff0;
+			}
+
+			//toggle the lines
+			if(line0 == buff0)
+			{
+				line0 = buff1;
+				line1 = buff0;
+			}
+			else
+			{
+				line0 = buff0;
+				line1 = buff1;
+			}
+	
+
+		}
 	}
 
 	return 0;
