@@ -92,7 +92,11 @@ void writeLn(char *strn)
 /* new style */
 int main(void)
 {
+
+	_delay_ms(1000);
+
 	usart_init();
+
 	writeLn("\r\nHello from LCD\r\n");
 
 	lcdInit();
@@ -102,26 +106,34 @@ int main(void)
 	char buff0[20];
 	char buff1[20];
 	char *currBuff = buff0;
-	char *line0 = buff0;
-	char *line1 = buff1;
+	char *line0 = buff1;
+	char *line1 = buff0;
 
-	memset(buff0, 0x00, 20);
-	memset(buff1, 0x00, 20);
+	memset(buff0, 0x20, 20);
+	memset(buff1, 0x20, 20);
 
 	lcdClear();
 	lcdGotoXY(0, 0);
+
+
+	lcdPrintData("USB-LCD", 7);
+
 	uint8_t counter = 0;
 	while(1)
 	{
 		
 		char let = getChar();
-		writeLn("Got Char\r\n");
+		//writeLn("Got Char\r\n");
+		putChar(let);
 		currBuff[counter ++] = let;
 		if(let == 0x0D)
 		{
-			writeLn("Inside if\r\n");
+			writeLn("\n");
+			currBuff[counter - 1] = 0x20;
+			//writeLn("Inside if\r\n");
 
 			counter = 0;
+
 			lcdGotoXY(0, 0);
 			lcdPrintData(line0, 20);
 			lcdGotoXY(0, 1);
@@ -130,14 +142,15 @@ int main(void)
 			//toggle the buffers
 			if(currBuff == buff0)
 			{
-				memset(buff1, 0x00, 20);
+				memset(buff1, 0x20, 20);
 				currBuff = buff1;
 			}
-			if(currBuff == buff1)
+			else
 			{
-				memset(buff0, 0x00, 20);
+				memset(buff0, 0x20, 20);
 				currBuff = buff0;
 			}
+
 
 			//toggle the lines
 			if(line0 == buff0)
