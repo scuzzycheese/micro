@@ -52,16 +52,20 @@ void delay_ms(unsigned int ms)
 }
 
 
+
+
 void usart_init()
 {
 	unsigned int baudRate = SET_BAUD(38400);
-	//unsigned int baudRate = 25;
+
 	UBRRL = baudRate;
 	UBRRH = baudRate >> 8;
 
-	UCSRB |= (1 << TXEN); 
-	//I don't think this makes much of a difference
-	UCSRC = ((1 << URSEL) | (3 << UCSZ0));
+	/* Enable receiver and transmitter */
+	UCSRB = (1 << RXEN) | (1 << TXEN);
+
+	/* Set frame format: 8data, 0stop bit */
+	UCSRC = (1 << URSEL) | (3 << UCSZ0);
 }
 
 void putChar(uint8_t c)
@@ -85,7 +89,6 @@ void writeLn(char *strn)
 		putChar(*(strn ++));
 	}
 }
-
 
 
 uint16_t getRegister_helper(uint8_t regNumber)
@@ -211,107 +214,84 @@ void setAllRegs(uint16_t regVals[])
 	if(!setBool) writeLn("Device Not Responding\r\n");
 }
 
-void tune()
+void tune(uint16_t freq)
 {
+	freq -= 690;
 
-	writeLn("Getting regs...\r\n");
-
-	uint16_t R0 = getRegister(0, 1);
-	uint16_t R1 = getRegister(1, 0);
-	uint16_t R2 = getRegister(2, 0);
-	uint16_t R3 = getRegister(3, 0);
-	uint16_t R17 = getRegister(17, 0);
-
-	char strOut[20];
-	sprintf(strOut, "REGB0: %0.4X\r\n", R0);
-	writeLn(strOut);
-	sprintf(strOut, "REGB1: %0.4X\r\n", R1);
-	writeLn(strOut);
-	sprintf(strOut, "REGB2: %0.4X\r\n", R2);
-	writeLn(strOut);
-	sprintf(strOut, "REGB3: %0.4X\r\n", R3);
-	writeLn(strOut);
-	sprintf(strOut, "REGB17: %0.4X\r\n", R17);
-	writeLn(strOut);
-
-	//(88.40Mhz)
-	uint16_t freq = 194;
-
-	writeLn("Done.\r\n");
-
-	if(R17 & 0x0400)
+	if(getRegister(17, 1) & (1 << 5))
 	{
 		writeLn("Radio ready for tuning...\r\n");
 		
-		//set hmute bit
-		R1 |= 0x40;
-		setRegister(1, R1);
+		//clear tune bit and chan bits
+		register_values[2] &= ~(0x01FF | 0x0200);
+		//set chan bits
+		register_values[2] |= freq; 
+		//clear seek bit 
+		register_values[3] &= ~(1 << 14);
 
-		//clean tune bit
-		R2 &= ~(1);
-		setRegister(2, R2);
+		//set space = 100k (seek stepping increments in 100k steps)
+		register_values[3] |= (1 << 13);
+		//set band to US/Europe
+		register_values[3] &= ~(3 << 11);
 
-		//clear seek bit
-		R3 &= ~(2);
-		setRegister(3, R3);
 
-		//set band and space bits
-		R3 &= ~(3 << 3);
-		R3 |= (1 << 2);
-		setRegister(3, R3);
-
-		//set Band
-		//clear the chan bits
-		R2 &= ~(0x1FF << 1);
-		//set the band bits
-		R2 |= (freq << 1);
-		sprintf(strOut, "REG2-T: %0.4X\r\n", R2);
-		writeLn(strOut);
-		setRegister(2, R2);
+		//send the registers to the chip
+		setRegister(2, register_values[2]);
+		setRegister(3, register_values[3]);
 
 		//set tune bit
-		R2 |= 1;
-		setRegister(2, R2);
+		register_values[2] |= (0x0200);
 
-		writeLn("Waiting for STC...\r\n");
-		while(!(getRegister(17, 1) & 0x0400))
-		{
-			writeLn("Waiting for STC...\r\n");
-			delay_ms(20);
-		}
-		writeLn("done.\r\n");
+		//send the register to the chip
+		setRegister(2, register_values[2]);
 
-		//clear the hmute bit
-		R1 &= ~(0x40);
-		setRegister(1, R1);
+		setRegister(1, register_values[1]);
 
-		writeLn("Finished Tuning.\r\n");
+
 
 	}
 
-	R1 = getRegister(1, 1);
-	R2 = getRegister(2, 0);
-	R3 = getRegister(3, 0);
-	R17 = getRegister(17, 0);
-
-
-	sprintf(strOut, "REGA1: %0.4X\r\n", R1);
-	writeLn(strOut);
-	sprintf(strOut, "REGA2: %0.4X\r\n", R2);
-	writeLn(strOut);
-	sprintf(strOut, "REGA3: %0.4X\r\n", R3);
-	writeLn(strOut);
-	sprintf(strOut, "REGA17: %0.4X\r\n", R17);
-	writeLn(strOut);
 }
 
 void seek()
 {
+	//clear tune bit
+	//set chan bits
 	register_values[2] = 0xB480;
-	register_values[3] = 0xA001;
+
+	//clear seek bit 
+	register_values[3] &= ~(1 << 14);
+	//set seekup bit
+	register_values[3] |= (1 << 15);
+	//set space = 100k (seek stepping increments in 100k steps)
+	register_values[3] |= (1 << 13);
+	//set band to US/Europe
+	register_values[3] &= ~(3 << 11);
+/*	
+	char strout[20];
+	sprintf(strout, "REG2: %0.2X\r\n", register_values[2]);
+	writeLn(strout);
+	sprintf(strout, "REG3: %0.2X\r\n", register_values[3]);
+	writeLn(strout);
+*/
+
+	//send the registers to the chip
+	setRegister(2, register_values[2]);
+	setRegister(3, register_values[3]);
+
+	//set the seek bit
+	register_values[3] |= (1 << 14);
+
+	//send the register to the chip
+	setRegister(3, register_values[3]);
+}
+void vol(uint8_t volume)
+{
+
+	register_values[3] &= ~(0x0F << 7);
+	register_values[3] |= (0x09 << 7);
 	setAllRegs(register_values);
-	register_values[3] = 0xE001;
-	setAllRegs(register_values);
+
 }
 
 #define STATION_STATE 0
@@ -362,7 +342,13 @@ int main(void)
 	lcdInit();
 	lcdHome();
 
-	//delay_ms(8000);
+
+
+			lcdClear();
+			lcdGotoXY(0, 0);
+			lcdPrintData("X-FM", 4);
+
+	delay_ms(4000);
 
 	setAllRegs(register_values);
 	//ar1000calibration(register_values);
@@ -375,11 +361,13 @@ int main(void)
 		delay_ms(20);
 	}
 
-	//delay_ms(8000);
+	delay_ms(4000);
 	writeLn("Seeking...\r\n");
 	//tune();
 	//seek();	
 	
+	delay_ms(4000);
+
 	while(!(getRegister(17, 1) & 0x0400))
 	{
 		writeLn("Waiting for STC...\r\n");
@@ -388,16 +376,49 @@ int main(void)
 
 	writeLn("Done!\r\n");
 
-	//we need to do a volatile fetch
-	getRegister(0, 1);
-	uint8_t y;
-	for(y = 0; y < 0x1d; y ++)
+	uint16_t freq = 860;
+	while(1)
 	{
-		char outStr[30];
-		sprintf(outStr, "REG: %0.2d - VAL: %0.4X\r\n", y, getRegister(y, 0));
-		writeLn(outStr);
+		char c = getChar();
+		if(c == 0x73)
+		{
+			writeLn("Seeking...");
+			seek();	
+			writeLn("Done.\r\n");
+		}
+		if(c == 0x75)
+		{
+			char strout[20];
+			sprintf(strout, "FREQ: %d\r\n", freq ++);
+			writeLn(strout);
+			tune(freq);	
+		}
+		if(c == 0x64)
+		{
+			char strout[20];
+			sprintf(strout, "FREQ: %d\r\n", freq --);
+			writeLn(strout);
+			tune(freq);	
+		}
+		if(c == 0x72)
+		{
+			//we need to do a volatile fetch
+			getRegister(0, 1);
+			uint8_t y;
+			for(y = 0; y < 0x1d; y ++)
+			{
+				char outStr[30];
+				sprintf(outStr, "REG: %0.2d - VAL: %0.4X\r\n", y, getRegister(y, 0));
+				writeLn(outStr);
+			}
+		}
+		if(c == 0x76)
+		{
+			vol(4);
+		}
 	}
-	delay_ms(3000);
+
+
 
 
 
