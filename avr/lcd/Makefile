@@ -2,14 +2,14 @@ OPT = -Os -mcall-prologues
 
 
 all:
-	avr-gcc -g ${OPT} -mmcu=atmega8 -c lcdtest.c -I../avrlib -I.
+	avr-gcc ${OPT} -mmcu=atmega8 -c lcdtest.c -I../avrlib -I.
 
-	avr-gcc -g ${OPT} -mmcu=atmega8 -c lcd.c -I../avrlib -I.
+	avr-gcc ${OPT} -mmcu=atmega8 -c lcd.c -I../avrlib -I.
 
-	avr-gcc -g ${OPT} -mmcu=atmega8 -c i2c.c -I../avrlib -I.
+	avr-gcc ${OPT} -mmcu=atmega8 -c i2c.c -I../avrlib -I.
 
 
-	avr-gcc -g ${OPT} -mmcu=atmega8 -o lcdtest.elf lcdtest.o lcd.o i2c.o
+	avr-gcc ${OPT} -mmcu=atmega8 -o lcdtest.elf lcdtest.o lcd.o i2c.o
 	avr-objcopy -j .text -j .data -O ihex lcdtest.elf lcdtest.hex
 
 

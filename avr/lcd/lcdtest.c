@@ -10,8 +10,7 @@
 
 #define SET_BAUD(baudRate) (((F_CPU / baudRate) / 16L) - 1);
 
-
-uint16_t register_values[18] = 
+const uint16_t registerValues[18] = 
 {
 	0xffff,
 	0x5b15,
@@ -35,24 +34,6 @@ uint16_t register_values[18] =
 
 #define SLA_W 0x20 //write address
 #define SLA_R 0x21 //read address
-
-
-
-void delay_ms(unsigned int ms)
-/* delay for a minimum of <ms> */
-{
-	// we use a calibrated macro. This is more
-	// accurate and not so much compiler dependent
-	// as self made code.
-	while(ms)
-	{
-		_delay_ms(0.96);
-		ms--;
-	}
-}
-
-
-
 
 void usart_init()
 {
@@ -128,7 +109,7 @@ uint16_t getRegister_helper(uint8_t regNumber)
 		writeLn("Device Not Responding to READ operations\r\n");
 	}
 
-	delay_ms(1);
+	_delay_ms(1);
 
 	sbi(TWCR, TWIE);
 
@@ -142,12 +123,12 @@ uint16_t getRegister(uint8_t regNumber, uint8_t vola)
 	//This is crazy, it doesn't work like the docco says
 	if(vola)
 	{
-		writeLn("Getting register set (volatile)...\r\n");
+		//writeLn("Getting register set (volatile)...\r\n");
 		uint8_t i;
 		for(i = 0x0; i < 0x1d; i++)
 		{
 			internalRegs[i] = getRegister_helper(i);
-			delay_ms(5);
+			_delay_ms(5);
 		}
 		i2cSendStop();
 	}
@@ -207,7 +188,7 @@ void setAllRegs(uint16_t regVals[])
 		//writeLn("Setting Register\r\n");
 		uint8_t setBool = setRegister(i, regVals[i]);
 		if(!setBool) writeLn("Device Not Responding\r\n");
-		delay_ms(1);
+		_delay_ms(1);
 	}
 	//writeLn("Setting Register\r\n");
 	uint8_t setBool = setRegister(0, regVals[0]);
@@ -216,6 +197,10 @@ void setAllRegs(uint16_t regVals[])
 
 void tune(uint16_t freq)
 {
+	uint16_t reg1 = registerValues[1];
+	uint16_t reg2 = registerValues[2];
+	uint16_t reg3 = registerValues[3];
+
 	freq -= 690;
 
 	if(getRegister(17, 1) & (1 << 5))
@@ -223,29 +208,29 @@ void tune(uint16_t freq)
 		writeLn("Radio ready for tuning...\r\n");
 		
 		//clear tune bit and chan bits
-		register_values[2] &= ~(0x01FF | 0x0200);
+		reg2 &= ~(0x01FF | 0x0200);
 		//set chan bits
-		register_values[2] |= freq; 
+		reg2 |= freq; 
 		//clear seek bit 
-		register_values[3] &= ~(1 << 14);
+		reg3 &= ~(1 << 14);
 
 		//set space = 100k (seek stepping increments in 100k steps)
-		register_values[3] |= (1 << 13);
+		reg3 |= (1 << 13);
 		//set band to US/Europe
-		register_values[3] &= ~(3 << 11);
+		reg3 &= ~(3 << 11);
 
 
 		//send the registers to the chip
-		setRegister(2, register_values[2]);
-		setRegister(3, register_values[3]);
+		setRegister(2, reg2);
+		setRegister(3, reg3);
 
 		//set tune bit
-		register_values[2] |= (0x0200);
+		reg2 |= (0x0200);
 
 		//send the register to the chip
-		setRegister(2, register_values[2]);
+		setRegister(2, reg2);
 
-		setRegister(1, register_values[1]);
+		setRegister(1, reg1);
 
 
 
@@ -255,42 +240,39 @@ void tune(uint16_t freq)
 
 void seek()
 {
-	//clear tune bit
-	//set chan bits
-	register_values[2] = 0xB480;
+	uint16_t reg2 = registerValues[2];
+	uint16_t reg3 = registerValues[3];
 
-	//clear seek bit 
-	register_values[3] &= ~(1 << 14);
-	//set seekup bit
-	register_values[3] |= (1 << 15);
-	//set space = 100k (seek stepping increments in 100k steps)
-	register_values[3] |= (1 << 13);
-	//set band to US/Europe
-	register_values[3] &= ~(3 << 11);
-/*	
-	char strout[20];
-	sprintf(strout, "REG2: %0.2X\r\n", register_values[2]);
-	writeLn(strout);
-	sprintf(strout, "REG3: %0.2X\r\n", register_values[3]);
-	writeLn(strout);
-*/
+	if(getRegister(17, 1) & (1 << 5))
+	{
 
-	//send the registers to the chip
-	setRegister(2, register_values[2]);
-	setRegister(3, register_values[3]);
-
-	//set the seek bit
-	register_values[3] |= (1 << 14);
-
-	//send the register to the chip
-	setRegister(3, register_values[3]);
+		//clear tune bit
+		//set chan bits
+		reg2 = 0xB480;
+	
+		//clear seek bit 
+		reg3 &= ~(1 << 14);
+		//set seekup bit
+		reg3 |= (1 << 15);
+		//set space = 100k (seek stepping increments in 100k steps)
+		reg3 |= (1 << 13);
+		//set band to US/Europe
+		reg3 &= ~(3 << 11);
+	
+		//send the registers to the chip
+		setRegister(2, reg2);
+		setRegister(3, reg3);
+	
+		//set the seek bit
+		reg3 |= (1 << 14);
+	
+		//send the register to the chip
+		setRegister(3, reg3);
+	}
 }
 void vol(uint8_t volume)
 {
 
-	register_values[3] &= ~(0x0F << 7);
-	register_values[3] |= (0x09 << 7);
-	setAllRegs(register_values);
 
 }
 
@@ -313,7 +295,7 @@ ISR(INT0_vect)
 	cli();
 	if(PINC & 2)
 	{
-		delay_ms(50);
+		_delay_ms(50);
 		if(PINC & 2)
 		{
 			writeLn("button pressed\r\n");
@@ -342,36 +324,33 @@ int main(void)
 	lcdInit();
 	lcdHome();
 
+	lcdClear();
+	lcdGotoXY(0, 0);
+	lcdPrintData("X-FM", 4);
 
+	_delay_ms(4000);
 
-			lcdClear();
-			lcdGotoXY(0, 0);
-			lcdPrintData("X-FM", 4);
-
-	delay_ms(4000);
-
-	setAllRegs(register_values);
-	//ar1000calibration(register_values);
-	delay_ms(100);
+	setAllRegs((uint16_t *)registerValues);
+	_delay_ms(100);
 
 	//wait for radio to be ready after initialising
 	while(!(getRegister(17, 1) & 0x0400))
 	{
 		writeLn("Waiting for STC...\r\n");
-		delay_ms(20);
+		_delay_ms(20);
 	}
 
-	delay_ms(4000);
+	_delay_ms(4000);
 	writeLn("Seeking...\r\n");
 	//tune();
 	//seek();	
 	
-	delay_ms(4000);
+	_delay_ms(4000);
 
 	while(!(getRegister(17, 1) & 0x0400))
 	{
 		writeLn("Waiting for STC...\r\n");
-		delay_ms(20);
+		_delay_ms(20);
 	}
 
 	writeLn("Done!\r\n");
@@ -458,7 +437,7 @@ int main(void)
 		//decrease the counter, and then drop to the default state
 		if(dispState.timer > 0)
 		{
-			delay_ms(5);
+			_delay_ms(5);
 			dispState.timer --;
 		}
 		else

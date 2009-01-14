@@ -165,6 +165,7 @@ inline u08 i2cGetStatus(void)
 	return( inb(TWSR) );
 }
 
+/*
 void i2cMasterSend(u08 deviceAddr, u08 length, u08* data)
 {
 	u08 i;
@@ -201,6 +202,8 @@ void i2cMasterReceive(u08 deviceAddr, u08 length, u08* data)
 	for(i=0; i<length; i++)
 		*data++ = I2cReceiveData[i];
 }
+
+
 
 u08 i2cMasterSendNI(u08 deviceAddr, u08 length, u08* data)
 {
@@ -297,7 +300,7 @@ u08 i2cMasterReceiveNI(u08 deviceAddr, u08 length, u08 *data)
 
 	return retval;
 }
-/*
+
 void i2cMasterTransferNI(u08 deviceAddr, u08 sendlength, u08* senddata, u08 receivelength, u08* receivedata)
 {
 	// disable TWI interrupt
@@ -359,7 +362,6 @@ void i2cMasterTransferNI(u08 deviceAddr, u08 sendlength, u08* senddata, u08 rece
 	sbi(TWCR, TWIE);
 }
 */
-
 //! I2C (TWI) interrupt service routine
 SIGNAL(SIG_2WIRE_SERIAL)
 {
@@ -593,6 +595,7 @@ SIGNAL(SIG_2WIRE_SERIAL)
 		break;
 	}
 }
+
 
 eI2cStateType i2cGetState(void)
 {
