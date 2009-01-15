@@ -270,9 +270,59 @@ void seek()
 		setRegister(3, reg3);
 	}
 }
-void vol(uint8_t volume)
+void volume(uint8_t volu)
 {
+	if(volu >= 22) volu = 22;
+	if(volu <= 0) volu = 0;
 
+	uint16_t reg3 = registerValues[3];
+	uint16_t reg14 = registerValues[14];
+
+	const uint8_t vols[22] = 
+	{
+		0x0F,
+		0xCF,
+		0xDF,
+		0xEF,
+		0xFF,
+		0xEE,
+		0xFE,
+		0xED,
+		0xFD,
+		0xFB,
+		0xFA,
+		0xF9,
+		0xF7,
+		0xE6,
+		0xF6,
+		0xE5,
+		0xF5,
+		0xE3,
+		0xF3,
+		0xF2,
+		0xF1,
+		0xF0
+	};
+
+	//clear this part of the register
+	reg3 &= ~(0x000F << 7);
+	//fill this part with the nessesary data
+	reg3 |= (vols[volu] & 0x000F) << 7;
+
+	
+	//clear this part of the register
+	reg14 &= ~0xF000;
+	//fill this part with the nessesary data "x << 8 = (x >> 4 ) << 12"
+	reg14 |= (vols[volu] & 0x00F0) << 8;
+
+	char outstr[20];
+	sprintf(outstr, "REG3: %0.2X\r\n", reg3);
+	writeLn(outstr);
+	sprintf(outstr, "REG14: %0.2X\r\n", reg14);
+	writeLn(outstr);
+
+	setRegister(3, reg3);
+	setRegister(14, reg14);
 
 }
 
@@ -328,7 +378,7 @@ int main(void)
 	lcdGotoXY(0, 0);
 	lcdPrintData("X-FM", 4);
 
-	_delay_ms(4000);
+	//_delay_ms(4000);
 
 	setAllRegs((uint16_t *)registerValues);
 	_delay_ms(100);
@@ -340,12 +390,12 @@ int main(void)
 		_delay_ms(20);
 	}
 
-	_delay_ms(4000);
+	//_delay_ms(4000);
 	writeLn("Seeking...\r\n");
 	//tune();
 	//seek();	
 	
-	_delay_ms(4000);
+	//_delay_ms(4000);
 
 	while(!(getRegister(17, 1) & 0x0400))
 	{
@@ -356,6 +406,7 @@ int main(void)
 	writeLn("Done!\r\n");
 
 	uint16_t freq = 860;
+	uint8_t vol = 0;
 	while(1)
 	{
 		char c = getChar();
@@ -368,14 +419,14 @@ int main(void)
 		if(c == 0x75)
 		{
 			char strout[20];
-			sprintf(strout, "FREQ: %d\r\n", freq ++);
+			sprintf(strout, "FREQ: %d\r\n", ++ freq);
 			writeLn(strout);
 			tune(freq);	
 		}
 		if(c == 0x64)
 		{
 			char strout[20];
-			sprintf(strout, "FREQ: %d\r\n", freq --);
+			sprintf(strout, "FREQ: %d\r\n", -- freq);
 			writeLn(strout);
 			tune(freq);	
 		}
@@ -393,7 +444,17 @@ int main(void)
 		}
 		if(c == 0x76)
 		{
-			vol(4);
+			char strout[20];
+			sprintf(strout, "VOL: %d\r\n", ++ vol);
+			writeLn(strout);
+			volume(vol);
+		}
+		if(c == 0x77)
+		{
+			char strout[20];
+			sprintf(strout, "VOL: %d\r\n", -- vol);
+			writeLn(strout);
+			volume(vol);
 		}
 	}
 
