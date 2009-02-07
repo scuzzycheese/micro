@@ -8,8 +8,9 @@
 
 #include "lcd.h"
 
-#define SET_BAUD(baudRate) (((F_CPU / baudRate) / 16L) - 1);
+#define SET_BAUD(baudRate) (((F_CPU / baudRate) / 16L) - 1)
 
+//Default register values for the ar1000
 const uint16_t registerValues[18] = 
 {
 	0xffff,
@@ -31,6 +32,12 @@ const uint16_t registerValues[18] =
 	0x04a1,
 	0xdf6a
 };
+
+//This is a global placeholder for the current frequency
+uint16_t frequency = 850;
+
+#define FTR(x) (x - 690)
+#define RTF(x) (x + 690)
 
 #define SLA_W 0x20 //write address
 #define SLA_R 0x21 //read address
@@ -195,22 +202,36 @@ void setAllRegs(uint16_t regVals[])
 	if(!setBool) writeLn("Device Not Responding\r\n");
 }
 
+
+void getCurFreq()
+{
+	//Wait for STC, then set the global frequency to the one the radio tuned to
+	uint16_t reg19;
+	while(!(getRegister(19, 1) & (1 << 5)));
+	reg19 = getRegister(19, 1); 
+
+	//reg19 = (reg19 & 0xFF80) >> 7;
+	//since we are shifting right, we don't need to mask out the rightmost bits like above
+	reg19 = reg19 >> 7;
+
+	frequency = RTF(reg19);
+}
+
+
 void tune(uint16_t freq)
 {
 	uint16_t reg1 = registerValues[1];
 	uint16_t reg2 = registerValues[2];
 	uint16_t reg3 = registerValues[3];
 
-	freq -= 690;
-
-	if(getRegister(17, 1) & (1 << 5))
+	if(getRegister(19, 1) & (1 << 5))
 	{
 		writeLn("Radio ready for tuning...\r\n");
 		
 		//clear tune bit and chan bits
 		reg2 &= ~(0x01FF | 0x0200);
 		//set chan bits
-		reg2 |= freq; 
+		reg2 |= FTR(freq); 
 		//clear seek bit 
 		reg3 &= ~(1 << 14);
 
@@ -232,23 +253,31 @@ void tune(uint16_t freq)
 
 		setRegister(1, reg1);
 
-
-
 	}
+
+	getCurFreq();
 
 }
 
+
+
+
 void seek()
 {
+	//set default values for register 2 and 3
+	//These might have to be set from getRegister
 	uint16_t reg2 = registerValues[2];
 	uint16_t reg3 = registerValues[3];
 
-	if(getRegister(17, 1) & (1 << 5))
+	if(getRegister(19, 1) & (1 << 5))
 	{
 
 		//clear tune bit
 		//set chan bits
 		reg2 = 0xB480;
+		reg2 &= ~(0x01FF | 0x0200);
+		//use global frequency as a base
+		reg2 |= FTR(frequency);
 	
 		//clear seek bit 
 		reg3 &= ~(1 << 14);
@@ -269,7 +298,15 @@ void seek()
 		//send the register to the chip
 		setRegister(3, reg3);
 	}
+
+	getCurFreq();
+
+	char strout[20];
+	sprintf(strout, "Found FREQ: %d\r\n", frequency);
+	writeLn(strout);
 }
+
+
 void volume(uint8_t volu)
 {
 	if(volu >= 22) volu = 22;
@@ -384,7 +421,7 @@ int main(void)
 	_delay_ms(100);
 
 	//wait for radio to be ready after initialising
-	while(!(getRegister(17, 1) & 0x0400))
+	while(!(getRegister(19, 1) & (1 << 5)))
 	{
 		writeLn("Waiting for STC...\r\n");
 		_delay_ms(20);
@@ -397,7 +434,7 @@ int main(void)
 	
 	//_delay_ms(4000);
 
-	while(!(getRegister(17, 1) & 0x0400))
+	while(!(getRegister(19, 1) & (1 << 5)))
 	{
 		writeLn("Waiting for STC...\r\n");
 		_delay_ms(20);
@@ -405,7 +442,7 @@ int main(void)
 
 	writeLn("Done!\r\n");
 
-	uint16_t freq = 860;
+	frequency = 860;
 	uint8_t vol = 0;
 	while(1)
 	{
@@ -419,16 +456,16 @@ int main(void)
 		if(c == 0x75)
 		{
 			char strout[20];
-			sprintf(strout, "FREQ: %d\r\n", ++ freq);
+			sprintf(strout, "FREQ: %d\r\n", ++ frequency);
 			writeLn(strout);
-			tune(freq);	
+			tune(frequency);	
 		}
 		if(c == 0x64)
 		{
 			char strout[20];
-			sprintf(strout, "FREQ: %d\r\n", -- freq);
+			sprintf(strout, "FREQ: %d\r\n", -- frequency);
 			writeLn(strout);
-			tune(freq);	
+			tune(frequency);	
 		}
 		if(c == 0x72)
 		{
