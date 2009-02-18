@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "i2c.h"
 #include <avr/interrupt.h>
+#include <string.h>
 
 #include "lcd.h"
 
@@ -33,8 +34,8 @@ const uint16_t registerValues[18] =
 	0xdf6a
 };
 
-//This is a global placeholder for the current frequency
-uint16_t frequency = 850;
+//This is a global placeholder for the current curFreq
+uint16_t curFreq = 850;
 
 #define FTR(x) (x - 690)
 #define RTF(x) (x + 690)
@@ -205,7 +206,7 @@ void setAllRegs(uint16_t regVals[])
 
 void getCurFreq()
 {
-	//Wait for STC, then set the global frequency to the one the radio tuned to
+	//Wait for STC, then set the global curFreq to the one the radio tuned to
 	uint16_t reg19;
 	while(!(getRegister(19, 1) & (1 << 5)));
 	reg19 = getRegister(19, 1); 
@@ -214,7 +215,7 @@ void getCurFreq()
 	//since we are shifting right, we don't need to mask out the rightmost bits like above
 	reg19 = reg19 >> 7;
 
-	frequency = RTF(reg19);
+	curFreq = RTF(reg19);
 }
 
 
@@ -276,8 +277,8 @@ void seek()
 		//set chan bits
 		reg2 = 0xB480;
 		reg2 &= ~(0x01FF | 0x0200);
-		//use global frequency as a base
-		reg2 |= FTR(frequency);
+		//use global curFreq as a base
+		reg2 |= FTR(curFreq);
 	
 		//clear seek bit 
 		reg3 &= ~(1 << 14);
@@ -302,7 +303,7 @@ void seek()
 	getCurFreq();
 
 	char strout[20];
-	sprintf(strout, "Found FREQ: %d\r\n", frequency);
+	sprintf(strout, "Found FREQ: %d\r\n", curFreq);
 	writeLn(strout);
 }
 
@@ -363,20 +364,25 @@ void volume(uint8_t volu)
 
 }
 
-#define STATION_STATE 0
-#define VOLUME_STATE 1
-#define NO_STATE 2
+#define NO_STATE 0
+#define STATION_STATE 1
+#define VOLUME_STATE 2
+#define SEEK_STATE 3
+#define FREQ_STATE 4
 
 #define STATE_UNCHANGED 0
 #define STATE_CHANGED 1
 
 struct displayState
 {
-	uint8_t volume;
+	uint8_t genReg;
 	uint8_t state;
 	uint8_t timer;
 } dispState;
 
+
+
+//interrupt to catch button presses
 ISR(INT0_vect)
 {
 	cli();
@@ -387,10 +393,18 @@ ISR(INT0_vect)
 		{
 			writeLn("button pressed\r\n");
 			
-			dispState.state = VOLUME_STATE;
-			dispState.timer = 255;
+			dispState.state = SEEK_STATE;
+			dispState.timer = 3;
 		}
 	}
+	sei();
+}
+
+ISR(TIMER1_COMPA_vect)
+{
+	cli();
+	//de-increment the timer every second
+	dispState.timer --;
 	sei();
 }
 
@@ -442,8 +456,16 @@ int main(void)
 
 	writeLn("Done!\r\n");
 
-	frequency = 860;
+	//Set up out timer interrupt to fire every second 
+	TIMSK = 1 << OCIE1A;
+	TCCR1B = 1 << CS12 | 1 << WGM12;      // CTC mode, TOP = OCR1A
+	OCR1A = 62500;
+
+	curFreq = 860;
 	uint8_t vol = 0;
+
+
+/*
 	while(1)
 	{
 		char c = getChar();
@@ -456,16 +478,16 @@ int main(void)
 		if(c == 0x75)
 		{
 			char strout[20];
-			sprintf(strout, "FREQ: %d\r\n", ++ frequency);
+			sprintf(strout, "FREQ: %d\r\n", ++ curFreq);
 			writeLn(strout);
-			tune(frequency);	
+			tune(curFreq);	
 		}
 		if(c == 0x64)
 		{
 			char strout[20];
-			sprintf(strout, "FREQ: %d\r\n", -- frequency);
+			sprintf(strout, "FREQ: %d\r\n", -- curFreq);
 			writeLn(strout);
-			tune(frequency);	
+			tune(curFreq);	
 		}
 		if(c == 0x72)
 		{
@@ -495,13 +517,14 @@ int main(void)
 		}
 	}
 
+*/
 
 
 
 
-/*
 
-	dispState.state = STATION_STATE;
+
+	dispState.state = FREQ_STATE;
 	dispState.timer = 0;
 
 	//enable internal pullup on pin 1 of port C
@@ -530,21 +553,49 @@ int main(void)
 
 			//don't thrash this state
 			dispState.state = NO_STATE;
-			dispState.timer = 255;
+			dispState.timer = 3;
 		}
+		if(dispState.state == SEEK_STATE)
+		{
+			lcdClear();
+			lcdGotoXY(0, 0);
+			lcdPrintData("SEEKING...", 10);
+
+			seek();	
+
+			//drop to the default state as soon as we are finished seeking
+			dispState.state = NO_STATE;
+			dispState.timer = 0;
+		}
+		if(dispState.state == FREQ_STATE)
+		{
+			char strOut[10];
+			lcdClear();
+			lcdGotoXY(0, 0);
+			sprintf(strOut, "%d", curFreq / 10);
+			lcdPrintData(strOut, strlen(strOut));
+
+			//Some nasty hackery doo, to get fixed point decimal place
+			sprintf(strOut, ".%d Mhz", curFreq - ((curFreq / 10) * 10));
+			lcdPrintData(strOut, strlen(strOut));
+
+			//don't thrash this state
+			dispState.state = NO_STATE;
+			dispState.timer = 3;
+		}
+
 		//decrease the counter, and then drop to the default state
 		if(dispState.timer > 0)
 		{
 			_delay_ms(5);
-			dispState.timer --;
 		}
 		else
 		{
-			dispState.timer = 255;
-			dispState.state = STATION_STATE;
+			dispState.timer = 3;
+			dispState.state = FREQ_STATE;
 		}
 	}
-*/
+
 
 	return 0;
 }
