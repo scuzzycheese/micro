@@ -50,8 +50,8 @@ void usart_init()
 	UBRRL = baudRate;
 	UBRRH = baudRate >> 8;
 
-	/* Enable receiver and transmitter */
-	UCSRB = (1 << RXEN) | (1 << TXEN);
+	/* Enable receiver, transmitter and recieve complete interrupt */
+	UCSRB = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);
 
 	/* Set frame format: 8data, 0stop bit */
 	UCSRC = (1 << URSEL) | (3 << UCSZ0);
@@ -369,6 +369,7 @@ void volume(uint8_t volu)
 #define VOLUME_STATE 2
 #define SEEK_STATE 3
 #define FREQ_STATE 4
+#define UART_STATE 5
 
 #define STATE_UNCHANGED 0
 #define STATE_CHANGED 1
@@ -408,16 +409,25 @@ ISR(TIMER1_COMPA_vect)
 	sei();
 }
 
+ISR(USART_RXC_vect)
+{
+	//cli();
+	dispState.state = UART_STATE;
+	dispState.timer = 3;
+	//sei();
+}
+
 /* new style */
 int main(void)
 {
 	usart_init();
-	writeLn("Hello from LCD\r\n");
+	writeLn("Hello from RADIO\r\n");
 
 	MCUCR = (1 << ISC01) | (1 << ISC00);
 	//MCUCR = (1 << ISC00);
-
 	GIMSK  |= (1 << INT0);
+
+
 	sei();
 
 	i2cInit();
@@ -427,9 +437,7 @@ int main(void)
 
 	lcdClear();
 	lcdGotoXY(0, 0);
-	lcdPrintData("X-FM", 4);
-
-	//_delay_ms(4000);
+	lcdPrintData("RADIO", 5);
 
 	setAllRegs((uint16_t *)registerValues);
 	_delay_ms(100);
@@ -440,21 +448,12 @@ int main(void)
 		writeLn("Waiting for STC...\r\n");
 		_delay_ms(20);
 	}
+	writeLn("Initialised!\r\n");
 
-	//_delay_ms(4000);
-	writeLn("Seeking...\r\n");
-	//tune();
-	//seek();	
-	
-	//_delay_ms(4000);
-
-	while(!(getRegister(19, 1) & (1 << 5)))
-	{
-		writeLn("Waiting for STC...\r\n");
-		_delay_ms(20);
-	}
-
-	writeLn("Done!\r\n");
+	//This might enable RDS
+	uint16_t R1 = registerValues[1];
+	R1 |= 1 << 15;
+	setRegister(1, R1);
 
 	//Set up out timer interrupt to fire every second 
 	TIMSK = 1 << OCIE1A;
@@ -536,6 +535,27 @@ int main(void)
 
 	while(1)
 	{
+
+		if(dispState.state == UART_STATE)
+		{
+			char c = getChar();
+			if(c == 0x72)
+			{
+				//we need to do a volatile fetch
+				getRegister(0, 1);
+				uint8_t y;
+				for(y = 0; y < 0x1d; y ++)
+				{
+					char outStr[30];
+					sprintf(outStr, "REG: %0.2d - VAL: %0.4X\r\n", y, getRegister(y, 0));
+					writeLn(outStr);
+				}
+			}
+
+			dispState.state = NO_STATE;
+			dispState.timer = 3;
+		}
+
 		if(dispState.state == STATION_STATE)
 		{
 			lcdClear();
