@@ -43,9 +43,6 @@ uint16_t curFreq = 850;
 #define SLA_W 0x20 //write address
 #define SLA_R 0x21 //read address
 
-//global char read variable
-char UARTIn;
-
 void usart_init()
 {
 	unsigned int baudRate = SET_BAUD(38400);
@@ -70,8 +67,8 @@ void putChar(uint8_t c)
 
 unsigned char getChar()
 {
-	//while(!(UCSRA & (1 << RXC)));
-	return UARTIn;
+	while(!(UCSRA & (1 << RXC)));
+	return UDR;
 }
 
 void writeLn(char *strn)
@@ -415,8 +412,6 @@ ISR(TIMER1_COMPA_vect)
 ISR(USART_RXC_vect)
 {
 	//cli();
-	while(!(UCSRA & (1 << RXC)));
-	UARTIn = UDR;
 	dispState.state = UART_STATE;
 	dispState.timer = 0;
 	//sei();
