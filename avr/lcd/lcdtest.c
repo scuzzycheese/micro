@@ -227,7 +227,7 @@ void tune(uint16_t freq)
 
 	if(getRegister(19, 1) & (1 << 5))
 	{
-		writeLn("Radio ready for tuning...\r\n");
+		//writeLn("Radio ready for tuning...\r\n");
 		
 		//clear tune bit and chan bits
 		reg2 &= ~(0x01FF | 0x0200);
@@ -302,15 +302,15 @@ void seek()
 
 	getCurFreq();
 
-	char strout[20];
-	sprintf(strout, "Found FREQ: %d\r\n", curFreq);
-	writeLn(strout);
+	//char strout[20];
+	//sprintf(strout, "Found FREQ: %d\r\n", curFreq);
+	//writeLn(strout);
 }
 
 
 void volume(uint8_t volu)
 {
-	if(volu >= 22) volu = 22;
+	if(volu >= 21) volu = 21;
 	if(volu <= 0) volu = 0;
 
 	uint16_t reg3 = registerValues[3];
@@ -343,21 +343,21 @@ void volume(uint8_t volu)
 	};
 
 	//clear this part of the register
-	reg3 &= ~(0x000F << 7);
+	reg3 &= ~(0x0F << 7);
 	//fill this part with the nessesary data
-	reg3 |= (vols[volu] & 0x000F) << 7;
+	reg3 |= (vols[volu] & 0x0F) << 7;
 
 	
 	//clear this part of the register
-	reg14 &= ~0xF000;
+	reg14 &= ~(0xF000);
 	//fill this part with the nessesary data "x << 8 = (x >> 4 ) << 12"
-	reg14 |= (vols[volu] & 0x00F0) << 8;
+	reg14 |= (vols[volu] & 0xF0) << 8;
 
-	char outstr[20];
-	sprintf(outstr, "REG3: %0.2X\r\n", reg3);
-	writeLn(outstr);
-	sprintf(outstr, "REG14: %0.2X\r\n", reg14);
-	writeLn(outstr);
+	//char outstr[20];
+	//sprintf(outstr, "REG3: %0.2X\r\n", reg3);
+	//writeLn(outstr);
+	//sprintf(outstr, "REG14: %0.2X\r\n", reg14);
+	//writeLn(outstr);
 
 	setRegister(3, reg3);
 	setRegister(14, reg14);
@@ -392,7 +392,7 @@ ISR(INT0_vect)
 		_delay_ms(50);
 		if(PINC & 2)
 		{
-			writeLn("button pressed\r\n");
+			//writeLn("button pressed\r\n");
 			
 			dispState.state = SEEK_STATE;
 			dispState.timer = 3;
@@ -413,7 +413,7 @@ ISR(USART_RXC_vect)
 {
 	//cli();
 	dispState.state = UART_STATE;
-	dispState.timer = 3;
+	dispState.timer = 0;
 	//sei();
 }
 
@@ -421,7 +421,7 @@ ISR(USART_RXC_vect)
 int main(void)
 {
 	usart_init();
-	writeLn("Hello from RADIO\r\n");
+	//writeLn("Hello from RADIO\r\n");
 
 	MCUCR = (1 << ISC01) | (1 << ISC00);
 	//MCUCR = (1 << ISC00);
@@ -445,10 +445,10 @@ int main(void)
 	//wait for radio to be ready after initialising
 	while(!(getRegister(19, 1) & (1 << 5)))
 	{
-		writeLn("Waiting for STC...\r\n");
+		//writeLn("Waiting for STC...\r\n");
 		_delay_ms(20);
 	}
-	writeLn("Initialised!\r\n");
+	//writeLn("Initialised!\r\n");
 
 	//This might enable RDS
 	uint16_t R1 = registerValues[1];
@@ -539,6 +539,7 @@ int main(void)
 		if(dispState.state == UART_STATE)
 		{
 			char c = getChar();
+			/*
 			if(c == 0x72)
 			{
 				//we need to do a volatile fetch
@@ -551,6 +552,24 @@ int main(void)
 					writeLn(outStr);
 				}
 			}
+			*/
+
+
+			if(c == 0x76)
+			{
+				char strout[20];
+				sprintf(strout, "VOL: %d\r\n", ++ vol);
+				writeLn(strout);
+				volume(vol);
+			}
+			if(c == 0x77)
+			{
+				char strout[20];
+				sprintf(strout, "VOL: %d\r\n", -- vol);
+				writeLn(strout);
+				volume(vol);
+			}
+
 
 			dispState.state = NO_STATE;
 			dispState.timer = 3;
@@ -604,13 +623,15 @@ int main(void)
 			dispState.timer = 3;
 		}
 
-		//decrease the counter, and then drop to the default state
+		//Don't let this thrash
 		if(dispState.timer > 0)
 		{
+			//writeLn("Waiting on timer\r\n");
 			_delay_ms(5);
 		}
 		else
 		{
+			//writeLn("Dropping to default state\r\n");
 			dispState.timer = 3;
 			dispState.state = FREQ_STATE;
 		}
