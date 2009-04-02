@@ -18,3 +18,6 @@ install:
 
 install-dragon:
 	avrdude -p m8 -c dragon_isp -P usb -U flash:w:lcdtest.hex
+
+fuse:
+	avrdude -p m8 -c dragon_isp -P usb -U hfuse:w:0xc9:m -U lfuse:w:0xef:m

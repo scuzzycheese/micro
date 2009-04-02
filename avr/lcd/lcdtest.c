@@ -51,7 +51,9 @@ void usart_init()
 	UBRRH = baudRate >> 8;
 
 	/* Enable receiver, transmitter and recieve complete interrupt */
-	UCSRB = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);
+	//UCSRB = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);
+	/* Enable receiver, transmitter and recieve complete interrupt */
+	UCSRB = (1 << RXEN) | (1 << TXEN);
 
 	/* Set frame format: 8data, 0stop bit */
 	UCSRC = (1 << URSEL) | (3 << UCSZ0);
@@ -69,6 +71,12 @@ unsigned char getChar()
 {
 	while(!(UCSRA & (1 << RXC)));
 	return UDR;
+}
+
+unsigned char getCharNoBlock()
+{
+	if((UCSRA & (1 << RXC))) return UDR; 
+	else return 0;
 }
 
 void writeLn(char *strn)
@@ -370,6 +378,8 @@ void volume(uint8_t volu)
 #define SEEK_STATE 3
 #define FREQ_STATE 4
 #define UART_STATE 5
+#define VOLUME_UP_STATE 6
+#define VOLUME_DOWN_STATE 7
 
 #define STATE_UNCHANGED 0
 #define STATE_CHANGED 1
@@ -393,9 +403,15 @@ ISR(INT0_vect)
 		if(PINC & 2)
 		{
 			//writeLn("button pressed\r\n");
-			
 			dispState.state = SEEK_STATE;
-			dispState.timer = 3;
+		}
+		if(PINC & 3)
+		{
+			dispState.state = VOLUME_UP_STATE;
+		}
+		if(PINC & 4)
+		{
+			dispState.state = VOLUME_DOWN_STATE;
 		}
 	}
 	sei();
@@ -404,11 +420,12 @@ ISR(INT0_vect)
 ISR(TIMER1_COMPA_vect)
 {
 	cli();
+	//writeLn("Count\r\n");
 	//de-increment the timer every second
 	dispState.timer --;
 	sei();
 }
-
+/*
 ISR(USART_RXC_vect)
 {
 	//cli();
@@ -416,12 +433,19 @@ ISR(USART_RXC_vect)
 	dispState.timer = 0;
 	//sei();
 }
+*/
 
 /* new style */
 int main(void)
 {
 	usart_init();
-	//writeLn("Hello from RADIO\r\n");
+	char blah[20];
+	uint8_t moo = MCUCSR;
+	sprintf(blah, "MCUCSR: %0.2X\r\n", moo);
+	writeLn(blah);
+
+	writeLn("Hello from RADIO\r\n");
+	
 
 	MCUCR = (1 << ISC01) | (1 << ISC00);
 	//MCUCR = (1 << ISC00);
@@ -439,21 +463,41 @@ int main(void)
 	lcdGotoXY(0, 0);
 	lcdPrintData("RADIO", 5);
 
+	writeLn("Setting regs...");
+
+	//DELETE
+	if(0)
+	{
+		TIMSK = 1 << OCIE1A;
+		TCCR1B = 1 << CS12 | 1 << WGM12;      // CTC mode, TOP = OCR1A
+		OCR1A = 62500;
+		while(1)
+		{
+			_delay_ms(100);
+		}
+	}
+
 	setAllRegs((uint16_t *)registerValues);
 	_delay_ms(100);
+
+	writeLn("Done!\r\n");
 
 	//wait for radio to be ready after initialising
 	while(!(getRegister(19, 1) & (1 << 5)))
 	{
-		//writeLn("Waiting for STC...\r\n");
+		writeLn("Waiting for STC...\r\n");
 		_delay_ms(20);
 	}
-	//writeLn("Initialised!\r\n");
+	writeLn("Initialised!\r\n");
+
+	volume(1);
+	
+	seek();
 
 	//This might enable RDS
-	uint16_t R1 = registerValues[1];
-	R1 |= 1 << 15;
-	setRegister(1, R1);
+	//uint16_t R1 = registerValues[1];
+	//R1 |= 1 << 15;
+	//setRegister(1, R1);
 
 	//Set up out timer interrupt to fire every second 
 	TIMSK = 1 << OCIE1A;
@@ -532,14 +576,15 @@ int main(void)
 	//DDRC |= 2;
 	DDRC = 0;
 
+	//Initialise the UART char
+	char c = 0;
 
 	while(1)
 	{
 
 		if(dispState.state == UART_STATE)
 		{
-			char c = getChar();
-			/*
+			
 			if(c == 0x72)
 			{
 				//we need to do a volatile fetch
@@ -552,7 +597,7 @@ int main(void)
 					writeLn(outStr);
 				}
 			}
-			*/
+			
 
 
 			if(c == 0x76)
@@ -571,8 +616,31 @@ int main(void)
 			}
 
 
+			if(c == 0x73)
+			{
+				writeLn("Seeking...");
+				seek();	
+				writeLn("Done.\r\n");
+			}
+
+
+
 			dispState.state = NO_STATE;
 			dispState.timer = 3;
+		}
+
+		
+		if(dispState.state == VOLUME_UP_STATE)
+		{
+			++ vol;
+			dispState.state = VOLUME_STATE;
+			volume(vol);
+		}
+		if(dispState.state == VOLUME_DOWN_STATE)
+		{
+			-- vol;
+			dispState.state = VOLUME_STATE;
+			volume(vol);
 		}
 
 		if(dispState.state == STATION_STATE)
@@ -627,7 +695,11 @@ int main(void)
 		if(dispState.timer > 0)
 		{
 			//writeLn("Waiting on timer\r\n");
-			_delay_ms(5);
+			if((c = getCharNoBlock()) != 0)
+			{
+				dispState.state = UART_STATE;
+			}
+			_delay_ms(1);
 		}
 		else
 		{
