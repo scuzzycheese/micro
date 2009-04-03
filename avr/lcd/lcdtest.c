@@ -397,23 +397,21 @@ struct displayState
 ISR(INT0_vect)
 {
 	cli();
+	_delay_ms(50);
 	if(PINC & 2)
 	{
-		_delay_ms(50);
-		if(PINC & 2)
-		{
-			//writeLn("button pressed\r\n");
-			dispState.state = SEEK_STATE;
-		}
-		if(PINC & 3)
-		{
-			dispState.state = VOLUME_UP_STATE;
-		}
-		if(PINC & 4)
-		{
-			dispState.state = VOLUME_DOWN_STATE;
-		}
+		//writeLn("button pressed\r\n");
+		dispState.state = SEEK_STATE;
 	}
+	if(PINC & 4)
+	{
+		dispState.state = VOLUME_UP_STATE;
+	}
+	if(PINC & 8)
+	{
+		dispState.state = VOLUME_DOWN_STATE;
+	}
+
 	sei();
 }
 
