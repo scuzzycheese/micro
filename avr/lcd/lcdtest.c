@@ -507,15 +507,6 @@ int main(void)
 
 
 /*
-	while(1)
-	{
-		char c = getChar();
-		if(c == 0x73)
-		{
-			writeLn("Seeking...");
-			seek();	
-			writeLn("Done.\r\n");
-		}
 		if(c == 0x75)
 		{
 			char strout[20];
@@ -530,48 +521,13 @@ int main(void)
 			writeLn(strout);
 			tune(curFreq);	
 		}
-		if(c == 0x72)
-		{
-			//we need to do a volatile fetch
-			getRegister(0, 1);
-			uint8_t y;
-			for(y = 0; y < 0x1d; y ++)
-			{
-				char outStr[30];
-				sprintf(outStr, "REG: %0.2d - VAL: %0.4X\r\n", y, getRegister(y, 0));
-				writeLn(outStr);
-			}
-		}
-		if(c == 0x76)
-		{
-			char strout[20];
-			sprintf(strout, "VOL: %d\r\n", ++ vol);
-			writeLn(strout);
-			volume(vol);
-		}
-		if(c == 0x77)
-		{
-			char strout[20];
-			sprintf(strout, "VOL: %d\r\n", -- vol);
-			writeLn(strout);
-			volume(vol);
-		}
-	}
 
 */
-
-
-
-
 
 
 	dispState.state = FREQ_STATE;
 	dispState.timer = 0;
 
-	//enable internal pullup on pin 1 of port C
-	//PORTC |= 2;
-	//output in pin 1 of port C
-	//DDRC |= 2;
 	DDRC = 0;
 
 	//Initialise the UART char
@@ -579,114 +535,127 @@ int main(void)
 
 	while(1)
 	{
+		//nominalise the volume
+		if(vol >= 21) vol = 21;
+		if(vol <= 0) vol = 0;
 
-		if(dispState.state == UART_STATE)
+		switch(dispState.state)
 		{
-			
-			if(c == 0x72)
+			case(UART_STATE):
 			{
-				//we need to do a volatile fetch
-				getRegister(0, 1);
-				uint8_t y;
-				for(y = 0; y < 0x1d; y ++)
+				if(c == 0x72)
 				{
-					char outStr[30];
-					sprintf(outStr, "REG: %0.2d - VAL: %0.4X\r\n", y, getRegister(y, 0));
-					writeLn(outStr);
+					//we need to do a volatile fetch
+					getRegister(0, 1);
+					uint8_t y;
+					for(y = 0; y < 0x1d; y ++)
+					{
+						char outStr[30];
+						sprintf(outStr, "REG: %0.2d - VAL: %0.4X\r\n", y, getRegister(y, 0));
+						writeLn(outStr);
+					}
 				}
+				if(c == 0x76)
+				{
+					char strout[20];
+					sprintf(strout, "VOL: %d\r\n", ++ vol);
+					writeLn(strout);
+					volume(vol);
+				}
+				if(c == 0x77)
+				{
+					char strout[20];
+					sprintf(strout, "VOL: %d\r\n", -- vol);
+					writeLn(strout);
+					volume(vol);
+				}
+	
+	
+				if(c == 0x73)
+				{
+					writeLn("Seeking...");
+					seek();	
+					writeLn("Done.\r\n");
+				}
+	
+	
+	
+				dispState.state = NO_STATE;
+				dispState.timer = 3;
 			}
-			
+			break;
 
-
-			if(c == 0x76)
+			case(VOLUME_UP_STATE):
 			{
-				char strout[20];
-				sprintf(strout, "VOL: %d\r\n", ++ vol);
-				writeLn(strout);
+				++ vol;
+				dispState.state = VOLUME_STATE;
 				volume(vol);
 			}
-			if(c == 0x77)
+			break;
+
+			case(VOLUME_DOWN_STATE):
 			{
-				char strout[20];
-				sprintf(strout, "VOL: %d\r\n", -- vol);
-				writeLn(strout);
+				-- vol;
+				dispState.state = VOLUME_STATE;
 				volume(vol);
 			}
-
-
-			if(c == 0x73)
+			break;
+	
+			case(STATION_STATE):
 			{
-				writeLn("Seeking...");
+				lcdClear();
+				lcdGotoXY(0, 0);
+				lcdPrintData("X-FM", 4);
+	
+				//don't thrash this state
+				dispState.state = NO_STATE;
+			}
+			break;
+
+			case(VOLUME_STATE):
+			{
+				lcdClear();
+				lcdGotoXY(0, 0);
+				lcdPrintData("VOLUME", 6);
+	
+				//don't thrash this state
+				dispState.state = NO_STATE;
+				dispState.timer = 3;
+			}
+			break;
+
+			case(SEEK_STATE):
+			{
+				lcdClear();
+				lcdGotoXY(0, 0);
+				lcdPrintData("SEEKING...", 10);
+	
 				seek();	
-				writeLn("Done.\r\n");
+	
+				//drop to the default state as soon as we are finished seeking
+				dispState.state = NO_STATE;
+				dispState.timer = 0;
 			}
+			break;
 
+			case(FREQ_STATE):
+			{
+				char strOut[10];
+				lcdClear();
+				lcdGotoXY(0, 0);
+				sprintf(strOut, "%d", curFreq / 10);
+				lcdPrintData(strOut, strlen(strOut));
+	
+				//Some nasty hackery doo, to get fixed point decimal place
+				sprintf(strOut, ".%d Mhz", curFreq - ((curFreq / 10) * 10));
+				lcdPrintData(strOut, strlen(strOut));
+	
+				//don't thrash this state
+				dispState.state = NO_STATE;
+				dispState.timer = 3;
+			}
+			break;
 
-
-			dispState.state = NO_STATE;
-			dispState.timer = 3;
-		}
-
-		
-		if(dispState.state == VOLUME_UP_STATE)
-		{
-			++ vol;
-			dispState.state = VOLUME_STATE;
-			volume(vol);
-		}
-		if(dispState.state == VOLUME_DOWN_STATE)
-		{
-			-- vol;
-			dispState.state = VOLUME_STATE;
-			volume(vol);
-		}
-
-		if(dispState.state == STATION_STATE)
-		{
-			lcdClear();
-			lcdGotoXY(0, 0);
-			lcdPrintData("X-FM", 4);
-
-			//don't thrash this state
-			dispState.state = NO_STATE;
-		}
-		if(dispState.state == VOLUME_STATE)
-		{
-			lcdClear();
-			lcdGotoXY(0, 0);
-			lcdPrintData("VOLUME", 6);
-
-			//don't thrash this state
-			dispState.state = NO_STATE;
-			dispState.timer = 3;
-		}
-		if(dispState.state == SEEK_STATE)
-		{
-			lcdClear();
-			lcdGotoXY(0, 0);
-			lcdPrintData("SEEKING...", 10);
-
-			seek();	
-
-			//drop to the default state as soon as we are finished seeking
-			dispState.state = NO_STATE;
-			dispState.timer = 0;
-		}
-		if(dispState.state == FREQ_STATE)
-		{
-			char strOut[10];
-			lcdClear();
-			lcdGotoXY(0, 0);
-			sprintf(strOut, "%d", curFreq / 10);
-			lcdPrintData(strOut, strlen(strOut));
-
-			//Some nasty hackery doo, to get fixed point decimal place
-			sprintf(strOut, ".%d Mhz", curFreq - ((curFreq / 10) * 10));
-			lcdPrintData(strOut, strlen(strOut));
-
-			//don't thrash this state
-			dispState.state = NO_STATE;
-			dispState.timer = 3;
 		}
 
 		//Don't let this thrash
