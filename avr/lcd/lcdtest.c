@@ -278,35 +278,34 @@ void seek()
 	uint16_t reg2 = registerValues[2];
 	uint16_t reg3 = registerValues[3];
 
-	if(getRegister(19, 1) & (1 << 5))
-	{
+	//Wait for STC bit (ready bit)
+	while(!(getRegister(19, 1) & (1 << 5)));
 
-		//clear tune bit
-		//set chan bits
-		reg2 = 0xB480;
-		reg2 &= ~(0x01FF | 0x0200);
-		//use global curFreq as a base
-		reg2 |= FTR(curFreq);
-	
-		//clear seek bit 
-		reg3 &= ~(1 << 14);
-		//set seekup bit
-		reg3 |= (1 << 15);
-		//set space = 100k (seek stepping increments in 100k steps)
-		reg3 |= (1 << 13);
-		//set band to US/Europe
-		reg3 &= ~(3 << 11);
-	
-		//send the registers to the chip
-		setRegister(2, reg2);
-		setRegister(3, reg3);
-	
-		//set the seek bit
-		reg3 |= (1 << 14);
-	
-		//send the register to the chip
-		setRegister(3, reg3);
-	}
+	//clear tune bit
+	//set chan bits
+	reg2 = 0xB480;
+	reg2 &= ~(0x01FF | 0x0200);
+	//use global curFreq as a base
+	reg2 |= FTR(curFreq);
+
+	//clear seek bit 
+	reg3 &= ~(1 << 14);
+	//set seekup bit
+	reg3 |= (1 << 15);
+	//set space = 100k (seek stepping increments in 100k steps)
+	reg3 |= (1 << 13);
+	//set band to US/Europe
+	reg3 &= ~(3 << 11);
+
+	//send the registers to the chip
+	setRegister(2, reg2);
+	setRegister(3, reg3);
+
+	//set the seek bit
+	reg3 |= (1 << 14);
+
+	//send the register to the chip
+	setRegister(3, reg3);
 
 	getCurFreq();
 
