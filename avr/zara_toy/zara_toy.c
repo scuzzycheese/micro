@@ -5,162 +5,44 @@
 #include <avr/interrupt.h>
 #include <stdlib.h>
 
-#define _NOP() asm volatile("nop")
 
-void delay_ms(unsigned int n)
+uint8_t sinArray[256] = 
 {
-	while(n --)
-	{
-		_delay_ms(0.96);
-	}
-}
-
-//This is a rough guess at a uS delay routine
-//16Mhz = 16 nop's - 2 (compare, jmp and 
-void delay_us(unsigned int n)
-{
-	while(n --)
-	{
-		_NOP();
-		_NOP();
-		_NOP();
-		_NOP();
-		_NOP();
-		_NOP();
-		_NOP();
-		_NOP();
-		_NOP();
-		_NOP();
-		_NOP();
-		_NOP();
-		_NOP();
-		_NOP();
-	}
-}
-
-#define A5 568
-#define B5 506
-#define C6 477
-#define D5 851
-#define E5 758
-#define F5 716
-#define Fsh5 675
-#define G5 637
-#define D6 425
-#define C5 956
-#define NON 0
-#define DUR 4000
-
-uint16_t tune2[][2] =
-{
-	{G5, DUR * 2},
-	{B5, DUR * 2},
-	{C5, DUR * 2},
-	{B5, DUR * 2},
-	{},
-	{},
-	{},
-	{},
-	{},
-	{},
-	{},
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   1,   2,   2,   3,   4,   4,   5,   6,   7,   9,
+  10,  11,  12,  14,  15,  17,  18,  20,  22,  24,  25,  27,  29,  31,  34,  36,  38,  40,  43,  45,  47,
+  50,  52,  55,  57,  60,  63,  66,  68,  71,  74,  77,  80,  83,  86,  89,  92,  95,  98, 101, 104, 107,
+ 110, 113, 116, 119, 123, 126, 129, 132, 135, 138, 141, 144, 148, 151, 154, 157, 160, 163, 166, 169, 172,
+ 175, 178, 181, 183, 186, 189, 192, 194, 197, 200, 202, 205, 207, 210, 212, 214, 217, 219, 221, 223, 225,
+ 227, 229, 231, 233, 235, 236, 238, 240, 241, 242, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 253,
+ 254, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254, 254, 253, 253, 252, 251, 251, 250, 249,
+ 248, 246, 245, 244, 243, 241, 240, 238, 237, 235, 233, 231, 230, 228, 226, 224, 221, 219, 217, 215, 212,
+ 210, 208, 205, 203, 200, 198, 195, 192, 189, 187, 184, 181, 178, 175, 172, 169, 166, 163, 160, 157, 154,
+ 151, 148, 145, 142, 139, 136, 132, 129, 126, 123, 120, 117, 114, 111, 107, 104, 101,  98,  95,  92,  89,
+  86,  83,  80,  77,  74,  72,  69,  66,  63,  61,  58,  55,  53,  50,  48,  45,  43,  41,  38,  36,  34,
+  32,  30,  28,  26,  24,  22,  20,  19,  17,  15,  14,  13,  11,  10,   9,   8,   7,   6,   5,   4,   3,
+   2,   2,   1,   1
 };
-
-uint16_t tune1[][2] = 
-{
-	{D5, DUR}, 
-	{NON, 1}, 
-	{D5, DUR}, 
-	{E5, DUR}, 
-	{D5, DUR}, 
-	{G5, DUR}, 
-	{Fsh5, 2 * DUR}, 
-
-	{D5, DUR}, 
-	{E5, DUR},
-	{D5, DUR},
-	{A5, DUR},
-	{G5, 2 * DUR},
-
-	{D5, DUR},
-	{D6, DUR},
-	{B5, DUR},
-	{G5, DUR},
-	{Fsh5, DUR},
-	{E5, DUR},
-
-	{C6, DUR},
-	{B5, DUR},
-	{G5, DUR},
-	{A5, DUR},
-	{G5, 2 * DUR},
-	{0, 0}
-}; 
-
-void play_tone(uint16_t delay, uint16_t duration)
-{
-	uint16_t cycles = duration / (delay / 50);
-	
-	while(cycles > 0)
-	{
-		PORTC |= 1 << 2;
-		delay_us(delay);
-		PORTC &= ~(1 << 2);
-		delay_us(delay);
-		cycles --;
-	}
-}
-
-#define MOTOR_ON PORTC |= 1 << 5
-#define MOTOR_OFF PORTC &= ~(1 << 5);
 
 /* new style */
 int main(void)
 {
 	DDRC = 0xFF;
-	DDRD = 0xFF;
 	
-	//Enable the input of these pins for the switch state controller
-	DDRD &= ~(1 << 2);
-	DDRD &= ~(1 << 3);
-
-	//Turn on the output pin for the switch state controller
-	PORTD = 1 << 4;
-
-	PORTC = 0;
-	//Always turn on the motor
-	//MOTOR_ON;
-
+	int dutyCycle = 0;
+	int incrementVal = -1;
 	while(1)
 	{
-		MOTOR_ON;
-		delay_ms(250);
-		MOTOR_OFF;
-		delay_ms(250);
-		/*
-		int tunePlace = 0;
-		while(tune1[tunePlace][1])
+		dutyCycle ++;
+		int i;
+		for(i = 0; i < 256; i ++)
 		{
-			//I'm going to add the state detection in this loop, it should be
-			//accurate enough for a simple toy
-			//NOTE: I don't need to bother with detecting the first state on the
-			//switch, because the motor will ALWAYs turn, according to the controll
-			//images on the switch
-			if(PIND & (1 << 2)) 
-			{
-				//play_tone(tune1[tunePlace][0], tune1[tunePlace][1]);
-				//PORTD |= 1 << 5;	
-			}
-			else
-			{
-				//PORTD &= ~(1 << 5);
-			}
-
-			tunePlace ++;
+			_delay_us(80);
+			if(i < sinArray[dutyCycle]) PORTD |= (1 << 5);
+			else PORTD &= ~(1 << 5);
 		}
-		delay_ms(1000);
-		*/
+		if(dutyCycle >= 255) dutyCycle = 0;
 	}
 
 	return 0;
 }
+
