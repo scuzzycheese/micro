@@ -1,5 +1,5 @@
 all:
-	avr-gcc -g -Os -mcall-prologues -mmcu=atmega8 -c zara_toy.c
+	avr-gcc -g -Os -mcall-prologues -mmcu=atmega8 -std=c99 -c zara_toy.c
 	avr-gcc -g -Os -mcall-prologues -mmcu=atmega8 -o zara_toy.elf zara_toy.o
 
 	avr-objcopy -j .text -j .data -O ihex zara_toy.elf zara_toy.hex

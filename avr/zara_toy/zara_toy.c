@@ -27,20 +27,43 @@ uint8_t sinArray[256] =
 int main(void)
 {
 	DDRC = 0xFF;
+	DDRD = 0xFF;
 	
-	int dutyCycle = 0;
-	int incrementVal = -1;
+	int dutyCycle[3] = {0, 66, 200};
+	int dutyInc[3] = {1, 2, 3};
+	int dutyNumber = 3;
+	int8_t slowDown = 3;
+	int8_t slowDownCounter = 0;
 	while(1)
 	{
-		dutyCycle ++;
-		int i;
-		for(i = 0; i < 256; i ++)
+		slowDownCounter ++;
+		if(slowDownCounter >= slowDown)
 		{
-			_delay_us(80);
-			if(i < sinArray[dutyCycle]) PORTD |= (1 << 5);
-			else PORTD &= ~(1 << 5);
+			for(int8_t i = 0; i < dutyNumber; i ++)
+			{
+				dutyCycle[i] += dutyInc[i];
+			}
+			slowDownCounter = 0;
 		}
-		if(dutyCycle >= 255) dutyCycle = 0;
+		for(int i = 0; i < 256; i ++)
+		{
+			_delay_us(40);
+			if(i < sinArray[dutyCycle[0]]) PORTD |= (1 << 5);
+			else PORTD &= ~(1 << 5);
+
+			if(i < sinArray[dutyCycle[1]]) PORTC |= 32;
+			else PORTC &= ~(32);
+
+			if(i < sinArray[dutyCycle[2]]) PORTC |= 4;
+			else PORTC &= ~(4);
+
+
+
+		}
+		for(int8_t i = 0; i < dutyNumber; i ++)
+		{
+			if(dutyCycle[i] >= 255) dutyCycle[i] = 0;
+		}
 	}
 
 	return 0;
