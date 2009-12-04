@@ -1,0 +1,4 @@
+open /dev/ttyUSB0
+version
+set ramwriteallow 0x200000 0x210000
+set flashwriteallow 0x100000 0x140000
