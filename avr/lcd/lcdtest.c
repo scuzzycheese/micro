@@ -419,7 +419,6 @@ int main(void)
 	}
 	//writeLn("Initialised!\r\n");
 
-	volume(1);
 	
 	seek();
 
@@ -434,7 +433,6 @@ int main(void)
 	OCR1A = 62500;
 
 	curFreq = 860;
-	uint8_t vol = 0;
 
 
 	dispState.state = FREQ_STATE;
@@ -442,8 +440,10 @@ int main(void)
 
 	DDRC = 0;
 
-	//Initialise the UART char
-	char c = 0;
+	
+	_delay_ms(10);
+	uint8_t vol = 15;
+	volume(vol);
 
 	while(1)
 	{
@@ -486,6 +486,8 @@ int main(void)
 				lcdClear();
 				lcdGotoXY(0, 0);
 				lcdPrintData("VOLUME", 6);
+				lcdGotoXY(0, 1);
+				lcdProgressBar(vol, 21, 20);
 	
 				//don't thrash this state
 				dispState.state = NO_STATE;
