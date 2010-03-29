@@ -43,50 +43,6 @@ uint16_t curFreq = 850;
 #define SLA_W 0x20 //write address
 #define SLA_R 0x21 //read address
 
-void usart_init()
-{
-	unsigned int baudRate = SET_BAUD(38400);
-
-	UBRRL = baudRate;
-	UBRRH = baudRate >> 8;
-
-	/* Enable receiver, transmitter and recieve complete interrupt */
-	//UCSRB = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);
-	/* Enable receiver, transmitter and recieve complete interrupt */
-	UCSRB = (1 << RXEN) | (1 << TXEN);
-
-	/* Set frame format: 8data, 0stop bit */
-	UCSRC = (1 << URSEL) | (3 << UCSZ0);
-}
-
-void putChar(uint8_t c)
-{
-	UDR = c;
-	while(!(UCSRA & (1 << TXC)));
-	//clear the bit by writing a 1
-	UCSRA = 1 << TXC;
-}
-
-unsigned char getChar()
-{
-	while(!(UCSRA & (1 << RXC)));
-	return UDR;
-}
-
-unsigned char getCharNoBlock()
-{
-	if((UCSRA & (1 << RXC))) return UDR; 
-	else return 0;
-}
-
-void writeLn(char *strn)
-{
-	while(*strn)
-	{
-		putChar(*(strn ++));
-	}
-}
-
 
 uint16_t getRegister_helper(uint8_t regNumber)
 {
@@ -122,7 +78,7 @@ uint16_t getRegister_helper(uint8_t regNumber)
 	}
 	else
 	{
-		writeLn("Device Not Responding to READ operations\r\n");
+		//writeLn("Device Not Responding to READ operations\r\n");
 	}
 
 	_delay_ms(1);
@@ -139,7 +95,6 @@ uint16_t getRegister(uint8_t regNumber, uint8_t vola)
 	//This is crazy, it doesn't work like the docco says
 	if(vola)
 	{
-		//writeLn("Getting register set (volatile)...\r\n");
 		uint8_t i;
 		for(i = 0x0; i < 0x1d; i++)
 		{
@@ -201,14 +156,12 @@ void setAllRegs(uint16_t regVals[])
 	uint8_t i;
 	for(i = 1; i < 18; i ++)
 	{
-		//writeLn("Setting Register\r\n");
 		uint8_t setBool = setRegister(i, regVals[i]);
-		if(!setBool) writeLn("Device Not Responding\r\n");
+		//if(!setBool) writeLn("Device Not Responding\r\n");
 		_delay_ms(1);
 	}
-	//writeLn("Setting Register\r\n");
 	uint8_t setBool = setRegister(0, regVals[0]);
-	if(!setBool) writeLn("Device Not Responding\r\n");
+	//if(!setBool) writeLn("Device Not Responding\r\n");
 }
 
 
@@ -279,7 +232,7 @@ void seek()
 	uint16_t reg3 = registerValues[3];
 
 	//Wait for STC bit (ready bit)
-	while(!(getRegister(19, 1) & (1 << 5)));
+	//while(!(getRegister(19, 1) & (1 << 5)));
 
 	//clear tune bit
 	//set chan bits
@@ -422,32 +375,13 @@ ISR(TIMER1_COMPA_vect)
 	dispState.timer --;
 	sei();
 }
-/*
-ISR(USART_RXC_vect)
-{
-	//cli();
-	dispState.state = UART_STATE;
-	dispState.timer = 0;
-	//sei();
-}
-*/
 
 /* new style */
 int main(void)
 {
-	usart_init();
-	char blah[20];
-	uint8_t moo = MCUCSR;
-	sprintf(blah, "MCUCSR: %0.2X\r\n", moo);
-	writeLn(blah);
-
-	writeLn("Hello from RADIO\r\n");
-	
-
 	MCUCR = (1 << ISC01) | (1 << ISC00);
 	//MCUCR = (1 << ISC00);
 	GIMSK  |= (1 << INT0);
-
 
 	sei();
 
@@ -459,8 +393,6 @@ int main(void)
 	lcdClear();
 	lcdGotoXY(0, 0);
 	lcdPrintData("RADIO", 5);
-
-	writeLn("Setting regs...");
 
 	//DELETE
 	if(0)
@@ -477,15 +409,15 @@ int main(void)
 	setAllRegs((uint16_t *)registerValues);
 	_delay_ms(100);
 
-	writeLn("Done!\r\n");
+	//writeLn("Done!\r\n");
 
 	//wait for radio to be ready after initialising
 	while(!(getRegister(19, 1) & (1 << 5)))
 	{
-		writeLn("Waiting for STC...\r\n");
+		//writeLn("Waiting for STC...\r\n");
 		_delay_ms(20);
 	}
-	writeLn("Initialised!\r\n");
+	//writeLn("Initialised!\r\n");
 
 	volume(1);
 	
@@ -505,25 +437,6 @@ int main(void)
 	uint8_t vol = 0;
 
 
-/*
-		if(c == 0x75)
-		{
-			char strout[20];
-			sprintf(strout, "FREQ: %d\r\n", ++ curFreq);
-			writeLn(strout);
-			tune(curFreq);	
-		}
-		if(c == 0x64)
-		{
-			char strout[20];
-			sprintf(strout, "FREQ: %d\r\n", -- curFreq);
-			writeLn(strout);
-			tune(curFreq);	
-		}
-
-*/
-
-
 	dispState.state = FREQ_STATE;
 	dispState.timer = 0;
 
@@ -540,49 +453,6 @@ int main(void)
 
 		switch(dispState.state)
 		{
-			case(UART_STATE):
-			{
-				if(c == 0x72)
-				{
-					//we need to do a volatile fetch
-					getRegister(0, 1);
-					uint8_t y;
-					for(y = 0; y < 0x1d; y ++)
-					{
-						char outStr[30];
-						sprintf(outStr, "REG: %0.2d - VAL: %0.4X\r\n", y, getRegister(y, 0));
-						writeLn(outStr);
-					}
-				}
-				if(c == 0x76)
-				{
-					char strout[20];
-					sprintf(strout, "VOL: %d\r\n", ++ vol);
-					writeLn(strout);
-					volume(vol);
-				}
-				if(c == 0x77)
-				{
-					char strout[20];
-					sprintf(strout, "VOL: %d\r\n", -- vol);
-					writeLn(strout);
-					volume(vol);
-				}
-	
-	
-				if(c == 0x73)
-				{
-					writeLn("Seeking...");
-					seek();	
-					writeLn("Done.\r\n");
-				}
-	
-	
-	
-				dispState.state = NO_STATE;
-				dispState.timer = 3;
-			}
-			break;
 
 			case(VOLUME_UP_STATE):
 			{
@@ -660,11 +530,6 @@ int main(void)
 		//Don't let this thrash
 		if(dispState.timer > 0)
 		{
-			//writeLn("Waiting on timer\r\n");
-			if((c = getCharNoBlock()) != 0)
-			{
-				dispState.state = UART_STATE;
-			}
 			_delay_ms(1);
 		}
 		else
