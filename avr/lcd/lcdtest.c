@@ -407,19 +407,14 @@ int main(void)
 	}
 
 	setAllRegs((uint16_t *)registerValues);
-	_delay_ms(100);
-
-	//writeLn("Done!\r\n");
+	_delay_ms(10);
 
 	//wait for radio to be ready after initialising
 	while(!(getRegister(19, 1) & (1 << 5)))
 	{
-		//writeLn("Waiting for STC...\r\n");
-		_delay_ms(20);
+		_delay_ms(10);
 	}
-	//writeLn("Initialised!\r\n");
 
-	
 	seek();
 
 	//This might enable RDS
