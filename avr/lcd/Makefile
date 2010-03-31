@@ -1,5 +1,5 @@
 CPU = -mmcu=atmega8
-OPT = -g -Os -mcall-prologues -Wl,-Map,lcdtest.map
+OPT = -Os -mcall-prologues -Wl,-Map,lcdtest.map
 //OPT = -mcall-prologues
 
 all:

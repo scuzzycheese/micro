@@ -515,21 +515,22 @@ int main(void)
 				lcdGotoXY(0, 0);
 				lcdPrintData("Sleeping", 8);
 
+
 				
 				//disable interrupts (race condition might occur)
 				cli();
 				//Set the sleep mode and type
-				MCUCR |= 11 << 4;
+				MCUCR |= (1 << SE) | (1 << SM1);
 
-				lcdGotoXY(0, 1);
-				sprintf(data, "MCUCR: %X", MCUCR);
-				lcdPrintData(data, 9);
+				//lcdGotoXY(0, 1);
+				//sprintf(data, "MCUCR: %X", MCUCR);
+				//lcdPrintData(data, 9);
 
 				//re-enable interrupts
 				sei();
 				sleep_cpu();
 				//disable sleep mode and type
-				MCUCR &= ~(11 << 4);
+				MCUCR &= ~((1 << SE) | (1 << SM1));
 				
 
 				dispState.state = NO_STATE;
