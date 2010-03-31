@@ -5,14 +5,32 @@
 #include <stdio.h>
 #include "i2c.h"
 #include <avr/interrupt.h>
+#include <avr/sleep.h>
 #include <string.h>
 
 #include "lcd.h"
 
 #define SET_BAUD(baudRate) (((F_CPU / baudRate) / 16L) - 1)
 
+#define FTR(x) (x - 690)
+#define RTF(x) (x + 690)
+
+#define SLA_W 0x20 //write address
+#define SLA_R 0x21 //read address
+
+#define NO_STATE 0
+#define STATION_STATE 1
+#define VOLUME_STATE 2
+#define SEEK_STATE 3
+#define FREQ_STATE 4
+#define UART_STATE 5
+#define VOLUME_UP_STATE 6
+#define VOLUME_DOWN_STATE 7
+#define SLEEP_STATE 8
+
+
 //Default register values for the ar1000
-const uint16_t registerValues[18] = 
+uint16_t registerValues[18] = 
 {
 	0xffff,
 	0x5b15,
@@ -35,13 +53,15 @@ const uint16_t registerValues[18] =
 };
 
 //This is a global placeholder for the current curFreq
-uint16_t curFreq = 850;
+uint16_t curFreq = 860;
 
-#define FTR(x) (x - 690)
-#define RTF(x) (x + 690)
+struct displayState
+{
+	volatile int8_t sleepTimer;
+	uint8_t state;
+	int8_t timer;
+} dispState = { 0, SEEK_STATE, 3 };
 
-#define SLA_W 0x20 //write address
-#define SLA_R 0x21 //read address
 
 
 uint16_t getRegister_helper(uint8_t regNumber)
@@ -91,7 +111,7 @@ uint16_t getRegister_helper(uint8_t regNumber)
 
 uint16_t getRegister(uint8_t regNumber, uint8_t vola)
 {
-	static uint16_t internalRegs[18]; 
+	static uint16_t internalRegs[29]; 
 	//This is crazy, it doesn't work like the docco says
 	if(vola)
 	{
@@ -322,26 +342,13 @@ void volume(uint8_t volu)
 	setRegister(3, reg3);
 	setRegister(14, reg14);
 
+	//This is to ensure the volume stays the same after every seek
+	//I hope
+	registerValues[3] = reg3;
+	registerValues[14] = reg14;
+
 }
 
-#define NO_STATE 0
-#define STATION_STATE 1
-#define VOLUME_STATE 2
-#define SEEK_STATE 3
-#define FREQ_STATE 4
-#define UART_STATE 5
-#define VOLUME_UP_STATE 6
-#define VOLUME_DOWN_STATE 7
-
-#define STATE_UNCHANGED 0
-#define STATE_CHANGED 1
-
-struct displayState
-{
-	uint8_t genReg;
-	uint8_t state;
-	uint8_t timer;
-} dispState;
 
 
 
@@ -364,6 +371,9 @@ ISR(INT0_vect)
 		dispState.state = VOLUME_DOWN_STATE;
 	}
 
+	//Reset sleep timer
+	dispState.sleepTimer = 0;
+
 	sei();
 }
 
@@ -373,10 +383,16 @@ ISR(TIMER1_COMPA_vect)
 	//writeLn("Count\r\n");
 	//de-increment the timer every second
 	dispState.timer --;
+	dispState.sleepTimer ++;
+	if(dispState.sleepTimer >= 20)
+	{
+		dispState.state = SLEEP_STATE;
+		dispState.sleepTimer = 0;
+		dispState.timer = 3;
+	}
 	sei();
 }
 
-/* new style */
 int main(void)
 {
 	MCUCR = (1 << ISC01) | (1 << ISC00);
@@ -394,18 +410,6 @@ int main(void)
 	lcdGotoXY(0, 0);
 	lcdPrintData("RADIO", 5);
 
-	//DELETE
-	if(0)
-	{
-		TIMSK = 1 << OCIE1A;
-		TCCR1B = 1 << CS12 | 1 << WGM12;      // CTC mode, TOP = OCR1A
-		OCR1A = 62500;
-		while(1)
-		{
-			_delay_ms(100);
-		}
-	}
-
 	setAllRegs((uint16_t *)registerValues);
 	_delay_ms(10);
 
@@ -414,8 +418,6 @@ int main(void)
 	{
 		_delay_ms(10);
 	}
-
-	seek();
 
 	//This might enable RDS
 	//uint16_t R1 = registerValues[1];
@@ -427,17 +429,10 @@ int main(void)
 	TCCR1B = 1 << CS12 | 1 << WGM12;      // CTC mode, TOP = OCR1A
 	OCR1A = 62500;
 
-	curFreq = 860;
-
-
-	dispState.state = FREQ_STATE;
-	dispState.timer = 0;
-
 	DDRC = 0;
-
 	
 	_delay_ms(10);
-	uint8_t vol = 15;
+	uint8_t vol = 10;
 	volume(vol);
 
 	while(1)
@@ -449,34 +444,25 @@ int main(void)
 		switch(dispState.state)
 		{
 
-			case(VOLUME_UP_STATE):
+			case VOLUME_UP_STATE:
 			{
 				++ vol;
 				dispState.state = VOLUME_STATE;
+				dispState.timer = 3;
 				volume(vol);
 			}
 			break;
 
-			case(VOLUME_DOWN_STATE):
+			case VOLUME_DOWN_STATE:
 			{
 				-- vol;
 				dispState.state = VOLUME_STATE;
+				dispState.timer = 3;
 				volume(vol);
 			}
 			break;
-	
-			case(STATION_STATE):
-			{
-				lcdClear();
-				lcdGotoXY(0, 0);
-				lcdPrintData("X-FM", 4);
-	
-				//don't thrash this state
-				dispState.state = NO_STATE;
-			}
-			break;
 
-			case(VOLUME_STATE):
+			case VOLUME_STATE:
 			{
 				lcdClear();
 				lcdGotoXY(0, 0);
@@ -490,7 +476,7 @@ int main(void)
 			}
 			break;
 
-			case(SEEK_STATE):
+			case SEEK_STATE:
 			{
 				lcdClear();
 				lcdGotoXY(0, 0);
@@ -504,9 +490,9 @@ int main(void)
 			}
 			break;
 
-			case(FREQ_STATE):
+			case FREQ_STATE:
 			{
-				char strOut[10];
+				char strOut[20];
 				lcdClear();
 				lcdGotoXY(0, 0);
 				sprintf(strOut, "%d", curFreq / 10);
@@ -516,10 +502,41 @@ int main(void)
 				sprintf(strOut, ".%d Mhz", curFreq - ((curFreq / 10) * 10));
 				lcdPrintData(strOut, strlen(strOut));
 	
-				//don't thrash this state
+				//if I've been here too long, then go to sleep
+				dispState.state = NO_STATE;
+				dispState.timer = 20;
+			}
+			break;
+			
+			case SLEEP_STATE:
+			{
+				char data[20];
+				lcdClear();
+				lcdGotoXY(0, 0);
+				lcdPrintData("Sleeping", 8);
+
+				
+				//disable interrupts (race condition might occur)
+				cli();
+				//Set the sleep mode and type
+				MCUCR |= 11 << 4;
+
+				lcdGotoXY(0, 1);
+				sprintf(data, "MCUCR: %X", MCUCR);
+				lcdPrintData(data, 9);
+
+				//re-enable interrupts
+				sei();
+				sleep_cpu();
+				//disable sleep mode and type
+				MCUCR &= ~(11 << 4);
+				
+
 				dispState.state = NO_STATE;
 				dispState.timer = 3;
 			}
+			break;
+			default:
 			break;
 
 		}
