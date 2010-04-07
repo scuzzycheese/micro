@@ -356,23 +356,39 @@ void volume(uint8_t volu)
 ISR(INT0_vect)
 {
 	cli();
+
+	DDRD = 4;
+	PORTD = 0;
+
+	DDRC &= ~((1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3));
+	PORTC |= (1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3);
+
+
 	_delay_ms(50);
-	if(PINC & 2)
+	if(!(PINC & 2))
 	{
 		//writeLn("button pressed\r\n");
 		dispState.state = SEEK_STATE;
 	}
-	if(PINC & 4)
+	if(!(PINC & 4))
 	{
 		dispState.state = VOLUME_UP_STATE;
 	}
-	if(PINC & 8)
+	if(!(PINC & 8))
 	{
 		dispState.state = VOLUME_DOWN_STATE;
 	}
 
 	//Reset sleep timer
 	dispState.sleepTimer = 0;
+	DDRD = 0;
+	PORTD = 4;
+
+	DDRC = (1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3);
+	PORTC = ~((1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3));
+
+	//clear any new interrupt flags
+	GIFR |= 1 << INTF0;
 
 	sei();
 }
@@ -395,7 +411,13 @@ ISR(TIMER1_COMPA_vect)
 
 int main(void)
 {
-	MCUCR = (1 << ISC01) | (1 << ISC00);
+	DDRD = 0;
+	PORTD = 4;
+
+	DDRC = (1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3);
+	PORTC = ~((1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3));
+
+	MCUCR = (1 << ISC01);
 	//MCUCR = (1 << ISC00);
 	GIMSK  |= (1 << INT0);
 
@@ -429,7 +451,6 @@ int main(void)
 	TCCR1B = 1 << CS12 | 1 << WGM12;      // CTC mode, TOP = OCR1A
 	OCR1A = 62500;
 
-	DDRC = 0;
 	
 	_delay_ms(10);
 	uint8_t vol = 10;
