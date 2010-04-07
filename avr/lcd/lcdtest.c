@@ -421,6 +421,10 @@ int main(void)
 	//MCUCR = (1 << ISC00);
 	GIMSK  |= (1 << INT0);
 
+
+	//power down the ADC conversion
+	ACSR |= (1 << ACD);
+
 	sei();
 
 	i2cInit();
@@ -535,24 +539,16 @@ int main(void)
 				lcdClear();
 				lcdGotoXY(0, 0);
 				lcdPrintData("Sleeping", 8);
-
-
 				
 				//disable interrupts (race condition might occur)
 				cli();
-				//Set the sleep mode and type
-				MCUCR |= (1 << SE) | (1 << SM1);
-
-				//lcdGotoXY(0, 1);
-				//sprintf(data, "MCUCR: %X", MCUCR);
-				//lcdPrintData(data, 9);
-
+				//Set the sleep mode and type (idle mode)
+				MCUCR |= (1 << SE);
 				//re-enable interrupts
 				sei();
 				sleep_cpu();
-				//disable sleep mode and type
-				MCUCR &= ~((1 << SE) | (1 << SM1));
-				
+				//disable sleem mode
+				MCUCR &= ~(1 << SE);
 
 				dispState.state = NO_STATE;
 				dispState.timer = 3;
