@@ -357,8 +357,8 @@ ISR(INT0_vect)
 {
 	cli();
 
-	DDRD = 4;
-	PORTD = 0;
+	DDRD |= (1 << PORTD2);
+	PORTD &= ~(1 << PORTD2);
 
 	DDRC &= ~((1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3));
 	PORTC |= (1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3);
@@ -381,8 +381,8 @@ ISR(INT0_vect)
 
 	//Reset sleep timer
 	dispState.sleepTimer = 0;
-	DDRD = 0;
-	PORTD = 4;
+	DDRD &= ~(1 << PORTD2);
+	PORTD |= (1 << PORTD2);
 
 	DDRC = (1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3);
 	PORTC = ~((1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3));
@@ -411,8 +411,8 @@ ISR(TIMER1_COMPA_vect)
 
 int main(void)
 {
-	DDRD = 0;
-	PORTD = 4;
+	DDRD = (1 << PORT0);
+	PORTD = (1 << PORTD2) | (1 << PORTD0);
 
 	DDRC = (1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3);
 	PORTC = ~((1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3));
@@ -535,22 +535,29 @@ int main(void)
 			
 			case SLEEP_STATE:
 			{
-				char data[20];
-				lcdClear();
-				lcdGotoXY(0, 0);
+				lcdGotoXY(0, 1);
 				lcdPrintData("Sleeping", 8);
 				
 				//disable interrupts (race condition might occur)
 				cli();
 				//Set the sleep mode and type (idle mode)
 				MCUCR |= (1 << SE);
+				//disable the timer interrupt
+				TIMSK &= ~(1 << OCIE1A);
+				//switch off LCD
+				PORTD &= ~(1 << PORTD0);
 				//re-enable interrupts
 				sei();
 				sleep_cpu();
 				//disable sleem mode
 				MCUCR &= ~(1 << SE);
+				//re-enable the timer interrupt
+				TIMSK |= (1 << OCIE1A);
+				//switch on LCD
+				PORTD |= (1 << PORTD0);
 
-				dispState.state = NO_STATE;
+				//when the interrupt fires, it sets the state
+				//dispState.state = NO_STATE;
 				dispState.timer = 3;
 			}
 			break;
