@@ -4,6 +4,9 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
+//This is a global placeholder for the current curFreq
+uint16_t curFreq = 860;
+
 //Default register values for the ar1000
 uint16_t registerValues[18] =
 {
@@ -27,8 +30,6 @@ uint16_t registerValues[18] =
 	0xdf6a
 };
 
-//This is a global placeholder for the current curFreq
-uint16_t curFreq = 860;
 
 void ar1010Init()
 {
@@ -168,6 +169,16 @@ void getCurFreq()
 	reg19 = reg19 >> 7;
 
 	curFreq = RTF(reg19);
+}
+
+//Nasty little blocking function, oh well.
+void ar1010WaitForReady()
+{
+	//wait for radio to be ready after initialising
+	while(!(getRegister(19, 1) & (1 << 5)))
+	{
+		_delay_ms(10);
+	}
 }
 
 uint16_t ar1010getCurFreq()

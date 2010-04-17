@@ -17,6 +17,7 @@
                    projectFiles="false">
       <itemPath>Makefile</itemPath>
       <itemPath>Makefile-lcd.mk</itemPath>
+      <itemPath>flash.sh</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>

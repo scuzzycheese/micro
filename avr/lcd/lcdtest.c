@@ -24,7 +24,6 @@
 
 
 
-
 struct displayState
 {
 	volatile int8_t sleepTimer;
@@ -92,6 +91,7 @@ ISR(TIMER1_COMPA_vect)
 
 int main(void)
 {
+
 	DDRD = (1 << PORT0);
 	PORTD = (1 << PORTD2) | (1 << PORTD0);
 
@@ -120,11 +120,7 @@ int main(void)
 	ar1010Init();
 	_delay_ms(10);
 
-	//wait for radio to be ready after initialising
-	while(!(getRegister(19, 1) & (1 << 5)))
-	{
-		_delay_ms(10);
-	}
+	ar1010WaitForReady();
 
 	//Set up out timer interrupt to fire every second 
 	TIMSK = 1 << OCIE1A;
