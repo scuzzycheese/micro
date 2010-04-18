@@ -4,8 +4,10 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-//This is a global placeholder for the current curFreq
-uint16_t curFreq = 860;
+#include <string.h>
+#include <stdio.h>
+
+
 
 //Default register values for the ar1000
 uint16_t registerValues[18] =
@@ -30,6 +32,8 @@ uint16_t registerValues[18] =
 	0xdf6a
 };
 
+//This is a global placeholder for the current curFreq
+uint16_t curFreq = 860;
 
 void ar1010Init()
 {
@@ -157,18 +161,12 @@ void setAllRegs(uint16_t *regVals)
 }
 
 
-void getCurFreq()
+uint16_t getCurFreq()
 {
-	//Wait for STC, then set the global curFreq to the one the radio tuned to
-	uint16_t reg19;
-	while(!(getRegister(19, 1) & (1 << 5)));
-	reg19 = getRegister(19, 1);
-
-	//reg19 = (reg19 & 0xFF80) >> 7;
-	//since we are shifting right, we don't need to mask out the rightmost bits like above
-	reg19 = reg19 >> 7;
-
-	curFreq = RTF(reg19);
+	//I'm using delays, as opposed to checking the STC bit, 
+	//because it seems somewhat unreliable
+	_delay_ms(5);
+	return RTF(getRegister(19, 1) >> 7);
 }
 
 //Nasty little blocking function, oh well.
@@ -183,6 +181,11 @@ void ar1010WaitForReady()
 
 uint16_t ar1010getCurFreq()
 {
+	char testData[10];
+	lcdClear();
+	lcdGotoXY(10, 0);
+	sprintf(testData, "%d", getCurFreq());
+	lcdPrintData(testData, strlen(testData));
 	return curFreq;
 }
 
@@ -223,7 +226,7 @@ void ar1010Tune(uint16_t freq)
 
 	}
 
-	getCurFreq();
+	curFreq = getCurFreq();
 
 }
 
@@ -266,11 +269,7 @@ void ar1010Seek()
 	//send the register to the chip
 	setRegister(3, reg3);
 
-	getCurFreq();
-
-	//char strout[20];
-	//sprintf(strout, "Found FREQ: %d\r\n", curFreq);
-	//writeLn(strout);
+	curFreq = getCurFreq();
 }
 
 
@@ -332,5 +331,4 @@ void ar1010Volume(uint8_t volu)
 	//I hope
 	registerValues[3] = reg3;
 	registerValues[14] = reg14;
-
 }

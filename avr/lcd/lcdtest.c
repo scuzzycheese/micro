@@ -192,13 +192,17 @@ int main(void)
 				uint16_t curFreq = ar1010getCurFreq();
 
 				char strOut[20];
-				lcdClear();
+				//lcdClear();
 				lcdGotoXY(0, 0);
 				sprintf(strOut, "%d", curFreq / 10);
 				lcdPrintData(strOut, strlen(strOut));
 	
 				//Some nasty hackery doo, to get fixed point decimal place
 				sprintf(strOut, ".%d Mhz", curFreq - ((curFreq / 10) * 10));
+				lcdPrintData(strOut, strlen(strOut));
+
+				lcdGotoXY(0, 1);
+				sprintf(strOut, "%d Khz", curFreq);
 				lcdPrintData(strOut, strlen(strOut));
 	
 				//if I've been here too long, then go to sleep
