@@ -30,6 +30,6 @@ static uint16_t getRegister_helper(uint8_t regNumber);
 static uint16_t getRegister(uint8_t regNumber, uint8_t vola);
 static uint8_t setRegister(uint8_t regNumber, uint16_t regValue);
 static void setAllRegs(uint16_t *regVals);
-static uint16_t getCurFreq();
+static void getCurFreq();
 #endif	/* _AR1010_H */
 

@@ -161,12 +161,12 @@ void setAllRegs(uint16_t *regVals)
 }
 
 
-uint16_t getCurFreq()
+void getCurFreq()
 {
 	//I'm using delays, as opposed to checking the STC bit, 
 	//because it seems somewhat unreliable
 	_delay_ms(5);
-	return RTF(getRegister(19, 1) >> 7);
+	curFreq = RTF(getRegister(19, 1) >> 7);
 }
 
 //Nasty little blocking function, oh well.
@@ -181,11 +181,13 @@ void ar1010WaitForReady()
 
 uint16_t ar1010getCurFreq()
 {
+	/*
 	char testData[10];
 	lcdClear();
 	lcdGotoXY(10, 0);
 	sprintf(testData, "%d", getCurFreq());
 	lcdPrintData(testData, strlen(testData));
+	*/
 	return curFreq;
 }
 
@@ -226,7 +228,7 @@ void ar1010Tune(uint16_t freq)
 
 	}
 
-	curFreq = getCurFreq();
+	getCurFreq();
 
 }
 
@@ -269,7 +271,7 @@ void ar1010Seek()
 	//send the register to the chip
 	setRegister(3, reg3);
 
-	curFreq = getCurFreq();
+	getCurFreq();
 }
 
 
