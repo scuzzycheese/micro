@@ -3,13 +3,17 @@
 #include <inttypes.h>
 #include <util/delay.h>
 #include <stdio.h>
-#include "i2c.h"
+//#include "i2c.h"
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <string.h>
 
 #include "lcd.h"
 #include "ar1010.h"
+
+#include "i2cmaster.h"
+
+#include <compat/twi.h>
 
 
 #define NO_STATE 0
@@ -108,7 +112,11 @@ int main(void)
 
 	sei();
 
-	i2cInit();
+	//enable the pullups for these pins, for the i2c bus
+	PORTC |= (1 << 4);
+	PORTC |= (1 << 5);
+	i2c_init();
+
 
 	lcdInit();
 	lcdHome();
@@ -120,7 +128,7 @@ int main(void)
 	ar1010Init();
 	_delay_ms(10);
 
-	ar1010WaitForReady();
+	//ar1010WaitForReady();
 
 	//Set up out timer interrupt to fire every second 
 	TIMSK = 1 << OCIE1A;

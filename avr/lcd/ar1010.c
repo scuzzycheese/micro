@@ -1,39 +1,21 @@
-#include "ar1010.h"
+#include "global.h"
 
-#include "i2c.h"
+#include "ar1010.h"
+//#include "i2c.h"
 #include <avr/io.h>
 #include <util/delay.h>
 
 #include <string.h>
 #include <stdio.h>
+#include "i2cmaster.h"
+
+#include <compat/twi.h>
 
 
+extern uint16_t curFreq;
 
-//Default register values for the ar1000
-uint16_t registerValues[18] =
-{
-	0xffff,
-	0x5b15,
-	0xF4B9,
-	0x8012,
-	0x0400,
-	0x28aa,
-	0x4400,
-	0x1ee7,
-	0x7141,
-	0x007d,
-	0x82ce,
-	0x4f55,
-	0x970c,
-	0xb845,
-	0xfc2d,
-	0x8097,
-	0x04a1,
-	0xdf6a
-};
+extern uint16_t registerValues[18];
 
-//This is a global placeholder for the current curFreq
-uint16_t curFreq = 860;
 
 void ar1010Init()
 {
@@ -43,43 +25,34 @@ void ar1010Init()
 uint16_t getRegister_helper(uint8_t regNumber)
 {
 	uint16_t retReg;
-	cbi(TWCR, TWIE);
 
-	i2cSendStart();
-	i2cWaitForComplete();
+	i2c_start();
+	i2c_waitForComplete();
 
-	i2cSendByte(SLA_W);
-	i2cWaitForComplete();
+	i2c_write(SLA_W);
+	i2c_waitForComplete();
 
-	i2cSendByte(regNumber);
-	i2cWaitForComplete();
+	i2c_write(regNumber);
+	i2c_waitForComplete();
 
-	i2cSendStart();
-	i2cWaitForComplete();
+	i2c_start();
+	i2c_waitForComplete();
 
-	i2cSendByte(SLA_R);
-	i2cWaitForComplete();
+	i2c_write(SLA_R);
+	i2c_waitForComplete();
 
-	if(inb(TWSR) == TW_MR_SLA_ACK)
+	if(TWSR == TW_MR_SLA_ACK)
 	{
-		i2cReceiveByte(TRUE);
-		i2cWaitForComplete();
-		uint8_t value = i2cGetReceivedByte();
+		uint8_t value = i2c_read();
 		retReg = (value & 0x00FF) << 8;
 
-		i2cReceiveByte(TRUE);
-		i2cWaitForComplete();
-		value = i2cGetReceivedByte();
+		value = i2c_read();
 		retReg |= (value & 0x00FF);
 	}
 	else
 	{
 		//writeLn("Device Not Responding to READ operations\r\n");
 	}
-
-	_delay_ms(1);
-
-	sbi(TWCR, TWIE);
 
 	return retReg;
 }
@@ -97,7 +70,8 @@ uint16_t getRegister(uint8_t regNumber, uint8_t vola)
 			internalRegs[i] = getRegister_helper(i);
 			_delay_ms(5);
 		}
-		i2cSendStop();
+		i2c_stop();
+		i2c_waitForComplete();
 	}
 	return internalRegs[regNumber];
 }
@@ -105,42 +79,38 @@ uint16_t getRegister(uint8_t regNumber, uint8_t vola)
 
 uint8_t setRegister(uint8_t regNumber, uint16_t regValue)
 {
-	cbi(TWCR, TWIE);
 
 	uint8_t retVal = 1;
-	i2cSendStart();
-	_delay_us(10);
-	i2cWaitForComplete();
+	i2c_start();
+	i2c_waitForComplete();
 
-	i2cSendByte(SLA_W);
-	i2cWaitForComplete();
-	_delay_us(10);
+	i2c_write(SLA_W);
+	i2c_waitForComplete();
 
-	if(inb(TWSR) == TW_MT_SLA_ACK)
+	if(TWSR == TW_MT_SLA_ACK)
 	{
-		i2cSendByte(regNumber);
-		i2cWaitForComplete();
-		_delay_us(10);
+		i2c_write(regNumber);
+		i2c_waitForComplete();
+		_delay_us(2);
 
 		uint8_t value = (regValue & 0xFF00) >> 8;
-		i2cSendByte(value);
-		i2cWaitForComplete();
-		_delay_us(10);
+		i2c_write(value);
+		i2c_waitForComplete();
+		_delay_us(2);
 
 		value = (regValue & 0x00FF);
-		i2cSendByte(value);
-		i2cWaitForComplete();
-		_delay_us(10);
+		i2c_write(value);
+		i2c_waitForComplete();
+		_delay_us(2);
 	}
 	else
 	{
 		retVal = 0;
 	}
 
-	i2cSendStop();
-	_delay_us(10);
+	i2c_stop();
+	_delay_us(2);
 
-	sbi(TWCR, TWIE);
 
 	return retVal;
 }
@@ -152,22 +122,14 @@ void setAllRegs(uint16_t *regVals)
 	uint8_t i;
 	for(i = 1; i < 18; i ++)
 	{
-		uint8_t setBool = setRegister(i, regVals[i]);
-		//if(!setBool) writeLn("Device Not Responding\r\n");
+		setRegister(i, regVals[i]);
 		_delay_ms(1);
 	}
-	uint8_t setBool = setRegister(0, regVals[0]);
-	//if(!setBool) writeLn("Device Not Responding\r\n");
+	setRegister(0, regVals[0]);
 }
 
+//TODO: re-add the getCurFreq function back here
 
-void getCurFreq()
-{
-	//I'm using delays, as opposed to checking the STC bit, 
-	//because it seems somewhat unreliable
-	_delay_ms(5);
-	curFreq = RTF(getRegister(19, 1) >> 7);
-}
 
 //Nasty little blocking function, oh well.
 void ar1010WaitForReady()
@@ -179,17 +141,6 @@ void ar1010WaitForReady()
 	}
 }
 
-uint16_t ar1010getCurFreq()
-{
-	/*
-	char testData[10];
-	lcdClear();
-	lcdGotoXY(10, 0);
-	sprintf(testData, "%d", getCurFreq());
-	lcdPrintData(testData, strlen(testData));
-	*/
-	return curFreq;
-}
 
 void ar1010Tune(uint16_t freq)
 {
@@ -235,44 +186,6 @@ void ar1010Tune(uint16_t freq)
 
 
 
-void ar1010Seek()
-{
-	//set default values for register 2 and 3
-	//These might have to be set from getRegister
-	uint16_t reg2 = registerValues[2];
-	uint16_t reg3 = registerValues[3];
-
-	//Wait for STC bit (ready bit)
-	//while(!(getRegister(19, 1) & (1 << 5)));
-
-	//clear tune bit
-	//set chan bits
-	reg2 = 0xB480;
-	reg2 &= ~(0x01FF | 0x0200);
-	//use global curFreq as a base
-	reg2 |= FTR(curFreq);
-
-	//clear seek bit
-	reg3 &= ~(1 << 14);
-	//set seekup bit
-	reg3 |= (1 << 15);
-	//set space = 100k (seek stepping increments in 100k steps)
-	reg3 |= (1 << 13);
-	//set band to US/Europe
-	reg3 &= ~(3 << 11);
-
-	//send the registers to the chip
-	setRegister(2, reg2);
-	setRegister(3, reg3);
-
-	//set the seek bit
-	reg3 |= (1 << 14);
-
-	//send the register to the chip
-	setRegister(3, reg3);
-
-	getCurFreq();
-}
 
 
 void ar1010Volume(uint8_t volu)

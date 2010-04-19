@@ -4,6 +4,9 @@
     <df name="lcd" root=".">
       <in>ar1010.c</in>
       <in>ar1010.h</in>
+      <in>ar1010_unop.c</in>
+      <in>avrlibdefs.h</in>
+      <in>avrlibtypes.h</in>
       <in>global.h</in>
       <in>i2c.c</in>
       <in>i2c.h</in>
