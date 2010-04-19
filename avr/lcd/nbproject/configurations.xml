@@ -10,7 +10,6 @@
       <in>global.h</in>
       <in>i2c.c</in>
       <in>i2c.h</in>
-      <in>i2cconf.h</in>
       <in>lcd.c</in>
       <in>lcdconf.h</in>
       <in>lcdtest.c</in>

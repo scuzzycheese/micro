@@ -11,7 +11,7 @@
 #include "lcd.h"
 #include "ar1010.h"
 
-#include "i2cmaster.h"
+#include "i2c.h"
 
 #include <compat/twi.h>
 

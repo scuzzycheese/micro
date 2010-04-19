@@ -1,13 +1,10 @@
 CPU = -mmcu=atmega8
 OPT = -Os -mcall-prologues 
 
-all: lcdtest.o ar1010.o lcd.o ar1010_unop.o twimaster.o
+all: lcdtest.o ar1010.o lcd.o ar1010_unop.o i2c.o
 
-	avr-gcc ${OPT} ${CPU} -o lcdtest.elf lcdtest.o lcd.o ar1010.o ar1010_unop.o twimaster.o
+	avr-gcc ${OPT} ${CPU} -o lcdtest.elf lcdtest.o lcd.o ar1010.o ar1010_unop.o i2c.o
 	avr-objcopy -j .text -j .data -O ihex lcdtest.elf lcdtest.hex
-
-i2c.o: i2c.c i2c.h i2cconf.h
-	avr-gcc ${OPT} ${CPU} -c i2c.c -I../avrlib -I.
 
 lcd.o: lcd.c lcdconf.h
 	avr-gcc ${OPT} ${CPU} -c lcd.c -I../avrlib -I.
@@ -18,8 +15,8 @@ ar1010.o: ar1010.c ar1010.h
 ar1010_unop.o: ar1010_unop.c ar1010.h
 	avr-gcc -g ${CPU} -c ar1010_unop.c -I../avrlib -I.
 
-twimaster.o: twimaster.c i2cmaster.h
-	avr-gcc ${OPT} ${CPU} -c twimaster.c -I../avrlib -I.
+i2c.o: i2c.c i2c.h
+	avr-gcc ${OPT} ${CPU} -c i2c.c -I../avrlib -I.
 
 lcdtest.o: lcdtest.c 
 	avr-gcc ${OPT} ${CPU} -c lcdtest.c -I../avrlib -I.
