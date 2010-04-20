@@ -3,7 +3,6 @@
 #include <inttypes.h>
 #include <util/delay.h>
 #include <stdio.h>
-//#include "i2c.h"
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <string.h>
@@ -41,6 +40,11 @@ ISR(INT0_vect)
 {
 	cli();
 
+	//This is for the buttons. When we are in the interrupt,
+	//we change the configureation, where all the pins
+	//connected to he buttons are pulled high internally, and the
+	//interrupt pin becomes an open sink , this way we can see
+	//which button is pulled low when it's pressed.
 	DDRD |= (1 << PORTD2);
 	PORTD &= ~(1 << PORTD2);
 
@@ -65,6 +69,12 @@ ISR(INT0_vect)
 
 	//Reset sleep timer
 	dispState.sleepTimer = 0;
+
+
+	//return to the normal configuration where the interrupt pin
+	//is pulled high, and each button is an open sink, causing
+	//the interrupt pin to be pulled low when you press a button
+	//thereby triggering an interrupt.
 	DDRD &= ~(1 << PORTD2);
 	PORTD |= (1 << PORTD2);
 
