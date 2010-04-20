@@ -128,7 +128,7 @@ int main(void)
 	ar1010Init();
 	_delay_ms(10);
 
-	//ar1010WaitForReady();
+	ar1010WaitForReady();
 
 	//Set up out timer interrupt to fire every second 
 	TIMSK = 1 << OCIE1A;

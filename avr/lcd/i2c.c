@@ -26,6 +26,7 @@ void i2c_init(void)
 void i2c_start()
 {
 	TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
+	i2c_waitForComplete();
 }
 
 void i2c_waitForComplete()
@@ -35,7 +36,7 @@ void i2c_waitForComplete()
 
 void i2c_stop()
 {
-	TWCR = (1 << TWINT) | (1 << TWEA) | (1 << TWSTO) | (1 << TWEN);
+	TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN);
 	
 	// wait until stop condition is executed and bus released
 	while(TWCR & (1 << TWSTO));
@@ -43,8 +44,6 @@ void i2c_stop()
 
 unsigned char i2c_write( unsigned char data )
 {	
-    uint8_t   twst;
-    
 	// send data to the previously addressed device
 	TWDR = data;
 	TWCR = (1<<TWINT) | (1<<TWEN);
@@ -60,7 +59,7 @@ unsigned char i2c_write( unsigned char data )
 
 unsigned char i2c_read(void)
 {
-	TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWEA);
+	TWCR = (1 << TWINT) | (1 << TWEN);
 
 	// wait until transmission completed
 	while(!(TWCR & (1<<TWINT)));    

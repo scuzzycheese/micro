@@ -1,13 +1,13 @@
 #include "global.h"
 
 #include "ar1010.h"
-//#include "i2c.h"
 #include <avr/io.h>
 #include <util/delay.h>
 
 #include <string.h>
 #include <stdio.h>
 #include "i2c.h"
+#include "lcd.h"
 
 #include <compat/twi.h>
 
@@ -71,7 +71,6 @@ uint16_t getRegister(uint8_t regNumber, uint8_t vola)
 			_delay_ms(5);
 		}
 		i2c_stop();
-		i2c_waitForComplete();
 	}
 	return internalRegs[regNumber];
 }
