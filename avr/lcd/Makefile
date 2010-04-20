@@ -1,9 +1,9 @@
 CPU = -mmcu=atmega8
 OPT = -Os -mcall-prologues 
 
-all: lcdtest.o ar1010.o lcd.o ar1010_unop.o i2c.o
+all: lcdtest.o ar1010.o lcd.o i2c.o
 
-	avr-gcc ${OPT} ${CPU} -o lcdtest.elf lcdtest.o lcd.o ar1010.o ar1010_unop.o i2c.o
+	avr-gcc ${OPT} ${CPU} -o lcdtest.elf lcdtest.o lcd.o ar1010.o i2c.o
 	avr-objcopy -j .text -j .data -O ihex lcdtest.elf lcdtest.hex
 
 lcd.o: lcd.c lcdconf.h
@@ -11,9 +11,6 @@ lcd.o: lcd.c lcdconf.h
 
 ar1010.o: ar1010.c ar1010.h
 	avr-gcc ${OPT} ${CPU} -c ar1010.c -I../avrlib -I.
-
-ar1010_unop.o: ar1010_unop.c ar1010.h
-	avr-gcc -g ${CPU} -c ar1010_unop.c -I../avrlib -I.
 
 i2c.o: i2c.c i2c.h
 	avr-gcc ${OPT} ${CPU} -c i2c.c -I../avrlib -I.
