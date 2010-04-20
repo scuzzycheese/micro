@@ -80,7 +80,6 @@ ISR(INT0_vect)
 	_delay_ms(50);
 	if(!(PINC & 2))
 	{
-		//writeLn("button pressed\r\n");
 		dispState.state = SEEK_STATE;
 	}
 	if(!(PINC & 4))
@@ -115,7 +114,6 @@ ISR(INT0_vect)
 ISR(TIMER1_COMPA_vect)
 {
 	cli();
-	//writeLn("Count\r\n");
 	//de-increment the timer every second
 	dispState.timer --;
 	dispState.sleepTimer ++;
@@ -289,7 +287,6 @@ int main(void)
 		}
 		else
 		{
-			//writeLn("Dropping to default state\r\n");
 			dispState.timer = 3;
 			dispState.state = FREQ_STATE;
 		}

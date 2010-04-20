@@ -171,9 +171,6 @@ void setAllRegs(uint16_t *regVals)
 	setRegister(0, regVals[0]);
 }
 
-//TODO: re-add the getCurFreq function back here
-
-
 //Nasty little blocking function, oh well.
 void ar1010WaitForReady()
 {
@@ -193,8 +190,6 @@ void ar1010Tune(uint16_t freq)
 
 	if(getRegister(19, 1) & (1 << 5))
 	{
-		//writeLn("Radio ready for tuning...\r\n");
-
 		//clear tune bit and chan bits
 		reg2 &= ~(0x01FF | 0x0200);
 		//set chan bits
@@ -276,12 +271,6 @@ void ar1010Volume(uint8_t volu)
 	//fill this part with the nessesary data "x << 8 = (x >> 4 ) << 12"
 	reg14 |= (vols[volu] & 0xF0) << 8;
 
-	//char outstr[20];
-	//sprintf(outstr, "REG3: %0.2X\r\n", reg3);
-	//writeLn(outstr);
-	//sprintf(outstr, "REG14: %0.2X\r\n", reg14);
-	//writeLn(outstr);
-
 	setRegister(3, reg3);
 	setRegister(14, reg14);
 
@@ -294,9 +283,6 @@ void ar1010Volume(uint8_t volu)
 
 void getCurFreq()
 {
-	//I'm using delays, as opposed to checking the STC bit,
-	//because it seems somewhat unreliable
-	//_delay_ms(5);
 	ar1010WaitForReady();
 	curFreq = RTF(getRegister(19, 1) >> 7);
 }
