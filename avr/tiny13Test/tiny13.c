@@ -3,6 +3,9 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/pgmspace.h>
+#include <avr/interrupt.h>
+#include <avr/sleep.h>
+
 
 
 const uint8_t __attribute__ ((progmem)) sinArray[64] =
@@ -17,29 +20,77 @@ const uint8_t __attribute__ ((progmem)) sinArray[64] =
   37,  29,  21,  15,   9,   5,   2,   0,
 };
 
+
+volatile uint8_t looper = 0;
+
+ISR(INT0_vect)
+{
+   cli();
+   _delay_ms(50);
+   if(!(PINB & 1))
+   {
+		looper = 0;
+   }
+
+   //clear any new interrupt flags
+   GIFR |= 1 << INTF0;
+
+   sei();
+}
+
+
 int main(void)
 {
-	DDRB = 0xFF;
-	
-	uint8_t dutyInc = 0;
-	uint8_t dutySlowDown = 20;
-	uint8_t counter = 0;
+   //MCUCR = (1 << ISC01);
+   GIMSK  |= (1 << INT0);
+
+	//Disable the ADC
+	ACSR |= (1 << ACD);
+
+	//configure port B pins 0,2,3 and 4 as ouputs
+	DDRB = (1 << 0) | (1 << 2) | (1 << 3) | (1 << 4);
+	//enable internal pullup on port b pin 1
+	PORTB |= (1 << 1);
+
+	sei();
+
 	while(1)
 	{
-		counter ++;
-		if(counter >= dutySlowDown)
+		uint8_t dutyInc = 0;
+		uint8_t dutySlowDown = 20;
+		uint8_t counter = 0;
+		while(looper)
 		{
-			dutyInc ++;
-			counter = 0;
+			counter ++;
+			if(counter >= dutySlowDown)
+			{
+				dutyInc ++;
+				counter = 0;
+			}
+			uint8_t dutyCycle = pgm_read_byte(&sinArray[dutyInc]);
+			for(int i = 0; i < 256; i ++)
+			{
+				if(i < dutyCycle) PORTB |= (1 << 0) | (1 << 2) | (1 << 3) | (1 << 4);
+				else PORTB &= ~((1 << 0) | (1 << 2) | (1 << 3) | (1 << 4));
+			}
+			if(dutyInc >= 63) dutyInc = 0;
 		}
-		uint8_t dutyCycle = pgm_read_byte(&sinArray[dutyInc]);
-		for(int i = 0; i < 256; i ++)
-		{
-			if(i < dutyCycle) PORTB |= (1 << 0) | (1 << 2) | (1 << 3) | (1 << 4);
-			else PORTB &= ~((1 << 0) | (1 << 2) | (1 << 3) | (1 << 4));
-		}
-		if(dutyInc >= 63) dutyInc = 0;
+
+		cli();
+		//Set the sleep mode and type (idle mode)
+		MCUCR |= (1 << SE) | (1 << SM1);
+		//re-enable interrupts
+		sei();
+		sleep_cpu();
+		//disable sleem mode
+		MCUCR &= ~(1 << SE);
+
+		looper = 1;
+	
 	}
+
+
+
 
 	return 0;
 }
