@@ -9,10 +9,15 @@ int main()
 	double i;
 	int counter = 0;
 	int intCount = 1;
-	for(i = 0; i < 6.28318; i += 0.024543672)
+	
+
+	int period = 256;
+	float magic = period / (2 * 3.14159);
+
+	for(i = 0; i < 256; i += 4)
 	{
-		printf("% 4d,", (int)((sin(i + 4.6) * 128) + 128));
-		if(intCount > 20)
+		printf("% 4d,", (int)((sin((i - (period / 4)) / magic) * (period / 2)) + (period / 2)));
+		if(intCount >= 8)
 		{
 			intCount = 0;
 			printf("\n");
