@@ -1,10 +1,12 @@
 #define F_CPU 1200000UL  // 1.2 MHz
 
 #include <avr/io.h>
+//#include <avr/iotn13.h>
 #include <util/delay.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
+
 
 
 
@@ -21,22 +23,25 @@ const uint8_t __attribute__ ((progmem)) sinArray[64] =
 };
 
 
-volatile uint8_t looper = 0;
+volatile uint8_t looper = 1;
+
 
 ISR(INT0_vect)
 {
    cli();
    _delay_ms(50);
-   if(!(PINB & 1))
+   if(!(PINB & 2))
    {
 		looper = 0;
    }
 
+
    //clear any new interrupt flags
-   GIFR |= 1 << INTF0;
+   //GIFR |= 1 << INTF0;
 
    sei();
 }
+ 
 
 
 int main(void)
@@ -44,11 +49,12 @@ int main(void)
    //MCUCR = (1 << ISC01);
    GIMSK  |= (1 << INT0);
 
-	//Disable the ADC
+	//Disable the ADC to save power
 	ACSR |= (1 << ACD);
 
 	//configure port B pins 0,2,3 and 4 as ouputs
 	DDRB = (1 << 0) | (1 << 2) | (1 << 3) | (1 << 4);
+
 	//enable internal pullup on port b pin 1
 	PORTB |= (1 << 1);
 
@@ -56,6 +62,21 @@ int main(void)
 
 	while(1)
 	{
+
+		{
+			cli();
+			//Set the sleep mode and type (idle mode)
+			MCUCR |= (1 << SE) | (1 << SM1);
+			//re-enable interrupts
+			sei();
+			sleep_cpu();
+			//disable sleem mode
+			MCUCR &= ~(1 << SE);
+		}
+
+		looper = 1;
+
+
 		uint8_t dutyInc = 0;
 		uint8_t dutySlowDown = 20;
 		uint8_t counter = 0;
@@ -75,17 +96,20 @@ int main(void)
 			}
 			if(dutyInc >= 63) dutyInc = 0;
 		}
-
-		cli();
-		//Set the sleep mode and type (idle mode)
-		MCUCR |= (1 << SE) | (1 << SM1);
-		//re-enable interrupts
-		sei();
-		sleep_cpu();
-		//disable sleem mode
-		MCUCR &= ~(1 << SE);
-
 		looper = 1;
+
+		while(looper)
+		{
+			PORTB |= 1;
+			_delay_ms(500);
+			PORTB &= ~1;
+			_delay_ms(500);
+		}
+		looper = 1;
+
+
+
+
 	
 	}
 
