@@ -55,9 +55,10 @@ int main(void)
 	//configure port B pins 0,2,3 and 4 as ouputs
 	DDRB = (1 << 0) | (1 << 2) | (1 << 3) | (1 << 4);
 
-	//enable internal pullup on port b pin 1
+	//enable internal pullup on port b pin 1 for the button
 	PORTB |= (1 << 1);
 
+	//NOTE: if we run outta space, I'll comment this out
 	sei();
 
 	while(1)
@@ -100,10 +101,18 @@ int main(void)
 
 		while(looper)
 		{
-			PORTB |= 1;
+			PORTB |= (1 << 0);
 			_delay_ms(500);
-			PORTB &= ~1;
+			PORTB &= ~(1 << 0);
+			PORTB |= (1 << 2);
 			_delay_ms(500);
+			PORTB &= ~(1 << 2);
+			PORTB |= (1 << 3);
+			_delay_ms(500);
+			PORTB &= ~(1 << 3);
+			PORTB |= (1 << 4);
+			_delay_ms(500);
+			PORTB &= ~(1 << 4);
 		}
 		looper = 1;
 
