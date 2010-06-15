@@ -33,11 +33,11 @@ ISR(INT0_vect)
    if(!(PINB & 2))
    {
 		looper = 0;
+		while(!(PINB & 2));
    }
 
-
    //clear any new interrupt flags
-   //GIFR |= 1 << INTF0;
+   GIFR |= 1 << INTF0;
 
    sei();
 }
