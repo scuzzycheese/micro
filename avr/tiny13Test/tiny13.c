@@ -6,6 +6,7 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
+#include <util/delay_basic.h>
 
 
 
@@ -41,8 +42,9 @@ ISR(INT0_vect)
 
    sei();
 }
- 
 
+//prototype
+uint8_t myrand();
 
 int main(void)
 {
@@ -66,7 +68,6 @@ int main(void)
 
 		{
 			cli();
-			//Set the sleep mode and type (idle mode)
 			MCUCR |= (1 << SE) | (1 << SM1);
 			//re-enable interrupts
 			sei();
@@ -74,7 +75,6 @@ int main(void)
 			//disable sleem mode
 			MCUCR &= ~(1 << SE);
 		}
-
 		looper = 1;
 
 
@@ -96,6 +96,27 @@ int main(void)
 				else PORTB &= ~((1 << 0) | (1 << 2) | (1 << 3) | (1 << 4));
 			}
 			if(dutyInc >= 63) dutyInc = 0;
+		}
+		looper = 1;
+
+		counter = 0;
+		uint8_t rand = 0;
+		uint8_t dutyCycle = 0;
+		while(looper)
+		{
+			counter ++;
+			if(counter >= rand)
+			{
+				rand = myrand();
+				counter = 0;
+				dutyCycle = pgm_read_byte(&sinArray[myrand()]);
+			}
+			for(int i = 0; i < 256; i ++)
+			{
+				if(i < dutyCycle) PORTB |= (1 << 0) | (1 << 2) | (1 << 3) | (1 << 4);
+				else PORTB &= ~((1 << 0) | (1 << 2) | (1 << 3) | (1 << 4));
+			}
+
 		}
 		looper = 1;
 
@@ -128,3 +149,11 @@ int main(void)
 	return 0;
 }
 
+
+uint8_t myrand()
+{
+	static uint32_t seed = 1;
+
+	seed = ((seed * 16807) + 100) % 2147483647;
+	return seed % 128;
+}
