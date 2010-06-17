@@ -44,7 +44,7 @@ ISR(INT0_vect)
 }
 
 //prototype
-uint8_t myrand();
+uint8_t myrand(uint8_t modVal);
 
 int main(void)
 {
@@ -65,7 +65,9 @@ int main(void)
 
 	while(1)
 	{
-
+		/**
+		 * Sleep Mode, default mode
+		 */
 		{
 			cli();
 			MCUCR |= (1 << SE) | (1 << SM1);
@@ -78,6 +80,9 @@ int main(void)
 		looper = 1;
 
 
+		/**
+		 * Pulse or "breath" mode.
+		 */
 		uint8_t dutyInc = 0;
 		uint8_t dutySlowDown = 20;
 		uint8_t counter = 0;
@@ -99,6 +104,10 @@ int main(void)
 		}
 		looper = 1;
 
+
+		/**
+		 * Pseudo candle mode.
+		 */
 		counter = 0;
 		uint8_t rand = 0;
 		uint8_t dutyCycle = 0;
@@ -107,9 +116,9 @@ int main(void)
 			counter ++;
 			if(counter >= rand)
 			{
-				rand = myrand();
+				rand = myrand(64);
 				counter = 0;
-				dutyCycle = pgm_read_byte(&sinArray[myrand()]);
+				dutyCycle = pgm_read_byte(&sinArray[myrand(20) + 10]);
 			}
 			for(int i = 0; i < 256; i ++)
 			{
@@ -120,6 +129,10 @@ int main(void)
 		}
 		looper = 1;
 
+
+		/**
+		 * Test mode.
+		 */
 		while(looper)
 		{
 			PORTB |= (1 << 0);
@@ -150,10 +163,10 @@ int main(void)
 }
 
 
-uint8_t myrand()
+uint8_t myrand(uint8_t modVal)
 {
 	static uint32_t seed = 1;
 
 	seed = ((seed * 16807) + 100) % 2147483647;
-	return seed % 128;
+	return seed % modVal;
 }
