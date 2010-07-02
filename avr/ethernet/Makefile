@@ -26,7 +26,7 @@ UIPSTUFF = ${UIPF} ${UIPARP} ${PSOCK} ${CLOCK} ${TIMER}
 AVRLIBSTUFF = ${ENC28J60}
 UARTSTUFF = ${UART}
 
-AVRLIBINCLUDES = -I/usr/avr/include
+AVRLIBINCLUDES = -I/usr/lib/avr/include/
 UIPLIBPATH = -I../uip/uip/
 AVRLIBPATH = -I../avrlib/
 MYPATH = -I. ${GENPATH}
@@ -74,21 +74,22 @@ ${MODULES}: ${@:.o=.c} ${@:.o=.h}
 
 
 x86:uip-x86 service-x86 uart-x86 ethernet-x86 hash-x86 modules-x86
-	${CCX86} ${DEBUG} ${OPTX86} ${CHIP} -o ethernet ethernet.o uip.o service.o uart.o libhash/libhash.o pages/index.o -lm 
+	${CCX86} ${DEBUG} ${OPTX86} -o ethernet ethernet.o uip.o service.o uart.o libhash/libhash.o pages/index-x86.o pages/404-x86.o -lm
 
 ethernet-x86: ethernet.c
 	${CCX86} ${DEBUG} ${OPTX86} -c ethernet.c -o ethernet.o ${UIPLIBPATH} ${MYPATH}
 uip-x86: 
 	${CCX86} ${DEBUG} ${OPTX86} -c -combine ${UIPSTUFF} -o uip.o ${UIPLIBPATH} ${MYPATH}
 service-x86:
-	${CCX86} ${DEBUG} ${OPTX86} -c -combine ${SERVICE} -o service.o ${UIPLIBPATH} ${MYPATH}
+	${CCX86} ${DEBUG} ${OPTX86} -c -combine ${SERVICE:.o=.c} -o service.o ${UIPLIBPATH} ${MYPATH}
 uart-x86: uart.c uart.h
 	${CCX86} ${DEBUG} ${OPTX86} -c -combine ${UARTSTUFF} -o uart.o ${MYPATH}
 hash-x86:
 	${CCX86} ${DEBUG} ${OPTX86} -c -combine libhash/libhash.c -o libhash/libhash.o ${MYPATH}
 
 modules-x86:
-	${CCX86} ${DEBUG} ${OPTX86} -c -combine pages/index-x86.c -o ${INDEXO} ${UIPLIBPATH} ${MYPATH} 
+	${CCX86} ${DEBUG} ${OPTX86} -c -combine pages/index-x86.c -o pages/index-x86.o ${UIPLIBPATH} ${MYPATH}
+	${CCX86} ${DEBUG} ${OPTX86} -c -combine pages/404.c -o pages/404-x86.o ${UIPLIBPATH} ${MYPATH}
 
 
 

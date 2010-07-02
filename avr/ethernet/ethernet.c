@@ -14,6 +14,18 @@
 #include <net/ethernet.h>
 #include <sys/socket.h>
 
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <linux/if_ether.h>
+#include <net/ethernet.h>
+
+#include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netpacket/packet.h>
+
+
+
 
 #else
 #include "global.h"
@@ -88,20 +100,47 @@ void delay_ms(unsigned int ms)
 #endif
 
 #ifdef X86
+
+char macAddr[] = {ETHADDR0, ETHADDR1, ETHADDR2, ETHADDR3, ETHADDR4, ETHADDR5};
+
+struct sockaddr_ll device;
+
 int linSock;
 #define enc28j60PacketReceive(BFSZ, buffr) read(linSock, buffr, BFSZ)
-#define enc28j60PacketSend(BFSZ, buffr) write(linSock, buffr, BFSZ)
+#define enc28j60PacketSend(BFSZ, buffr) 	if(sendto(linSock, buffr, BFSZ, 0, (const struct sockaddr *)&device, sizeof(device)) == -1) \
+														{ \
+															perror("ERROR: "); \
+														}
 void socketInit()
 {
 	if((linSock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) == -1)
 	{
 		perror("ERROR: ");
 	}
+
+	struct ifreq card;
+
+	strcpy(card.ifr_name, "wlan0");
+
+  if(ioctl(linSock, SIOCGIFINDEX, &card) == -1)
+  {
+	  perror("ERROR: ");
+  }
+
+	memset(&device, 0, sizeof(device));
+
+	device.sll_family = AF_PACKET;
+	device.sll_ifindex = card.ifr_ifindex;
+	memset(device.sll_addr, 0xFF, 6);
+	device.sll_halen = HTONS(6);
+
+
 }
 #endif
 
 int main()
 {
+
 	int i;
 
 	struct timer periodic_timer, arp_timer;
@@ -165,48 +204,14 @@ int main()
 	}
 	#endif
 
-	//IP address = 0-3 bytes of eeprom
-	//subnet mask = 4-7 bytes of eeprom
-	//default gw = 8-11 bytes of eeprom
-
-	//read the IP addres from eeprom
-	uint8_t eepromIP[4];
-	eepromIP[0] = eeprom_read_byte((uint8_t *)0);
-	eepromIP[1] = eeprom_read_byte((uint8_t *)1);
-	eepromIP[2] = eeprom_read_byte((uint8_t *)2);
-	eepromIP[3] = eeprom_read_byte((uint8_t *)3);
-
-	//read the Netmask addres from eeprom
-	uint8_t eepromNM[4];
-	eepromNM[0] = eeprom_read_byte((uint8_t *)4);
-	eepromNM[1] = eeprom_read_byte((uint8_t *)5);
-	eepromNM[2] = eeprom_read_byte((uint8_t *)6);
-	eepromNM[3] = eeprom_read_byte((uint8_t *)7);
-
-	//read the default GW addres from eeprom
-	uint8_t eepromDG[4];
-	eepromDG[0] = eeprom_read_byte((uint8_t *)8);
-	eepromDG[1] = eeprom_read_byte((uint8_t *)9);
-	eepromDG[2] = eeprom_read_byte((uint8_t *)10);
-	eepromDG[3] = eeprom_read_byte((uint8_t *)11);
-
-
-	char infoString[50];
-	sprintf(infoString, "IP ADDRESS: %d.%d.%d.%d\r\n", eepromIP[0], eepromIP[1], eepromIP[2], eepromIP[3]);
-	writeLn(infoString);
-	sprintf(infoString, "SUBNET MASK: %d.%d.%d.%d\r\n", eepromNM[0], eepromNM[1], eepromNM[2], eepromNM[3]);
-	writeLn(infoString);
-	sprintf(infoString, "DEFAULT GW: %d.%d.%d.%d\r\n", eepromDG[0], eepromDG[1], eepromDG[2], eepromDG[3]);
-	writeLn(infoString);
-
 	uip_ipaddr_t ipaddr;
-	uip_ipaddr(ipaddr, eepromIP[0], eepromIP[1], eepromIP[2], eepromIP[3]);
+	uip_ipaddr(ipaddr, 168, 192, 17, 0);
 	uip_sethostaddr(ipaddr);
 
-	uip_ipaddr(ipaddr, eepromDG[0], eepromDG[1], eepromDG[2], eepromDG[3]);
+	uip_ipaddr(ipaddr, 255, 255, 0, 255);
 	uip_setdraddr(ipaddr);
 
-	uip_ipaddr(ipaddr, eepromNM[0], eepromNM[1], eepromNM[2], eepromNM[3]);
+	uip_ipaddr(ipaddr, 168, 192, 1, 0);
 	uip_setnetmask(ipaddr);
 
 

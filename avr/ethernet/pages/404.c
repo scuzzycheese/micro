@@ -1,5 +1,4 @@
 #include "404.h"
-#include <avr/io.h>
 
 int error404(char **vars, struct web_state *ws)
 {

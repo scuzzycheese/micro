@@ -1,7 +1,7 @@
-#include "index.h"
+#include "index-x86.h"
 
 //This function will soon take an char ** of input vars
-int callFunc(char **vars, struct web_state *ws)
+int indexPage(char **vars, struct web_state *ws)
 {
 	PSOCK_BEGIN(&ws->po);
 	static int light = 0;
