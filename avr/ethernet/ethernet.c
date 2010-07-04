@@ -131,7 +131,8 @@ void socketInit()
 
 	device.sll_family = AF_PACKET;
 	device.sll_ifindex = card.ifr_ifindex;
-	memset(device.sll_addr, 0xFF, 6);
+	//memset(device.sll_addr, 0xFF, 6);
+	memcpy(device.sll_addr, macAddr, 6);
 	device.sll_halen = HTONS(6);
 
 
