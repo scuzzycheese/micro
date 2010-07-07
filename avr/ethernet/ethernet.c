@@ -209,10 +209,10 @@ int main()
 	uip_ipaddr(ipaddr, 168, 192, 17, 0);
 	uip_sethostaddr(ipaddr);
 
-	uip_ipaddr(ipaddr, 255, 255, 0, 255);
+	uip_ipaddr(ipaddr, 168, 192, 1, 0);
 	uip_setdraddr(ipaddr);
 
-	uip_ipaddr(ipaddr, 168, 192, 1, 0);
+	uip_ipaddr(ipaddr, 255, 255, 0, 255);
 	uip_setnetmask(ipaddr);
 
 
