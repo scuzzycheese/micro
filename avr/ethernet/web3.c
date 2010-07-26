@@ -24,10 +24,12 @@ void web_init(void)
 void web_appcall(void)
 {
 	struct web_state *ws = &(uip_conn->appstate);
+	printf("Webserver hit...\n");
 	if(uip_connected())
 	{
 		if(uip_newdata())
 		{
+			printf("New data on socket\n");
 			handle_connection(ws);
 		}
 	}

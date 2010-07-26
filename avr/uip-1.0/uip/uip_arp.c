@@ -302,7 +302,8 @@ uip_arp_arpin(void)
 		printf("SEQ Host IP ADDR[1]: %X\n", ((u8_t *)&(uip_hostaddr[0]))[1]);
 		printf("SEQ Host IP ADDR[2]: %X\n", ((u8_t *)&(uip_hostaddr[1]))[0]);
 		printf("SEQ Host IP ADDR[3]: %X\n", ((u8_t *)&(uip_hostaddr[1]))[1]);
-		*/
+		 */
+		
     if(uip_ipaddr_cmp(BUF->dipaddr, uip_hostaddr)) {
       /* First, we register the one who made the request in our ARP
 	 table, since it is likely that we will do more communication
