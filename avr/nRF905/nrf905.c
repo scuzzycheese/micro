@@ -71,6 +71,28 @@ void nRF905Init()
 	SPI_MasterEnd();
 }
 
+//Please follow the documentation for these values
+void nRF905SetFreq(uint16_t freqKhz, uint8_t HFREQ_PLL, uint8_t power)
+{
+	uint16_t channel = 0;
+	if(HFREQ_PLL == 0)
+	{
+		 channel = freqKhz - 4224;
+	}
+	if(HFREQ_PLL == 1)
+	{
+		 channel = ((freqKhz / 2) - 4224);
+	}
+
+	channel |= (power & 3) << 10 | (HFREQ_PLL & 1) << 9;
+
+	SPI_MasterStart();
+	SPI_MasterTransmit(0x80 | (uint8_t)((channel >> 8) & 0x0F));
+	SPI_MasterTransmit((uint8_t)channel);
+	SPI_MasterEnd();
+}
+
+
 
 /* new style */
 int main(void)
@@ -87,7 +109,7 @@ int main(void)
 
 		nRF905Init();
 
-
+		nRF905SetFreq(4500, 0, 3);
 
 		SPI_MasterStart();
 		SPI_MasterTransmit(0x10);
