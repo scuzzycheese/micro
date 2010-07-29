@@ -59,7 +59,7 @@ void nRF905Init()
 	NRF905_CONTRL_PORT &= ~((1 << NRF905_TXEN) | (1 << NRF905_TRX_CE) | (1 << NRF905_PWR_UP));
 
 
-	NRF905_CONTRL_PORT |= (1 << NRF905_PWR_UP);
+	//NRF905_CONTRL_PORT |= (1 << NRF905_PWR_UP);
 	//read the config data
 	SPI_MasterStart();
 	SPI_MasterTransmit(0x00);
@@ -92,6 +92,32 @@ void nRF905SetFreq(uint16_t freqKhz, uint8_t HFREQ_PLL, uint8_t power)
 	SPI_MasterEnd();
 }
 
+//valid values are 1, 2, 3 or 4
+void nRF905SetTxRxAddWidth(uint8_t txAddWidth, uint8_t rxAddWidth)
+{
+	uint8_t addLenWidth = (txAddWidth << 4) | (rxAddWidth & 0x0F);
+	SPI_MasterStart();
+	SPI_MasterTransmit(0x02);
+	SPI_MasterTransmit(addLenWidth);
+	SPI_MasterEnd();
+}
+
+void nRF905SetRxAddress(uint8_t address1, uint8_t address2, uint8_t address3, uint8_t address4)
+{
+	SPI_MasterStart();
+	SPI_MasterTransmit(0x05);
+	SPI_MasterTransmit(address1);
+	SPI_MasterTransmit(address2);
+	SPI_MasterTransmit(address3);
+	SPI_MasterTransmit(address4);
+	SPI_MasterEnd();
+}
+
+void nRF905ComposePacket()
+{
+
+}
+
 
 
 /* new style */
@@ -110,6 +136,10 @@ int main(void)
 		nRF905Init();
 
 		nRF905SetFreq(4500, 0, 3);
+
+		nRF905SetTxRxAddWidth(4, 4);
+
+		nRF905SetRxAddress(192,168,0,1);
 
 		SPI_MasterStart();
 		SPI_MasterTransmit(0x10);
