@@ -188,7 +188,7 @@ void nRF905GetTxPayload(uint8_t payloadWidth)
 void nRF905SendPacket()
 {
 	NRF905_CONTRL_PORT |= (1 << NRF905_TXEN) | (1 << NRF905_TRX_CE);
-	_delay_ms(1);
+	_delay_us(1);
 	NRF905_CONTRL_PORT &= ~((1 << NRF905_TXEN) | (1 << NRF905_TRX_CE));
 }
 
