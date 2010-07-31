@@ -192,6 +192,22 @@ void nRF905SendPacket()
 	NRF905_CONTRL_PORT &= ~((1 << NRF905_TXEN) | (1 << NRF905_TRX_CE));
 }
 
+void nRF905DeviceSleep()
+{
+	NRF905_CONTRL_PORT &= ~(1 << NRF905_PWR_UP);
+}
+
+//TODO: make this function return something useful, like the config (:
+void nRF905GetConfig()
+{
+		SPI_MasterStart();
+		SPI_MasterTransmit(0x10);
+		for(int i = 0; i < 10; i ++)
+		{
+			SPI_MasterTransmit(0x00);
+		}
+		SPI_MasterEnd();
+}
 
 
 /* new style */
@@ -225,18 +241,11 @@ int main(void)
 		nRF905SetTxPayload(blah, 4);
 		nRF905GetTxPayload(4);
 
-		SPI_MasterStart();
-		SPI_MasterTransmit(0x10);
-		for(int i = 0; i < 10; i ++)
-		{
-			//send dummy bytes to read off the data
-			SPI_MasterTransmit(0x00);
-		}
-		SPI_MasterEnd();
+		nRF905GetConfig();
 
 		nRF905SendPacket();
 
-		NRF905_CONTRL_PORT &= ~(1 << NRF905_PWR_UP);
+		nRF905DeviceSleep();
 	}
 	return 0;
 }
