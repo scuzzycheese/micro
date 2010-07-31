@@ -59,7 +59,7 @@ void nRF905Init()
 	NRF905_CONTRL_PORT &= ~((1 << NRF905_TXEN) | (1 << NRF905_TRX_CE) | (1 << NRF905_PWR_UP));
 
 
-	//NRF905_CONTRL_PORT |= (1 << NRF905_PWR_UP);
+	NRF905_CONTRL_PORT |= (1 << NRF905_PWR_UP);
 	//read the config data
 	SPI_MasterStart();
 	SPI_MasterTransmit(0x00);
@@ -113,9 +113,83 @@ void nRF905SetRxAddress(uint8_t address1, uint8_t address2, uint8_t address3, ui
 	SPI_MasterEnd();
 }
 
-void nRF905ComposePacket()
+void nRF905SetRxPayloadWidth(uint8_t width)
+{
+	//a small safety check to make sure, our payload isn't bigger than 32 bytes
+	if(width > 32) width = 32;
+	SPI_MasterStart();
+	SPI_MasterTransmit(0x03);
+	SPI_MasterTransmit(width);
+	SPI_MasterEnd();
+}
+
+void nRF905SetTxPayloadWidth(uint8_t width)
+{
+	//a small safety check to make sure, our payload isn't bigger than 32 bytes
+	if(width > 32) width = 32;
+	SPI_MasterStart();
+	SPI_MasterTransmit(0x04);
+	SPI_MasterTransmit(width);
+	SPI_MasterEnd();
+}
+
+void nRF905SetTxAddress(uint8_t address1, uint8_t address2, uint8_t address3, uint8_t address4)
+{
+	SPI_MasterStart();
+	SPI_MasterTransmit(0x22);
+	SPI_MasterTransmit(address1);
+	SPI_MasterTransmit(address2);
+	SPI_MasterTransmit(address3);
+	SPI_MasterTransmit(address4);
+	SPI_MasterEnd();
+}
+
+//TODO: make this function return something useful, like the address (:
+void nRF905GetTxAddress()
+{
+	SPI_MasterStart();
+	SPI_MasterTransmit(0x23);
+	SPI_MasterTransmit(0x00);
+	SPI_MasterTransmit(0x00);
+	SPI_MasterTransmit(0x00);
+	SPI_MasterTransmit(0x00);
+	SPI_MasterEnd();
+}
+
+//Please note, the payload width should match the payload width you have
+//configured with nRF905SetTxPayloadWidth, because only that ammount of
+//data will be sent from the unit, and you'll be sending unessesary
+//data over the SPI Bus.
+void nRF905SetTxPayload(char *payload, uint8_t payloadWidth)
 {
 
+	SPI_MasterStart();
+	SPI_MasterTransmit(0x20);
+	for(uint8_t i = 0; i < payloadWidth; ++ i)
+	{
+		SPI_MasterTransmit(payload[i]);
+	}
+	SPI_MasterEnd();
+
+}
+
+//TODO: make this function return something useful, like the payload (:
+void nRF905GetTxPayload(uint8_t payloadWidth)
+{
+	SPI_MasterStart();
+	SPI_MasterTransmit(0x21);
+	for(uint8_t i = 0; i < payloadWidth; ++ i)
+	{
+		SPI_MasterTransmit(0x00);
+	}
+	SPI_MasterEnd();
+}
+
+void nRF905SendPacket()
+{
+	NRF905_CONTRL_PORT |= (1 << NRF905_TXEN) | (1 << NRF905_TRX_CE);
+	_delay_ms(1);
+	NRF905_CONTRL_PORT &= ~((1 << NRF905_TXEN) | (1 << NRF905_TRX_CE));
 }
 
 
@@ -125,6 +199,7 @@ int main(void)
 {
 	SPI_MasterInit();
 
+	char blah[] = {0xDE, 0xAD, 0xBE, 0xEF};
 
 	//this has to be high from the start
 	SPI_MasterEnd();
@@ -139,7 +214,16 @@ int main(void)
 
 		nRF905SetTxRxAddWidth(4, 4);
 
-		nRF905SetRxAddress(192,168,0,1);
+		nRF905SetRxAddress(192, 168, 0, 1);
+
+		nRF905SetRxPayloadWidth(4);
+		nRF905SetTxPayloadWidth(4);
+
+		nRF905SetTxAddress(192, 168, 0, 5);
+		nRF905GetTxAddress();
+
+		nRF905SetTxPayload(blah, 4);
+		nRF905GetTxPayload(4);
 
 		SPI_MasterStart();
 		SPI_MasterTransmit(0x10);
@@ -150,6 +234,7 @@ int main(void)
 		}
 		SPI_MasterEnd();
 
+		nRF905SendPacket();
 
 		NRF905_CONTRL_PORT &= ~(1 << NRF905_PWR_UP);
 	}
