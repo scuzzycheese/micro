@@ -26,9 +26,11 @@ extern "C"
 #define NRF905_TRX_CE PORTC0
 #define NRF905_PWR_UP PORTC2
 
-#define NRF905_CD PORTD4
-#define NRF905_AM PORTD2
-#define NRF905_DR PORTD3
+#define NRF905_DR_PORT PIND
+#define NRF905_DR_DDR DDRD
+#define NRF905_CD PIN4
+#define NRF905_AM PIN2
+#define NRF905_DR PIN3
 
 #define NRF905_SS_PORT PORTB
 #define NRF905_SS PORTB2
@@ -48,7 +50,7 @@ unsigned char initData[10] =
 	0b00000001,
 	0b00000001,
 
-	0b11011111,
+	0b11011000,
 };
 
 

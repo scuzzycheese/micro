@@ -56,10 +56,11 @@ void nRF905Init()
 {
 	//nRF905 power down
 	NRF905_CONTRL_DDR = (1 << NRF905_TXEN) | (1 << NRF905_TRX_CE) | (1 << NRF905_PWR_UP);
-	NRF905_CONTRL_PORT &= ~((1 << NRF905_TXEN) | (1 << NRF905_TRX_CE) | (1 << NRF905_PWR_UP));
-
-
+	NRF905_CONTRL_PORT &= ~((1 << NRF905_TXEN) | (1 << NRF905_TRX_CE));
 	NRF905_CONTRL_PORT |= (1 << NRF905_PWR_UP);
+
+	//NRF905_DR_DDR &= ~((1 << NRF905_AM) | (1 << NRF905_CD) | (1 << NRF905_DR));
+
 	//read the config data
 	SPI_MasterStart();
 	SPI_MasterTransmit(0x00);
@@ -84,7 +85,7 @@ void nRF905SetFreq(uint16_t freqKhz, uint8_t HFREQ_PLL, uint8_t power)
 		 channel = ((freqKhz / 2) - 4224);
 	}
 
-	channel |= (power & 3) << 10 | (HFREQ_PLL & 1) << 9;
+	channel |= (power & 2) << 10 | (HFREQ_PLL & 1) << 9;
 
 	SPI_MasterStart();
 	SPI_MasterTransmit(0x80 | (uint8_t)((channel >> 8) & 0x0F));
@@ -188,7 +189,9 @@ void nRF905GetTxPayload(uint8_t payloadWidth)
 void nRF905SendPacket()
 {
 	NRF905_CONTRL_PORT |= (1 << NRF905_TXEN) | (1 << NRF905_TRX_CE);
-	_delay_us(1);
+	//once we start sending the packet, we wait for the DR pin to go high
+	//indicating that the data is finished sending
+	while(!(NRF905_DR_PORT & (1 << NRF905_DR)));
 	NRF905_CONTRL_PORT &= ~((1 << NRF905_TXEN) | (1 << NRF905_TRX_CE));
 }
 
@@ -224,18 +227,19 @@ int main(void)
 	{
 		_delay_ms(5000);
 
+
 		nRF905Init();
 
-		nRF905SetFreq(4500, 0, 3);
+		nRF905SetFreq(4331, 0, 0);
 
 		nRF905SetTxRxAddWidth(4, 4);
 
-		nRF905SetRxAddress(192, 168, 0, 1);
+		nRF905SetRxAddress(192, 168, 0, 5);
 
 		nRF905SetRxPayloadWidth(4);
 		nRF905SetTxPayloadWidth(4);
 
-		nRF905SetTxAddress(192, 168, 0, 5);
+		nRF905SetTxAddress(192, 168, 0, 1);
 		nRF905GetTxAddress();
 
 		nRF905SetTxPayload(blah, 4);
@@ -244,8 +248,14 @@ int main(void)
 		nRF905GetConfig();
 
 		nRF905SendPacket();
+		/*
+		NRF905_CONTRL_PORT &= ~(1 << NRF905_TXEN);
+		NRF905_CONTRL_PORT |= 1 << NRF905_TRX_CE;
+		NRF905_CONTRL_PORT |= 1 << NRF905_PWR_UP;
+		 */
 
-		nRF905DeviceSleep();
+
+		//nRF905DeviceSleep();
 	}
 	return 0;
 }
