@@ -216,12 +216,20 @@ void nRF905GetConfig()
 		SPI_MasterEnd();
 }
 
-char *nRF905RecvPacket(uint8_t payloadWidth)
+void nRF905EnableRecv()
 {
 	NRF905_CONTRL_PORT &= ~(1 << NRF905_TXEN);
 	NRF905_CONTRL_PORT |= 1 << NRF905_TRX_CE;
-	NRF905_CONTRL_PORT |= 1 << NRF905_PWR_UP;
+}
 
+void nRF905DisableRecv()
+{
+	NRF905_CONTRL_PORT &= ~(1 << NRF905_TXEN);
+	NRF905_CONTRL_PORT &= ~(1 << NRF905_TRX_CE);
+}
+
+char *nRF905RecvPacket(uint8_t payloadWidth)
+{
 	//we only want to continue while AM is high (in case of a CRC failure)
 	while(NRF905_DR_PORT & (1 << NRF905_AM))
 	{
@@ -229,7 +237,9 @@ char *nRF905RecvPacket(uint8_t payloadWidth)
 		if(NRF905_DR_PORT & (1 << NRF905_DR))
 		{
 			//we need to turn off receive mode now
-			NRF905_CONTRL_PORT &= ~(1 << NRF905_TRX_CE);
+			//TODO: think about this one, maybe make it an option
+			//we sometimes want to stay in recv mode after recieving a packet
+			//NRF905_CONTRL_PORT &= ~(1 << NRF905_TRX_CE);
 
 			SPI_MasterStart();
 			SPI_MasterTransmit(0x24);
@@ -305,6 +315,7 @@ int main(void)
 		//nRF905GetConfig();
 		while(1)
 		{
+			nRF905EnableRecv();
 			nRF905RecvPacket(4);
 		}
 
