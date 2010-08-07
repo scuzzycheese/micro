@@ -7,6 +7,10 @@
 #include "SPIDefs.h"
 #include "nRF905_conf.h"
 
+/**
+ * TODO make this size configureable at compile time maybe?
+ */
+char recvBuffer[32];
 
 void SPI_MasterInit(void)
 {
@@ -212,6 +216,33 @@ void nRF905GetConfig()
 		SPI_MasterEnd();
 }
 
+char *nRF905RecvPacket(uint8_t payloadWidth)
+{
+	NRF905_CONTRL_PORT &= ~(1 << NRF905_TXEN);
+	NRF905_CONTRL_PORT |= 1 << NRF905_TRX_CE;
+	NRF905_CONTRL_PORT |= 1 << NRF905_PWR_UP;
+
+	//we only want to continue while AM is high (in case of a CRC failure)
+	while(NRF905_DR_PORT & (1 << NRF905_AM))
+	{
+		//our data is ready for clocking out the RX buffer
+		if(NRF905_DR_PORT & (1 << NRF905_DR))
+		{
+			//we need to turn off receive mode now
+			NRF905_CONTRL_PORT &= ~(1 << NRF905_TRX_CE);
+
+			SPI_MasterStart();
+			SPI_MasterTransmit(0x24);
+			for(uint8_t i = 0; i < payloadWidth; ++ i)
+			{
+				recvBuffer[i] = SPI_MasterTransmit(0x00);
+			}
+			SPI_MasterEnd();
+		}
+	}
+	return recvBuffer;
+}
+
 
 /* new style */
 int main(void)
@@ -225,8 +256,34 @@ int main(void)
 
 	while(1)
 	{
+
+
+#ifdef SEND
 		_delay_ms(5000);
 
+		nRF905Init();
+
+		nRF905SetFreq(4331, 0, 0);
+
+		nRF905SetTxRxAddWidth(4, 4);
+
+		nRF905SetRxAddress(192, 168, 0, 1);
+
+		nRF905SetRxPayloadWidth(4);
+		nRF905SetTxPayloadWidth(4);
+
+		nRF905SetTxAddress(192, 168, 0, 5);
+		nRF905GetTxAddress();
+
+		nRF905SetTxPayload(blah, 4);
+		nRF905GetTxPayload(4);
+
+		nRF905GetConfig();
+
+		nRF905SendPacket();
+#endif
+
+#ifdef RECV
 
 		nRF905Init();
 
@@ -240,19 +297,18 @@ int main(void)
 		nRF905SetTxPayloadWidth(4);
 
 		nRF905SetTxAddress(192, 168, 0, 1);
-		nRF905GetTxAddress();
+		//nRF905GetTxAddress();
 
-		nRF905SetTxPayload(blah, 4);
-		nRF905GetTxPayload(4);
+		//nRF905SetTxPayload(blah, 4);
+		//nRF905GetTxPayload(4);
 
-		nRF905GetConfig();
+		//nRF905GetConfig();
+		while(1)
+		{
+			nRF905RecvPacket(4);
+		}
 
-		nRF905SendPacket();
-		/*
-		NRF905_CONTRL_PORT &= ~(1 << NRF905_TXEN);
-		NRF905_CONTRL_PORT |= 1 << NRF905_TRX_CE;
-		NRF905_CONTRL_PORT |= 1 << NRF905_PWR_UP;
-		 */
+#endif
 
 
 		//nRF905DeviceSleep();
