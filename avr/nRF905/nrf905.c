@@ -57,29 +57,6 @@ unsigned char SPI_MasterTransmit(unsigned char cData)
 }
 
 
-/**
- * Sets the operating frequency of the nRF905
- *
- * This allows one to select the operating frequency
- * of the nRF905, along with the switch to the
- * Higher Frequency band. It also allows you to set
- * the output power.
- *
- * @param uint16_t freqKKhz
- *  Set's the frequncy in thousands of killoherts. For instance,
- *  433.1 Mhz becomes 4331 thousand Khz. If you wanted to set
- *  it to say, 450Mhz, you would set a value of 4500.
- * @param uint8_t HFREQ_PLL
- *  This sets the band you're working in.
- *  0 = 433Mhz band
- *  1 = 868 or 915 band
- * @param uint8_t power
- *  Sets the power output of the transmitter.
- *  0 = -10dBm
- *  1 = -2dBm
- *  2 = 6dBm
- *  3 = 10dBm
- */
 void nRF905SetFreq(uint16_t freqKKhz, uint8_t HFREQ_PLL, uint8_t power)
 {
 	uint16_t channel = 0;
@@ -100,18 +77,6 @@ void nRF905SetFreq(uint16_t freqKKhz, uint8_t HFREQ_PLL, uint8_t power)
 	SPI_MasterEnd();
 }
 
-/**
- * Set the width of the TX and RX address
- *
- * We can set the Tramission and Reception Addresses
- * with these values. Valid values are from 1 - 4.
- * This defined how many bytes wide the address will be.
- *
- * @param uint8_t txAddWidth
- *  Width of the TX address, 1 - 4
- * @param uint8_t rxAddWidth
- *  Width of the RX address, 1 - 4
- */
 void nRF905SetTxRxAddWidth(uint8_t txAddWidth, uint8_t rxAddWidth)
 {
 	uint8_t addLenWidth = (txAddWidth << 4) | (rxAddWidth & 0x0F);
@@ -121,22 +86,6 @@ void nRF905SetTxRxAddWidth(uint8_t txAddWidth, uint8_t rxAddWidth)
 	SPI_MasterEnd();
 }
 
-/**
- * Set the Device Address
- *
- * This allows us to set the devices reception address.
- * Please note, if you set the address width narrow, the other
- * bytes are ignored by the nRF905.
- *
- * @param uint8_t address1
- *  First byte of address
- * @param uint8_t address2
- *  Second byte of address
- * @param uint8_t address3
- *  Third byte of address
- * @param uint8_t address4
- *  Fourth byte of address
- */
 void nRF905SetRxAddress(uint8_t address1, uint8_t address2, uint8_t address3, uint8_t address4)
 {
 	SPI_MasterStart();
@@ -148,16 +97,6 @@ void nRF905SetRxAddress(uint8_t address1, uint8_t address2, uint8_t address3, ui
 	SPI_MasterEnd();
 }
 
-/**
- * Set the RX payload width.
- *
- * We can specify how big the payload can be for each
- * packet here.
- *
- * @param uint8_t width
- *  Payload width, valid values are from 1 - 32. Any bigger
- *  values will be cut to 32 bytes.
- */
 void nRF905SetRxPayloadWidth(uint8_t width)
 {
 	//a small safety check to make sure, our payload isn't bigger than 32 bytes
@@ -168,16 +107,6 @@ void nRF905SetRxPayloadWidth(uint8_t width)
 	SPI_MasterEnd();
 }
 
-/**
- * Set the TX payload width.
- *
- * We can specify how big the payload can be for each
- * packet here.
- *
- * @param uint8_t width
- *  Payload width, valid values are from 1 - 32. Any bigger
- *  values will be cut to 32 bytes.
- */
 void nRF905SetTxPayloadWidth(uint8_t width)
 {
 	//a small safety check to make sure, our payload isn't bigger than 32 bytes
@@ -188,24 +117,6 @@ void nRF905SetTxPayloadWidth(uint8_t width)
 	SPI_MasterEnd();
 }
 
-/**
- * Set the address of any outgoing packets
- *
- * With this, we can change the address the chip uses to compose
- * packets to. This is likely to change very often, depending on what
- * other devices we are chatting to.
- * Please note, if you set the address width narrow, the other
- * bytes are ignored by the nRF905.
- *
- * @param uint8_t address1
- *  First byte of address
- * @param uint8_t address2
- *  Second byte of address
- * @param uint8_t address3
- *  Third byte of address
- * @param uint8_t address4
- *  Fourth byte of address
- */
 void nRF905SetTxAddress(uint8_t address1, uint8_t address2, uint8_t address3, uint8_t address4)
 {
 	SPI_MasterStart();
@@ -217,18 +128,6 @@ void nRF905SetTxAddress(uint8_t address1, uint8_t address2, uint8_t address3, ui
 	SPI_MasterEnd();
 }
 
-/**
- * This fetches the TX address from the chip.
- *
- * This might come in handy, to check what TX address you have
- * currently storred in the chip. It's more of a conenience
- * method.
- *
- * @param uint8_t *buffer
- *  This is a pointer to a buffer passed in, into which each byte of
- *  the address will be copied. The buffer needs at least four bytes
- *  of space.
- */
 void nRF905GetTxAddress(uint8_t *buffer)
 {
 	SPI_MasterStart();
@@ -240,22 +139,6 @@ void nRF905GetTxAddress(uint8_t *buffer)
 	SPI_MasterEnd();
 }
 
-/**
- * Set the TX payload.
- *
- * Here we can clock in all the data we want to send
- * from the device. It can be from 1 - 32 bytes in length.
- *
- * Please note, the payload width should match the payload width you have
- * configured with nRF905SetTxPayloadWidth, because only that ammount of
- * data will be sent from the unit, and you'll be sending unessesary
- * data over the SPI Bus.
- *
- * @param char *payload
- *  A pointer to the payload we want to send
- * @param uint8_t payloadWidth
- *  The length of payload. Valud values 1 - 32.
- */
 void nRF905SetTxPayload(char *payload, uint8_t payloadWidth)
 {
 
@@ -269,17 +152,6 @@ void nRF905SetTxPayload(char *payload, uint8_t payloadWidth)
 
 }
 
-/**
- * Get the TX payload
- * 
- * Again, this is a convenience function. It fetches the transmission 
- * payload from the device.
- * 
- * @param char *payload
- *  A pointer to a buffer we want the payload copied into
- *  It needs to be at least payloadWidth in size.
- * @param uint8_t payloadWidth
- */
 void nRF905GetTxPayload(char *payload, uint8_t payloadWidth)
 {
 	SPI_MasterStart();
@@ -305,7 +177,6 @@ void nRF905DeviceSleep()
 	NRF905_CONTRL_PORT &= ~(1 << NRF905_PWR_UP);
 }
 
-//TODO: make this function return something useful, like the config (:
 void nRF905GetConfig(uint8_t from, uint8_t count, char *buffer)
 {
 		SPI_MasterStart();
@@ -349,14 +220,26 @@ void nRF905EnableRecv()
 	NRF905_CONTRL_PORT &= ~(1 << NRF905_TXEN);
 	NRF905_CONTRL_PORT |= 1 << NRF905_TRX_CE;
 }
-
 void nRF905DisableRecv()
 {
 	NRF905_CONTRL_PORT &= ~(1 << NRF905_TXEN);
 	NRF905_CONTRL_PORT &= ~(1 << NRF905_TRX_CE);
 }
 
-char *nRF905RecvPacket(uint8_t payloadWidth)
+
+
+void nRF905GetRxPayload(char *payload, uint8_t payloadWidth)
+{
+	SPI_MasterStart();
+	SPI_MasterTransmit(0x24);
+	for(uint8_t i = 0; i < payloadWidth; ++ i)
+	{
+		payload[i] = SPI_MasterTransmit(0x00);
+	}
+	SPI_MasterEnd();
+}
+
+void nRF905RecvPacket(char *buffer, uint8_t payloadWidth, uint8_t stayInRecvMode)
 {
 	//we only want to continue while AM is high (in case of a CRC failure)
 	while(NRF905_DR_PORT & (1 << NRF905_AM))
@@ -364,21 +247,10 @@ char *nRF905RecvPacket(uint8_t payloadWidth)
 		//our data is ready for clocking out the RX buffer
 		if(NRF905_DR_PORT & (1 << NRF905_DR))
 		{
-			//we need to turn off receive mode now
-			//TODO: think about this one, maybe make it an option
-			//we sometimes want to stay in recv mode after recieving a packet
-			//NRF905_CONTRL_PORT &= ~(1 << NRF905_TRX_CE);
-
-			SPI_MasterStart();
-			SPI_MasterTransmit(0x24);
-			for(uint8_t i = 0; i < payloadWidth; ++ i)
-			{
-				recvBuffer[i] = SPI_MasterTransmit(0x00);
-			}
-			SPI_MasterEnd();
+			if(stayInRecvMode) NRF905_CONTRL_PORT &= ~(1 << NRF905_TRX_CE);
+			nRF905GetRxPayload(buffer, payloadWidth);
 		}
 	}
-	return recvBuffer;
 }
 
 void nRF905SetReduceRxPwr(uint8_t rxPwrRed)
@@ -430,6 +302,7 @@ void nRF905SetCRC(uint8_t CRCMode, uint8_t enable)
 	byte9Config = (byte9Config & 0b00111111) | CRCMode << 7 | enable << 6;
 	nRF905SetConfig(9, 1, &byte9Config);
 }
+
 
 void nRF905SetOscFreq(uint8_t freq)
 {
