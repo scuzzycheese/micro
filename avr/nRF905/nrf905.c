@@ -56,25 +56,6 @@ unsigned char SPI_MasterTransmit(unsigned char cData)
 	return data;
 }
 
-void nRF905Init()
-{
-	//nRF905 power down
-	NRF905_CONTRL_DDR = (1 << NRF905_TXEN) | (1 << NRF905_TRX_CE) | (1 << NRF905_PWR_UP);
-	NRF905_CONTRL_PORT &= ~((1 << NRF905_TXEN) | (1 << NRF905_TRX_CE));
-	NRF905_CONTRL_PORT |= (1 << NRF905_PWR_UP);
-
-	//NRF905_DR_DDR &= ~((1 << NRF905_AM) | (1 << NRF905_CD) | (1 << NRF905_DR));
-
-	//read the config data
-	SPI_MasterStart();
-	SPI_MasterTransmit(0x00);
-	for(int i = 0; i < 10; i ++)
-	{
-		//send dummy bytes to read off the data
-		SPI_MasterTransmit(initData[i]);
-	}
-	SPI_MasterEnd();
-}
 
 //Please follow the documentation for these values
 void nRF905SetFreq(uint16_t freqKhz, uint8_t HFREQ_PLL, uint8_t power)
@@ -205,15 +186,42 @@ void nRF905DeviceSleep()
 }
 
 //TODO: make this function return something useful, like the config (:
-void nRF905GetConfig()
+void nRF905GetConfig(uint8_t from, uint8_t count, char *buffer)
 {
 		SPI_MasterStart();
-		SPI_MasterTransmit(0x10);
-		for(int i = 0; i < 10; i ++)
+		SPI_MasterTransmit(0x10 | (from & 0x0F));
+		for(int i = 0; i < count; i ++)
 		{
-			SPI_MasterTransmit(0x00);
+			buffer[i] = SPI_MasterTransmit(0x00);
 		}
 		SPI_MasterEnd();
+}
+
+void nRF905SetConfig(uint8_t from, uint8_t count, char *buffer)
+{
+	SPI_MasterStart();
+	SPI_MasterTransmit(0x00 | (from & 0x0F));
+	for(int i = 0; i < count; i ++)
+	{
+		//send dummy bytes to read off the data
+		SPI_MasterTransmit(buffer[i]);
+	}
+	SPI_MasterEnd();
+
+}
+
+void nRF905Init()
+{
+	//nRF905 power down
+	NRF905_CONTRL_DDR = (1 << NRF905_TXEN) | (1 << NRF905_TRX_CE) | (1 << NRF905_PWR_UP);
+	NRF905_CONTRL_PORT &= ~((1 << NRF905_TXEN) | (1 << NRF905_TRX_CE));
+	NRF905_CONTRL_PORT |= (1 << NRF905_PWR_UP);
+
+	//NRF905_DR_DDR &= ~((1 << NRF905_AM) | (1 << NRF905_CD) | (1 << NRF905_DR));
+
+	//read the config data
+	nRF905SetConfig(0, 10, initData);
+	SPI_MasterEnd();
 }
 
 void nRF905EnableRecv()
@@ -251,6 +259,65 @@ char *nRF905RecvPacket(uint8_t payloadWidth)
 		}
 	}
 	return recvBuffer;
+}
+
+void nRF905SetReduceRxPwr(uint8_t rxPwrRed)
+{
+	char byte1Config;
+	nRF905GetConfig(1, 1, &byte1Config);
+	if(rxPwrRed)
+	{
+		byte1Config |= 0x10;
+	}
+	else
+	{
+		byte1Config &= ~(0x10);
+	}
+	nRF905SetConfig(1, 1, &byte1Config);
+}
+
+void nRF905SetAutoRetransmit(uint8_t autoRetransmit)
+{
+	char byte1Config;
+	nRF905GetConfig(1, 1, &byte1Config);
+	if(autoRetransmit)
+	{
+		byte1Config |= 0x20;
+	}
+	else
+	{
+		byte1Config &= ~(0x20);
+	}
+	nRF905SetConfig(1, 1, &byte1Config);
+}
+
+void nRF905SetOuputClock(uint8_t outClockFreq, uint8_t enable)
+{
+	outClockFreq = (outClockFreq > 3) ? 3 : outClockFreq;
+	enable = (enable) ? 1 : 0;
+	char byte9Config;
+	nRF905GetConfig(9, 1, &byte9Config);
+	byte9Config = (byte9Config & 0b11111000) | outClockFreq | enable << 2;
+	nRF905SetConfig(9, 1, &byte9Config);
+}
+
+void nRF905SetCRC(uint8_t CRCMode, uint8_t enable)
+{
+	CRCMode = (CRCMode) ? 1 : 0;
+	enable = (enable) ? 1 : 0;
+	char byte9Config;
+	nRF905GetConfig(9, 1, &byte9Config);
+	byte9Config = (byte9Config & 0b00111111) | CRCMode << 7 | enable << 6;
+	nRF905SetConfig(9, 1, &byte9Config);
+}
+
+void nRF905SetOscFreq(uint8_t freq)
+{
+	freq = (freq > 4) ? 4 : freq;
+	char byte9Config;
+	nRF905GetConfig(9, 1, &byte9Config);
+	byte9Config = (byte9Config & 0b11000111) | freq << 3;
+	nRF905SetConfig(9, 1, &byte9Config);
 }
 
 
@@ -295,6 +362,7 @@ int main(void)
 
 #ifdef RECV
 
+		_delay_ms(5000);
 		nRF905Init();
 
 		nRF905SetFreq(4331, 0, 0);
@@ -312,12 +380,21 @@ int main(void)
 		//nRF905SetTxPayload(blah, 4);
 		//nRF905GetTxPayload(4);
 
-		//nRF905GetConfig();
+		char buff;
+		nRF905GetConfig(9, 1, &buff);
+		nRF905SetOscFreq(0);
+		nRF905GetConfig(9, 1, &buff);
+		nRF905SetOscFreq(3);
+		nRF905GetConfig(9, 1, &buff);
+
+		/*
 		while(1)
 		{
 			nRF905EnableRecv();
 			nRF905RecvPacket(4);
 		}
+		 */
+		 
 
 #endif
 
