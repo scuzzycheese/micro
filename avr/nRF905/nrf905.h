@@ -345,8 +345,32 @@ void nRF905SetCRC(uint8_t CRCMode, uint8_t enable);
  *  3 = 16Mhz
  *  4 = 20Mhz
  */
-
 void nRF905SetOscFreq(uint8_t freq);
+
+/**
+ * Retrieve the status register
+ *
+ * The status rgister contains the current values of AM (Address Match)
+ * and DR (Data Ready). This is a useful function to have if you have
+ * not wired up the physical AM or DR lines on the IC. While you
+ * can't use it to trigger an interrupt, you can poll the device to see
+ * when data might be ready to fetch
+ */
+uint8_t nRF905GetStatusReg();
+
+/**
+ * Use this to test values in the status register
+ *
+ * EG: if(AM_IN_STATUS_REG(reg)) { ... }
+ */
+#define AM_IN_STATUS_REG(x) (x & 0x80)
+
+/**
+ * Use this to test values in the status register
+ *
+ * EG: if(DR_IN_STATUS_REG(reg)) { ... }
+ */
+#define DR_IN_STATUS_REG(x) (x & 0x20)
 
 
 #ifdef	__cplusplus

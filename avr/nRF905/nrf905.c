@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include "SPIDefs.h"
 #include "nRF905_conf.h"
+#include "nrf905.h"
 
 /**
  * TODO make this size configureable at compile time maybe?
@@ -239,6 +240,8 @@ void nRF905GetRxPayload(char *payload, uint8_t payloadWidth)
 	SPI_MasterEnd();
 }
 
+//TODO: 	write a version that relies on the status register rather than the
+//			status lines (AM/DR)
 void nRF905RecvPacket(char *buffer, uint8_t payloadWidth, uint8_t stayInRecvMode)
 {
 	//we only want to continue while AM is high (in case of a CRC failure)
@@ -247,7 +250,7 @@ void nRF905RecvPacket(char *buffer, uint8_t payloadWidth, uint8_t stayInRecvMode
 		//our data is ready for clocking out the RX buffer
 		if(NRF905_DR_PORT & (1 << NRF905_DR))
 		{
-			if(stayInRecvMode) NRF905_CONTRL_PORT &= ~(1 << NRF905_TRX_CE);
+			if(!stayInRecvMode) NRF905_CONTRL_PORT &= ~(1 << NRF905_TRX_CE);
 			nRF905GetRxPayload(buffer, payloadWidth);
 		}
 	}
@@ -313,6 +316,14 @@ void nRF905SetOscFreq(uint8_t freq)
 	nRF905SetConfig(9, 1, &byte9Config);
 }
 
+uint8_t nRF905GetStatusReg()
+{
+	SPI_MasterStart();
+	uint8_t statusReg = SPI_MasterTransmit(0x00);
+	SPI_MasterEnd();
+	return statusReg;
+}
+
 
 /* new style */
 int main(void)
@@ -373,20 +384,13 @@ int main(void)
 		//nRF905SetTxPayload(blah, 4);
 		//nRF905GetTxPayload(4);
 
-		char buff;
-		nRF905GetConfig(9, 1, &buff);
-		nRF905SetOscFreq(0);
-		nRF905GetConfig(9, 1, &buff);
-		nRF905SetOscFreq(3);
-		nRF905GetConfig(9, 1, &buff);
 
-		/*
+		nRF905EnableRecv();
+		char buff[4];
 		while(1)
 		{
-			nRF905EnableRecv();
-			nRF905RecvPacket(4);
+			nRF905RecvPacket(buff, 4, 1);
 		}
-		 */
 		 
 
 #endif
