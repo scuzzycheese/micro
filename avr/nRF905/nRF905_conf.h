@@ -47,23 +47,6 @@ extern "C"
 #define NRF905_SS PORTB2
 
 
-unsigned char initData[10] =
-{
-	0b01101100,
-	0b00001100,
-	0b01000100,
-	0b00100000,
-	0b00100000,
-
-	//Devices Address
-	0b00000001,
-	0b00000001,
-	0b00000001,
-	0b00000001,
-
-	0b11011000,
-};
-
 
 #ifdef	__cplusplus
 }

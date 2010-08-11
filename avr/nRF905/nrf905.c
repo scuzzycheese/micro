@@ -18,21 +18,28 @@
 
 
 #include <avr/io.h>
-#include <inttypes.h>
-#define F_CPU 16000000UL  // 16 MHz
-#include <util/delay.h>
-#include <avr/interrupt.h>
-#include <stdlib.h>
 #include "SPIDefs.h"
 #include "nRF905_conf.h"
 #include "nrf905.h"
 
-/**
- * TODO make this size configureable at compile time maybe?
- */
-char recvBuffer[32];
+unsigned char initData[10] =
+{
+	0b01101100,
+	0b00001100,
+	0b01000100,
+	0b00100000,
+	0b00100000,
 
-void SPI_MasterInit(void)
+	//Devices Address
+	0b00000001,
+	0b00000001,
+	0b00000001,
+	0b00000001,
+
+	0b11011000,
+};
+
+void SPI_MasterInit()
 {
 	/* Set MOSI and SCK output, all others input */
 	DDR_SPI = (1 << DD_MOSI) | (1 << DD_SCK) | (1 << DD_SS);
@@ -342,81 +349,3 @@ uint8_t nRF905GetStatusReg()
 	SPI_MasterEnd();
 	return statusReg;
 }
-
-
-/* new style */
-int main(void)
-{
-	SPI_MasterInit();
-
-	char blah[] = {0xDE, 0xAD, 0xBE, 0xEF};
-
-	//this has to be high from the start
-	SPI_MasterEnd();
-
-	while(1)
-	{
-
-
-#ifdef SEND
-		_delay_ms(5000);
-
-		nRF905Init();
-
-		nRF905SetFreq(4331, 0, 0);
-
-		nRF905SetTxRxAddWidth(4, 4);
-
-		nRF905SetRxAddress(192, 168, 0, 1);
-
-		nRF905SetRxPayloadWidth(4);
-		nRF905SetTxPayloadWidth(4);
-
-		nRF905SetTxAddress(192, 168, 0, 5);
-		nRF905GetTxAddress();
-
-		nRF905SetTxPayload(blah, 4);
-		nRF905GetTxPayload(4);
-
-		nRF905GetConfig();
-
-		nRF905SendPacket();
-#endif
-
-#ifdef RECV
-
-		_delay_ms(5000);
-		nRF905Init();
-
-		nRF905SetFreq(4331, 0, 0);
-
-		nRF905SetTxRxAddWidth(4, 4);
-
-		nRF905SetRxAddress(192, 168, 0, 5);
-
-		nRF905SetRxPayloadWidth(4);
-		nRF905SetTxPayloadWidth(4);
-
-		nRF905SetTxAddress(192, 168, 0, 1);
-		//nRF905GetTxAddress();
-
-		//nRF905SetTxPayload(blah, 4);
-		//nRF905GetTxPayload(4);
-
-
-		nRF905EnableRecv();
-		char buff[4];
-		while(1)
-		{
-			nRF905RecvPacket(buff, 4, 1);
-		}
-		 
-
-#endif
-
-
-		//nRF905DeviceSleep();
-	}
-	return 0;
-}
-

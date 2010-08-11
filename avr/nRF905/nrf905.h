@@ -24,6 +24,11 @@ extern "C"
 {
 #endif
 
+void SPI_MasterInit();
+void SPI_MasterStart();
+void SPI_MasterEnd();
+unsigned char SPI_MasterTransmit(unsigned char cData);
+
 /**
  * Sets the operating frequency of the nRF905
  *
