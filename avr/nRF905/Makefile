@@ -16,4 +16,4 @@ install:
 	avrdude -p m8 -P usb -c dragon_isp -e -U flash:w:nrf905.hex
 
 clean:
-	rm -Rf nrf905.hex nrf905.o nrf905.elf
+	rm -Rf nrf905.hex nrf905.o nrf905.elf nRF905_example.o
