@@ -277,7 +277,7 @@ void nRF905GetRxPayload(char *payload, uint8_t payloadWidth);
  *
  * If you have not wires up the AM or DR lines, there is another function
  * which can pull these values from a register for you to check if there
- * is basically a packet waiting on the line for you.
+ * is basically a packet waiting on the line for you: nRF905RevcPacketWODL
  * I will provide examples of all this.
  *
  * @param char *buffer
@@ -292,6 +292,30 @@ void nRF905GetRxPayload(char *payload, uint8_t payloadWidth);
  *  a neutral mode.
  */
 void nRF905RecvPacket(char *buffer, uint8_t payloadWidth, uint8_t stayInRecvMode);
+
+/**
+ * Pull a packet off the device if the circumstances are correct.
+ *
+ * This is a convenience method to help you pull a packet off the
+ * device. It only works if the address match status register bit is set.
+ *
+ * This is an alternative to nRF905RecvPacket, in that it does not require that
+ * the address match line, or the data ready line is hooked up. It polls
+ * the status register of the nRF905 to see if there is an address match, or
+ * the data is ready.
+ *
+ * @param char *buffer
+ *  A pointer to a buffer that the payload will be copied into.
+ *  It must be at least payloadWidth in size.
+ * @param uint8_t payloadWidth
+ *  The length of the payload to pull form the drvice.
+ *  Valid values 1 - 32.
+ * @param uint8_t stayInRecvMode
+ *  If set to 1, this ensures the device stays in receive mode after
+ *  it clocks the payload off the device. Otherwise it goes into
+ *  a neutral mode.
+ */
+void nRF905RecvPacketWODL(char *buffer, uint8_t payloadWidth, uint8_t stayInRecvMode);
 
 /**
  * Reduce the RX power of the device.

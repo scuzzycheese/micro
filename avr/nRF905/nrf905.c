@@ -266,8 +266,6 @@ void nRF905GetRxPayload(char *payload, uint8_t payloadWidth)
 	SPI_MasterEnd();
 }
 
-//TODO: 	write a version that relies on the status register rather than the
-//			status lines (AM/DR)
 void nRF905RecvPacket(char *buffer, uint8_t payloadWidth, uint8_t stayInRecvMode)
 {
 	//we only want to continue while AM is high (in case of a CRC failure)
@@ -275,6 +273,20 @@ void nRF905RecvPacket(char *buffer, uint8_t payloadWidth, uint8_t stayInRecvMode
 	{
 		//our data is ready for clocking out the RX buffer
 		if(NRF905_DR_PORT & (1 << NRF905_DR))
+		{
+			if(!stayInRecvMode) NRF905_CONTRL_PORT &= ~(1 << NRF905_TRX_CE);
+			nRF905GetRxPayload(buffer, payloadWidth);
+		}
+	}
+}
+
+void nRF905RecvPacketWODL(char *buffer, uint8_t payloadWidth, uint8_t stayInRecvMode)
+{
+	//we only want to continue while AM is high (in case of a CRC failure)
+	while(AM_IN_STATUS_REG(nRF905GetStatusReg()))
+	{
+		//our data is ready for clocking out the RX buffer
+		if(DR_IN_STATUS_REG(nRF905GetStatusReg()))
 		{
 			if(!stayInRecvMode) NRF905_CONTRL_PORT &= ~(1 << NRF905_TRX_CE);
 			nRF905GetRxPayload(buffer, payloadWidth);
