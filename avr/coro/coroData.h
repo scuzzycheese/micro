@@ -24,6 +24,10 @@ struct csd
 
 	char *SP;
 	char *mallocStack;
+
+	struct csd *next;
+	struct csd *prev;
+	struct csd *last;
 } __attribute__ ((__packed__));
 typedef struct csd coStData;
 

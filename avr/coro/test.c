@@ -53,7 +53,7 @@ void blah(coStData *rt)
 }
 
 
-void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize, int *coRoSem)
+void fibre_create(coStData *regs, fibreType rAdd, int stackSize)
 {
 	CLRBIT(regs->flags, JMPBIT); // = JMPFROMMAIN
 	CLRBIT(regs->flags, CALLSTATUS); // = CALL
@@ -64,70 +64,80 @@ void fibre_create(__volatile__ coStData *regs, fibreType rAdd, int stackSize, in
 	regs->mallocStack = (char *)malloc(stackSize);
 	regs->SP = regs->mallocStack + (stackSize - 1);
 
-	(*coRoSem) ++;
+	if(mainRegs.next == NULL)
+	{
+		mainRegs.next = regs;
+		mainRegs.last = regs;
+		regs->next = regs;
+		regs->prev = regs;
+	}
+	else
+	{
+		mainRegs.last->next = regs;
+		regs->prev = mainRegs.last;
+		mainRegs.last = regs;
+		regs->next = mainRegs.next;
+
+		mainRegs.next->prev = mainRegs.last;
+	}
 }
 
-void fibres_start(coStData *routineRegs, int *coRoSem)
+void fibres_start()
 {
-	int numOfRoutines = (*coRoSem);
-	int routineId;
+	coStData *curCoRo = mainRegs.next;
 
 	//This is the sheduler, it needs lots of work
 	//and carefully
-	while((*coRoSem))
+	while(mainRegs.next != NULL)
 	{
-		for(routineId = 0; routineId < numOfRoutines; routineId ++)
+		printf("Begin loop\n");
+		CLRBIT(curCoRo->flags, JMPBIT); // = JMPFROMMAIN
+
+		regSave(&mainRegs);
+		getExecAdd(mainRegs.retAdd);
+		regRestore(&mainRegs);
+
+		//This might be a few too many checks
+		if(GETBIT(curCoRo->flags, JMPBIT) == JMPFROMMAIN && !GETBIT(curCoRo->flags, FINISHED) && GETBIT(curCoRo->flags, SHEDULED))
 		{
-			printf("Begin loop\n");
-			CLRBIT(routineRegs[routineId].flags, JMPBIT); // = JMPFROMMAIN
-
-			regSave(&mainRegs);
-			getExecAdd(mainRegs.retAdd);
-			regRestore(&mainRegs);
-
-			//This might be a few too many checks
-			if(GETBIT(routineRegs[routineId].flags, JMPBIT) == JMPFROMMAIN && !GETBIT(routineRegs[routineId].flags, FINISHED) && GETBIT(routineRegs[routineId].flags, SHEDULED))
+			if(GETBIT(curCoRo->flags, CALLSTATUS) == CALL)
 			{
-				if(GETBIT(routineRegs[routineId].flags, CALLSTATUS) == CALL)
-				{
-					//We should onyl get in here once per routine,
-					//there after we jmp back, not call back
-					SETBIT(routineRegs[routineId].flags, CALLSTATUS); // = JMP
+				//We should onyl get in here once per routine,
+				//there after we jmp back, not call back
+				SETBIT(curCoRo->flags, CALLSTATUS); // = JMP
 
-					//copy a pointer to the specific routine's reg data structure
-					//onto it's stack so it's passed in as an argument
-					routineRegs[routineId].SP -= sizeof(coStData *);
-					*((coStData **)routineRegs[routineId].SP) = &(routineRegs[routineId]);
+				//copy a pointer to the specific routine's reg data structure
+				//onto it's stack so it's passed in as an argument
+				curCoRo->SP -= sizeof(coStData *);
+				//I think this will always be on aligned data, but must double check, otherwise
+				//it'll cause a bus error on some architechtures if it's not aligned
+				*((coStData **)curCoRo->SP) = curCoRo;
 
-					//This is designed to replace to two calls below
-					setStackAndCallToAdd(routineRegs[routineId].SP, routineRegs[routineId].retAdd);
-					/*
-					//point the stack to the new data
-					setStack(routineRegs[routineId].SP);
-
-					//call our function
-					callToAdd(routineRegs[routineId].retAdd);
-					*/
-				}
-				else
-				{
-					//This is designed to replace to two calls below
-					regRestoreAndJmpToAdd(&routineRegs[routineId]);
-					/*
-					regRestore(&routineRegs[routineId]);
-					jmpToAdd(routineRegs[routineId].retAdd);
-					*/
-				}
+				//This is designed to replace to two calls below
+				setStackAndCallToAdd(curCoRo->SP, curCoRo->retAdd);
 			}
-			if(GETBIT(routineRegs[routineId].flags, FINISHED) && routineRegs[routineId].mallocStack)
+			else
 			{
-				//now that our routine is finished, get rid of it's stack
-				free(routineRegs[routineId].mallocStack);
-				routineRegs[routineId].mallocStack = NULL;
-				(*coRoSem) --;
+				//This is designed to replace to two calls below
+				regRestoreAndJmpToAdd(curCoRo);
 			}
-			printf("End loop\n");
 		}
+		if(GETBIT(curCoRo->flags, FINISHED) && curCoRo->mallocStack)
+		{
+			//now that our routine is finished, get rid of it's stack
+			free(curCoRo->mallocStack);
+			curCoRo->mallocStack = NULL;
+			if(curCoRo->prev->next = curCoRo->next)
+			{
+				mainRegs.next = NULL;
+			}
+			else
+			{
+				curCoRo->prev->next = curCoRo->next;
+			}
+		}
+		curCoRo = curCoRo->next;
+		printf("End loop\n");
 	}
 }
 
@@ -136,15 +146,15 @@ int main(int argc, char **argv)
 {
 	printf("Co-Routine storage size: %d\n", sizeof(coStData));
 
-	coStData routineRegs[2];
-	int crs = 0;
+	coStData routineRegs[3];
 
 	//set up the fibres
-	fibre_create(&(routineRegs[0]), blah, 10000, &crs);
-	fibre_create(&(routineRegs[1]), blah, 10000, &crs);
+	fibre_create(&(routineRegs[0]), blah, 10000);
+	fibre_create(&(routineRegs[1]), blah, 10000);
+	fibre_create(&(routineRegs[2]), blah, 10000);
 
 	//start the fibres
-	fibres_start(routineRegs, &crs);
+	fibres_start();
 
 	printf("Fibres finished\n");
 
