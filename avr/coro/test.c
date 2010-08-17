@@ -110,7 +110,7 @@ void fibres_start()
 
 				//This is designed to replace to two calls below
 				setStackAndCallToAdd(curCoRo->SP, curCoRo->retAdd);
-				//Put us back into the right frame
+				//Put us back into the right stack frame
 				regRestore(&mainRegs);
 				//Believe if or not, if we get here, the routine is finished
 				fibre_end(curCoRo);
