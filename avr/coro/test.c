@@ -18,14 +18,6 @@ void fibre_yield(coStData *rt)
 	}
 }
 
-//this has to get routineRegs dynamically
-void fibre_end(coStData *rt)
-{
-	SETBIT(rt->flags, FINISHED);
-	//i think it's always safe to jump back
-	//jmpToAdd(mainRegs.retAdd);
-}
-
 void blah(coStData *rt)
 {
 	int count = 0;
@@ -43,8 +35,6 @@ void blah(coStData *rt)
 
 		count ++;
 	}
-	//if you don't put this on, it's all gonna be bad!
-	//fibre_end(rt);
 }
 
 
@@ -88,6 +78,9 @@ void fibres_start()
 		printf("Begin loop\n");
 		CLRBIT(curCoRo->flags, JMPBIT); // = JMPFROMMAIN
 
+		//TODO: check this out
+		//I might be able to move this out the while loop, as any changes
+		//to the registers up to this point are inconsiquential
 		regSave(&mainRegs);
 		getExecAdd(mainRegs.retAdd);
 		regRestore(&mainRegs);
@@ -113,7 +106,7 @@ void fibres_start()
 				//Put us back into the right stack frame
 				regRestore(&mainRegs);
 				//Believe if or not, if we get here, the routine is finished
-				fibre_end(curCoRo);
+				SETBIT(curCoRo->flags, FINISHED);
 			}
 			else
 			{
