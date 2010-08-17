@@ -2,11 +2,6 @@
 #include <stdlib.h>
 #include "coroData.h"
 
-#ifdef WIN32
-	#include <windows.h>
-#endif
-
-
 __volatile__ static coStData mainRegs;
 
 //this has to get routineRegs dynamically
@@ -28,7 +23,7 @@ void fibre_end(coStData *rt)
 {
 	SETBIT(rt->flags, FINISHED);
 	//i think it's always safe to jump back
-	jmpToAdd(mainRegs.retAdd);
+	//jmpToAdd(mainRegs.retAdd);
 }
 
 void blah(coStData *rt)
@@ -49,7 +44,7 @@ void blah(coStData *rt)
 		count ++;
 	}
 	//if you don't put this on, it's all gonna be bad!
-	fibre_end(rt);
+	//fibre_end(rt);
 }
 
 
@@ -115,6 +110,10 @@ void fibres_start()
 
 				//This is designed to replace to two calls below
 				setStackAndCallToAdd(curCoRo->SP, curCoRo->retAdd);
+				//Put us back into the right frame
+				regRestore(&mainRegs);
+				//Believe if or not, if we get here, the routine is finished
+				fibre_end(curCoRo);
 			}
 			else
 			{
