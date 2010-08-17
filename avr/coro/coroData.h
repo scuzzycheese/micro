@@ -17,6 +17,7 @@ struct csd
 	int esp;
 	int ecx;
 	int ebp;
+	int edx;
 	fibreType retAdd;
 
 	//These flags contain statuses about the fibre
@@ -115,6 +116,7 @@ typedef struct csd coStData;
 	"movl %%esp, (12)(%%eax)\n" \
 	"movl %%ecx, (16)(%%eax)\n" \
 	"movl %%ebp, (20)(%%eax)\n" \
+	"movl %%edx, (24)(%%eax)\n" \
 	\
 	: \
 	:"a"(buf) \
@@ -129,6 +131,7 @@ typedef struct csd coStData;
 	"movl (12)(%%eax), %%esp\n" \
 	"movl (16)(%%eax), %%ecx\n" \
 	"movl (20)(%%eax), %%ebp\n" \
+	"movl (24)(%%eax), %%edx\n" \
 	\
 	: \
 	:"a"(buf) \
@@ -143,6 +146,7 @@ typedef struct csd coStData;
 	"movl (12)(%%eax), %%esp\n" \
 	"movl (16)(%%eax), %%ecx\n" \
 	"movl (20)(%%eax), %%ebp\n" \
+	"movl (24)(%%eax), %%edx\n" \
 	"jmp *(24)(%%eax)" \
 	\
 	: \
