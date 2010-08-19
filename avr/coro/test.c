@@ -23,22 +23,23 @@ void blah(coStData *rt)
 	int count = 0;
 	printf("Starting blah()\n");
 
-	while(count < 4)
-	{
-		//for some reason, printf behaves strangely in windows when it has a new stack.
-		//sounds like hackery jiggery going on underneith
-		printf("looping in blah() count: %d\n", count);
-		//flog(routineId);
+	printf("blah() count: %d\n", count);
+	count ++;
+	fibre_yield(rt);
 
-		//Let this decide if I should yield or not
-		fibre_yield(rt);
+	printf("blah() count: %d\n", count);
+	count ++;
+	fibre_yield(rt);
 
-		count ++;
-	}
+	printf("blah() count: %d\n", count);
+	count ++;
+	fibre_yield(rt);
+
+	printf("blah() count: %d\n", count);
 }
 
 
-void fibre_create(coStData *regs, fibreType rAdd, int stackSize)
+void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer)
 {
 	CLRBIT(regs->flags, JMPBIT); // = JMPFROMMAIN
 	CLRBIT(regs->flags, CALLSTATUS); // = CALL
@@ -46,7 +47,7 @@ void fibre_create(coStData *regs, fibreType rAdd, int stackSize)
 	SETBIT(regs->flags, SHEDULED);
 
 	regs->retAdd = rAdd;
-	regs->mallocStack = (char *)malloc(stackSize);
+	regs->mallocStack = stackPointer;
 	regs->SP = regs->mallocStack + (stackSize - 1);
 
 	if(mainRegs.next == NULL)
@@ -116,10 +117,7 @@ void fibres_start()
 		}
 		if(GETBIT(curCoRo->flags, FINISHED) && curCoRo->mallocStack)
 		{
-			//now that our routine is finished, get rid of it's stack
-			free(curCoRo->mallocStack);
-			curCoRo->mallocStack = NULL;
-			if(curCoRo->prev->next = curCoRo->next)
+			if(curCoRo->prev->next == curCoRo->next)
 			{
 				mainRegs.next = NULL;
 			}
@@ -139,11 +137,12 @@ int main(int argc, char **argv)
 	printf("Co-Routine storage size: %d\n", sizeof(coStData));
 
 	coStData routineRegs[3];
+	char stack[3][10000];
 
 	//set up the fibres
-	fibre_create(&(routineRegs[0]), blah, 10000);
-	fibre_create(&(routineRegs[1]), blah, 10000);
-	fibre_create(&(routineRegs[2]), blah, 10000);
+	fibre_create(&(routineRegs[0]), blah, 10000, stack[0]);
+	fibre_create(&(routineRegs[1]), blah, 10000, stack[1]);
+	fibre_create(&(routineRegs[2]), blah, 10000, stack[2]);
 
 	//start the fibres
 	fibres_start();
