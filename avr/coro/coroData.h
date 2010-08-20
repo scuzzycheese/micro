@@ -46,23 +46,16 @@ struct csd
 	uint8_t r30;
 	uint8_t r31;
 #else
-	//the following 7 members have to be in this exact order
-	//at the top of this struct
-	int ebx;
-	int esi;
-	int edi;
-	int esp;
-	int ecx;
-	int ebp;
-	int edx;
 #endif
+
+	char *sp;
+	char *bp;
 
 	void *retAdd;
 
 	//These flags contain statuses about the fibre
 	char flags;
 
-	char *sp;
 	char *mallocStack;
 
 	struct csd *next;
@@ -217,13 +210,15 @@ typedef struct csd coStData;
 #else
 #define regSave(buf) __asm__ \
 ( \
-	"movl %%ebx, (%%eax)\n" \
-	"movl %%esi, (4)(%%eax)\n" \
-	"movl %%edi, (8)(%%eax)\n" \
-	"movl %%esp, (12)(%%eax)\n" \
-	"movl %%ecx, (16)(%%eax)\n" \
-	"movl %%ebp, (20)(%%eax)\n" \
-	"movl %%edx, (24)(%%eax)\n" \
+	"pushl %%ebx\n" \
+	"pushl %%esi\n" \
+	"pushl %%edi\n" \
+	"pushl %%esp\n" \
+	"pushl %%ecx\n" \
+	"pushl %%ebp\n" \
+	"pushl %%edx\n" \
+	"movl %%esp, (%%eax)\n" \
+	"movl %%ebp, (4)(%%eax)\n" \
 	\
 	: \
 	:"a"(buf) \
@@ -273,13 +268,15 @@ typedef struct csd coStData;
 #else
 #define regRestore(buf) __asm__ \
 ( \
-	"movl (%%eax), %%ebx\n" \
-	"movl (4)(%%eax), %%esi\n" \
-	"movl (8)(%%eax), %%edi\n" \
-	"movl (12)(%%eax), %%esp\n" \
-	"movl (16)(%%eax), %%ecx\n" \
-	"movl (20)(%%eax), %%ebp\n" \
-	"movl (24)(%%eax), %%edx\n" \
+	"movl (%%eax), %%esp\n" \
+	"movl (4)(%%eax), %%ebp\n" \
+	"popl %%edx\n" \
+	"popl %%ebp\n" \
+	"popl %%ecx\n" \
+	"popl %%esp\n" \
+	"popl %%edi\n" \
+	"popl %%esi\n" \
+	"popl %%ebx\n" \
 	\
 	: \
 	:"a"(buf) \
@@ -329,14 +326,16 @@ typedef struct csd coStData;
 #else
 #define regRestoreAndJmpToAdd(buf) __asm__ \
 ( \
-	"movl (%%eax), %%ebx\n" \
-	"movl (4)(%%eax), %%esi\n" \
-	"movl (8)(%%eax), %%edi\n" \
-	"movl (12)(%%eax), %%esp\n" \
-	"movl (16)(%%eax), %%ecx\n" \
-	"movl (20)(%%eax), %%ebp\n" \
-	"movl (24)(%%eax), %%edx\n" \
-	"jmp *(28)(%%eax)" \
+	"movl (%%eax), %%esp\n" \
+	"movl (4)(%%eax), %%ebp\n" \
+	"popl %%edx\n" \
+	"popl %%ebp\n" \
+	"popl %%ecx\n" \
+	"popl %%esp\n" \
+	"popl %%edi\n" \
+	"popl %%esi\n" \
+	"popl %%ebx\n" \
+	"jmp *(8)(%%eax)" \
 	\
 	: \
 	:"a"(buf) \
