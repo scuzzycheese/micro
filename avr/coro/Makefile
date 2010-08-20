@@ -4,8 +4,8 @@ test-x86: test.c coroData.h
 	gcc -g3 -O0 -o test test.c
 
 test-avr: test.c coroData.h
-	avr-gcc -g -Os -mcall-prologues -mmcu=atmega8 -std=c99 -c test.c
-	avr-gcc -g -Os -mcall-prologues -mmcu=atmega8 -o test.elf test.o
+	avr-gcc -g -Os -fno-omit-frame-pointer -mmcu=atmega8 -std=c99 -c test.c
+	avr-gcc -g -Os -fno-omit-frame-pointer -mmcu=atmega8 -o test.elf test.o
 
 	avr-objcopy -j text -j .data -O ihex test.elf test.hex
 

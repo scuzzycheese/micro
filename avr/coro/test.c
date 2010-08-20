@@ -8,7 +8,8 @@ __volatile__ static coStData mainRegs;
 void fibre_yield(coStData *rt)
 {
 	SETBIT(rt->flags, JMPBIT); // = JMPFROMROUTINE
-	getExecAdd(rt->retAdd);
+	rt->retAdd = &&FIBRET;
+	FIBRET:
 	if(GETBIT(rt->flags, JMPBIT) == JMPFROMROUTINE)
 	{
 		//I think it's safer for the routine to save it's own registers and stack data
@@ -48,7 +49,7 @@ void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPoin
 
 	regs->retAdd = rAdd;
 	regs->mallocStack = stackPointer;
-	regs->SP = regs->mallocStack + (stackSize - 1);
+	regs->sp = regs->mallocStack + (stackSize - 1);
 
 	if(mainRegs.next == NULL)
 	{
@@ -83,7 +84,8 @@ void fibres_start()
 		//I might be able to move this out the while loop, as any changes
 		//to the registers up to this point are inconsiquential
 		regSave(&mainRegs);
-		getExecAdd(mainRegs.retAdd);
+		mainRegs.retAdd = &&MAINRET;
+		MAINRET:
 		regRestore(&mainRegs);
 
 		//This might be a few too many checks
@@ -97,13 +99,13 @@ void fibres_start()
 
 				//copy a pointer to the specific routine's reg data structure
 				//onto it's stack so it's passed in as an argument
-				curCoRo->SP -= sizeof(coStData *);
+				curCoRo->sp -= sizeof(coStData *);
 				//I think this will always be on aligned data, but must double check, otherwise
 				//it'll cause a bus error on some architechtures if it's not aligned
-				*((coStData **)curCoRo->SP) = curCoRo;
+				*((coStData **)curCoRo->sp) = curCoRo;
 
 				//This is designed to replace to two calls below
-				setStackAndCallToAdd(curCoRo->SP, curCoRo->retAdd);
+				setStackAndCallToAdd(curCoRo->sp, curCoRo->retAdd);
 				//Put us back into the right stack frame
 				regRestore(&mainRegs);
 				//Believe if or not, if we get here, the routine is finished
