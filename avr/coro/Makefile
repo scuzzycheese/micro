@@ -1,19 +1,16 @@
-all: test.exe testoo.exe
+all: test-avr
 
-test: test.c coroData.h
+test-x86: test.c coroData.h
 	gcc -g3 -O0 -o test test.c
 
-testoo.exe: testoo.c moo.o fibre.o
-	g++ -g3 -o testoo.exe testoo.c moo.o fibre.o
+test-avr: test.c coroData.h
+	avr-gcc -g -Os -mcall-prologues -mmcu=atmega8 -std=c99 -c test.c
+	avr-gcc -g -Os -mcall-prologues -mmcu=atmega8 -o test.elf test.o
 
-moo.o: moo.cpp moo.h
-	g++ -g3 -c -o moo.o moo.cpp
+	avr-objcopy -j text -j .data -O ihex test.elf test.hex
 
-fibre.o: fibre.cpp fibre.h
-	g++ -g3 -c -o fibre.o fibre.cpp
+install:
+	avrdude -p m8 -P usb -c dragon_isp -e -U flash:w:test.hex
 
 clean:
 	rm -rf test
-	rm -rf testoo.exe
-	rm -rf moo.o
-	rm -rf fibre.o

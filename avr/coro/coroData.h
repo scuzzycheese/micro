@@ -1,5 +1,6 @@
 #ifndef CORODATAH
 #define CORODATAH
+#include <avr/io.h>
 
 //Some lovely foward declairation
 struct csd;
@@ -9,6 +10,30 @@ typedef void (*fibreType)(struct csd *);
 //NOTE: this is packed, to make it as small as possible
 struct csd 
 {
+#ifdev__AVR__
+	uint8_t r1;
+	uint8_t r2;
+	uint8_t r3;
+	uint8_t r4;
+	uint8_t r5;
+	uint8_t r6;
+	uint8_t r7;
+	uint8_t r8;
+	uint8_t r9;
+	uint8_t r10;
+	uint8_t r11;
+	uint8_t r12;
+	uint8_t r13;
+	uint8_t r14;
+	uint8_t r15;
+	uint8_t r16;
+	uint8_t r17;
+	uint8_t r18;
+	uint8_t r19;
+	uint8_t r20;
+	uint8_t r21;
+	uint8_t r;
+#else
 	//the following 7 members have to be in this exact order
 	//at the top of this struct
 	int ebx;
@@ -18,6 +43,8 @@ struct csd
 	int ecx;
 	int ebp;
 	int edx;
+	#endif
+
 	fibreType retAdd;
 
 	//These flags contain statuses about the fibre
@@ -57,6 +84,17 @@ typedef struct csd coStData;
 
 
 //This is a hopefull combination of setStack and callToAdd
+#ifdef __AVR__
+#define setStackAndCallToAdd(sp,add) __asm__ \
+( \
+	"mov __SP_H__, \n" \
+	"ldi %%0, %%esp\n" \
+	"call *%%1\n" \
+	\
+	: \
+	:"q"(sp),"a"(add) \
+)
+#else
 #define setStackAndCallToAdd(sp,add) __asm__ \
 ( \
 	"movl %%eax, %%ebp\n" \
@@ -66,6 +104,7 @@ typedef struct csd coStData;
 	: \
 	:"a"(sp),"b"(add) \
 )
+#endif
 
 #define setStack(sp) __asm__ \
 ( \
