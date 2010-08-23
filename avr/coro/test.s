@@ -86,8 +86,8 @@ __zero_reg__ = 1
 	.stabn	162,0,0,0
 	.stabn	162,0,0,0
 	.stabs	"fibreType:t(8,1)=(8,2)=*(8,3)=f(0,15)",128,0,10,0
-	.stabs	"csd:T(8,4)=s45r0:(3,2),0,8;r1:(3,2),8,8;r2:(3,2),16,8;r3:(3,2),24,8;r4:(3,2),32,8;r5:(3,2),40,8;r6:(3,2),48,8;r7:(3,2),56,8;r8:(3,2),64,8;r9:(3,2),72,8;r10:(3,2),80,8;r11:(3,2),88,8;r12:(3,2),96,8;r13:(3,2),104,8;r14:(3,2),112,8;r15:(3,2),120,8;r16:(3,2),128,8;r17:(3,2),136,8;r18:(3,2),144,8;r19:(3,2),152,8;r20:(3,2),160,8;r21:(3,2),168,8;r22:(3,2),176,8;r23:(3,2),184,8;r24:(3,2),192,8;r25:(3,2),200,8;r26:(3,2),208,8;r27:(3,2),216,8;r28:(3,2),224,8;r29:(3,2),232,8;r30:(3,2),240,8;r31:(3,2),248,8;retAdd:(1,7),256,16;flags:(0,2),272,8;sp:(1,2),280,16;mallocStack:(1,2),296,16;next:(8,5)=*(8,4),312,16;prev:(8,5),328,16;last:(8,5),344,16;;",128,0,0,0
-	.stabs	"coStData:t(8,6)=(8,4)",128,0,72,0
+	.stabs	"csd:T(8,4)=s47r0:(3,2),0,8;r1:(3,2),8,8;r2:(3,2),16,8;r3:(3,2),24,8;r4:(3,2),32,8;r5:(3,2),40,8;r6:(3,2),48,8;r7:(3,2),56,8;r8:(3,2),64,8;r9:(3,2),72,8;r10:(3,2),80,8;r11:(3,2),88,8;r12:(3,2),96,8;r13:(3,2),104,8;r14:(3,2),112,8;r15:(3,2),120,8;r16:(3,2),128,8;r17:(3,2),136,8;r18:(3,2),144,8;r19:(3,2),152,8;r20:(3,2),160,8;r21:(3,2),168,8;r22:(3,2),176,8;r23:(3,2),184,8;r24:(3,2),192,8;r25:(3,2),200,8;r26:(3,2),208,8;r27:(3,2),216,8;r28:(3,2),224,8;r29:(3,2),232,8;r30:(3,2),240,8;r31:(3,2),248,8;sp:(1,2),256,16;bp:(1,2),272,16;retAdd:(1,7),288,16;flags:(0,2),304,8;mallocStack:(1,2),312,16;next:(8,5)=*(8,4),328,16;prev:(8,5),344,16;last:(8,5),360,16;;",128,0,0,0
+	.stabs	"coStData:t(8,6)=(8,4)",128,0,65,0
 	.stabn	162,0,0,0
 	.stabs	"fibre_yield:F(0,15)",36,0,9,fibre_yield
 	.stabs	"rt:P(0,16)=*(8,6)",64,0,8,30
@@ -107,15 +107,15 @@ fibre_yield:
 	movw r30,r24
 	.stabn	68,0,10,.LM1-.LFBB1
 .LM1:
-	ldd r18,Z+34
+	ldd r18,Z+38
 	ori r18,lo8(2)
-	std Z+34,r18
+	std Z+38,r18
 	.stabn	68,0,11,.LM2-.LFBB1
 .LM2:
 	ldi r24,lo8(gs(.L2))
 	ldi r25,hi8(gs(.L2))
-	std Z+33,r25
-	std Z+32,r24
+	std Z+37,r25
+	std Z+36,r24
 .L2:
 	.stabn	68,0,13,.LM3-.LFBB1
 .LM3:
@@ -125,45 +125,51 @@ fibre_yield:
 .LM4:
 /* #APP */
  ;  17 "test.c" 1
-	st Z+, r0
-st Z+, r1
-st Z+, r2
-st Z+, r3
-st Z+, r4
-st Z+, r5
-st Z+, r6
-st Z+, r7
-st Z+, r8
-st Z+, r9
-st Z+, r10
-st Z+, r11
-st Z+, r12
-st Z+, r13
-st Z+, r14
-st Z+, r15
-st Z+, r16
-st Z+, r17
-st Z+, r18
-st Z+, r19
-st Z+, r20
-st Z+, r21
-st Z+, r22
-st Z+, r23
-st Z+, r24
-st Z+, r25
-st Z+, r26
-st Z+, r27
-st Z+, r28
+	push r0
+push r1
+push r2
+push r3
+push r4
+push r5
+push r6
+push r7
+push r8
+push r9
+push r10
+push r11
+push r12
+push r13
+push r14
+push r15
+push r16
+push r17
+push r18
+push r19
+push r20
+push r21
+push r22
+push r23
+push r24
+push r25
+push r26
+push r27
+push r28
+push r29
+push r30
+push r31
+in __tmp_reg__, __SP_H__
+st Z+, __tmp_reg__
+in __tmp_reg__, __SP_L__
+st Z+, __tmp_reg__
 st Z+, r29
-st Z+, r30
-st Z+, r31
+st Z, r28
 
  ;  0 "" 2
 	.stabn	68,0,18,.LM5-.LFBB1
 .LM5:
 /* #NOAPP */
-	lds r30,mainRegs+32
-	lds r31,(mainRegs+32)+1
+	lds r30,mainRegs+36
+	lds r31,(mainRegs+36)+1
 /* #APP */
  ;  18 "test.c" 1
 	ijmp
@@ -201,104 +207,104 @@ fibre_create:
 	movw r26,r24
 	.stabn	68,0,48,.LM8-.LFBB2
 .LM8:
-	adiw r26,34
+	adiw r26,38
 	ld r24,X
-	sbiw r26,34
+	sbiw r26,38
 	andi r24,lo8(-12)
 	ori r24,lo8(4)
-	adiw r26,34
+	adiw r26,38
 	st X,r24
-	sbiw r26,34
+	sbiw r26,38
 	.stabn	68,0,50,.LM9-.LFBB2
 .LM9:
-	adiw r26,32+1
+	adiw r26,36+1
 	st X,r23
 	st -X,r22
-	sbiw r26,32
+	sbiw r26,36
 	.stabn	68,0,51,.LM10-.LFBB2
 .LM10:
-	adiw r26,37+1
+	adiw r26,39+1
 	st X,r19
 	st -X,r18
-	sbiw r26,37
+	sbiw r26,39
 	.stabn	68,0,52,.LM11-.LFBB2
 .LM11:
 	subi r20,lo8(-(-1))
 	sbci r21,hi8(-(-1))
 	add r18,r20
 	adc r19,r21
-	adiw r26,35+1
+	adiw r26,32+1
 	st X,r19
 	st -X,r18
-	sbiw r26,35
+	sbiw r26,32
 	.stabn	68,0,54,.LM12-.LFBB2
 .LM12:
-	lds r24,mainRegs+39
-	lds r25,(mainRegs+39)+1
+	lds r24,mainRegs+41
+	lds r25,(mainRegs+41)+1
 	or r24,r25
 	brne .L6
 	.stabn	68,0,56,.LM13-.LFBB2
 .LM13:
-	sts (mainRegs+39)+1,r27
-	sts mainRegs+39,r26
+	sts (mainRegs+41)+1,r27
+	sts mainRegs+41,r26
 	.stabn	68,0,57,.LM14-.LFBB2
 .LM14:
-	sts (mainRegs+43)+1,r27
-	sts mainRegs+43,r26
+	sts (mainRegs+45)+1,r27
+	sts mainRegs+45,r26
 	.stabn	68,0,58,.LM15-.LFBB2
 .LM15:
 	mov __tmp_reg__,r26
 	mov __zero_reg__,r27
-	adiw r26,39+1
+	adiw r26,41+1
 	st X,__zero_reg__
 	st -X,__tmp_reg__
 	clr __zero_reg__
-	sbiw r26,39
+	sbiw r26,41
 	.stabn	68,0,59,.LM16-.LFBB2
 .LM16:
 	mov __tmp_reg__,r26
 	mov __zero_reg__,r27
-	adiw r26,41+1
+	adiw r26,43+1
 	st X,__zero_reg__
 	st -X,__tmp_reg__
 	clr __zero_reg__
-	sbiw r26,41
+	sbiw r26,43
 	rjmp .L8
 .L6:
 	.stabn	68,0,63,.LM17-.LFBB2
 .LM17:
-	lds r30,mainRegs+43
-	lds r31,(mainRegs+43)+1
-	std Z+40,r27
-	std Z+39,r26
+	lds r30,mainRegs+45
+	lds r31,(mainRegs+45)+1
+	std Z+42,r27
+	std Z+41,r26
 	.stabn	68,0,64,.LM18-.LFBB2
 .LM18:
-	lds r24,mainRegs+43
-	lds r25,(mainRegs+43)+1
+	lds r24,mainRegs+45
+	lds r25,(mainRegs+45)+1
+	adiw r26,43+1
+	st X,r25
+	st -X,r24
+	sbiw r26,43
+	.stabn	68,0,65,.LM19-.LFBB2
+.LM19:
+	sts (mainRegs+45)+1,r27
+	sts mainRegs+45,r26
+	.stabn	68,0,66,.LM20-.LFBB2
+.LM20:
+	lds r24,mainRegs+41
+	lds r25,(mainRegs+41)+1
 	adiw r26,41+1
 	st X,r25
 	st -X,r24
 	sbiw r26,41
-	.stabn	68,0,65,.LM19-.LFBB2
-.LM19:
-	sts (mainRegs+43)+1,r27
-	sts mainRegs+43,r26
-	.stabn	68,0,66,.LM20-.LFBB2
-.LM20:
-	lds r24,mainRegs+39
-	lds r25,(mainRegs+39)+1
-	adiw r26,39+1
-	st X,r25
-	st -X,r24
-	sbiw r26,39
 	.stabn	68,0,68,.LM21-.LFBB2
 .LM21:
-	lds r30,mainRegs+39
-	lds r31,(mainRegs+39)+1
-	lds r24,mainRegs+43
-	lds r25,(mainRegs+43)+1
-	std Z+42,r25
-	std Z+41,r24
+	lds r30,mainRegs+41
+	lds r31,(mainRegs+41)+1
+	lds r24,mainRegs+45
+	lds r25,(mainRegs+45)+1
+	std Z+44,r25
+	std Z+43,r24
 .L8:
 /* epilogue start */
 	.stabn	68,0,70,.LM22-.LFBB2
@@ -338,8 +344,8 @@ fibres_start:
 /* frame size = 0 */
 	.stabn	68,0,74,.LM24-.LFBB3
 .LM24:
-	lds r16,mainRegs+39
-	lds r17,(mainRegs+39)+1
+	lds r16,mainRegs+41
+	lds r17,(mainRegs+41)+1
 	.stabn	68,0,86,.LM25-.LFBB3
 .LM25:
 	ldi r25,lo8(mainRegs)
@@ -362,101 +368,113 @@ fibres_start:
 	.stabn	68,0,81,.LM28-.LFBB3
 .LM28:
 	movw r26,r16
-	adiw r26,34
+	adiw r26,38
 	ld r24,X
-	sbiw r26,34
+	sbiw r26,38
 	andi r24,lo8(-3)
-	adiw r26,34
+	adiw r26,38
 	st X,r24
 	.stabn	68,0,86,.LM29-.LFBB3
 .LM29:
 	movw r30,r14
 /* #APP */
  ;  86 "test.c" 1
-	st Z+, r0
-st Z+, r1
-st Z+, r2
-st Z+, r3
-st Z+, r4
-st Z+, r5
-st Z+, r6
-st Z+, r7
-st Z+, r8
-st Z+, r9
-st Z+, r10
-st Z+, r11
-st Z+, r12
-st Z+, r13
-st Z+, r14
-st Z+, r15
-st Z+, r16
-st Z+, r17
-st Z+, r18
-st Z+, r19
-st Z+, r20
-st Z+, r21
-st Z+, r22
-st Z+, r23
-st Z+, r24
-st Z+, r25
-st Z+, r26
-st Z+, r27
-st Z+, r28
+	push r0
+push r1
+push r2
+push r3
+push r4
+push r5
+push r6
+push r7
+push r8
+push r9
+push r10
+push r11
+push r12
+push r13
+push r14
+push r15
+push r16
+push r17
+push r18
+push r19
+push r20
+push r21
+push r22
+push r23
+push r24
+push r25
+push r26
+push r27
+push r28
+push r29
+push r30
+push r31
+in __tmp_reg__, __SP_H__
+st Z+, __tmp_reg__
+in __tmp_reg__, __SP_L__
+st Z+, __tmp_reg__
 st Z+, r29
-st Z+, r30
-st Z+, r31
+st Z, r28
 
  ;  0 "" 2
 	.stabn	68,0,87,.LM30-.LFBB3
 .LM30:
 /* #NOAPP */
-	sts (mainRegs+32)+1,r13
-	sts mainRegs+32,r12
+	sts (mainRegs+36)+1,r13
+	sts mainRegs+36,r12
 .L11:
 	.stabn	68,0,89,.LM31-.LFBB3
 .LM31:
 	movw r26,r14
 /* #APP */
  ;  89 "test.c" 1
-	ld r0, X+
-ld r1, X+
-ld r2, X+
-ld r3, X+
-ld r4, X+
-ld r5, X+
-ld r6, X+
-ld r7, X+
-ld r8, X+
-ld r9, X+
-ld r10, X+
-ld r11, X+
-ld r12, X+
-ld r13, X+
-ld r14, X+
-ld r15, X+
-ld r16, X+
-ld r17, X+
-ld r18, X+
-ld r19, X+
-ld r20, X+
-ld r21, X+
-ld r22, X+
-ld r23, X+
-ld r24, X+
-ld r25, X+
-ld r26, X+
-ld r27, X+
-ld r28, X+
+	ld __tmp_reg__, X+
+out __SP_H__, __tmp_reg__
+ld __tmp_reg__, X+
+out __SP_L__, __tmp_reg__
 ld r29, X+
-ld r30, X+
-ld r31, X+
+ld r28, X
+pop r0
+pop r1
+pop r2
+pop r3
+pop r4
+pop r5
+pop r6
+pop r7
+pop r8
+pop r9
+pop r10
+pop r11
+pop r12
+pop r13
+pop r14
+pop r15
+pop r16
+pop r17
+pop r18
+pop r19
+pop r20
+pop r21
+pop r22
+pop r23
+pop r24
+pop r25
+pop r26
+pop r27
+pop r28
+pop r29
+pop r30
+pop r31
 
  ;  0 "" 2
 	.stabn	68,0,92,.LM32-.LFBB3
 .LM32:
 /* #NOAPP */
 	movw r30,r16
-	ldd r18,Z+34
+	ldd r18,Z+38
 	mov r24,r18
 	clr r25
 	sbrc r24,7
@@ -474,31 +492,34 @@ ld r31, X+
 	.stabn	68,0,98,.LM34-.LFBB3
 .LM34:
 	ori r18,lo8(1)
-	std Z+34,r18
+	std Z+38,r18
 	.stabn	68,0,102,.LM35-.LFBB3
 .LM35:
-	ldd r18,Z+35
-	ldd r19,Z+36
+	ldd r18,Z+32
+	ldd r19,Z+33
 	subi r18,lo8(-(-2))
 	sbci r19,hi8(-(-2))
-	std Z+36,r19
-	std Z+35,r18
+	std Z+33,r19
+	std Z+32,r18
 	.stabn	68,0,105,.LM36-.LFBB3
 .LM36:
 	movw r26,r18
-	st X+,r16
+	adiw r26,1
 	st X,r17
+	st -X,r16
 	.stabn	68,0,108,.LM37-.LFBB3
 .LM37:
-	ldd r24,Z+32
-	ldd r25,Z+33
+	ldd r24,Z+36
+	ldd r25,Z+37
 	movw r30,r24
 /* #APP */
  ;  108 "test.c" 1
-	out __SP_L, r18
-out __SP_H, r19
-in r28, __SP_L__
+	ld __tmp_reg__, X+
+out __SP_H__, __tmp_reg__
+ld __tmp_reg__, X+
+out __SP_L__, __tmp_reg__
 in r29, __SP_H__
+in r28, __SP_L__
 icall
 
  ;  0 "" 2
@@ -508,47 +529,53 @@ icall
 	movw r26,r14
 /* #APP */
  ;  110 "test.c" 1
-	ld r0, X+
-ld r1, X+
-ld r2, X+
-ld r3, X+
-ld r4, X+
-ld r5, X+
-ld r6, X+
-ld r7, X+
-ld r8, X+
-ld r9, X+
-ld r10, X+
-ld r11, X+
-ld r12, X+
-ld r13, X+
-ld r14, X+
-ld r15, X+
-ld r16, X+
-ld r17, X+
-ld r18, X+
-ld r19, X+
-ld r20, X+
-ld r21, X+
-ld r22, X+
-ld r23, X+
-ld r24, X+
-ld r25, X+
-ld r26, X+
-ld r27, X+
-ld r28, X+
+	ld __tmp_reg__, X+
+out __SP_H__, __tmp_reg__
+ld __tmp_reg__, X+
+out __SP_L__, __tmp_reg__
 ld r29, X+
-ld r30, X+
-ld r31, X+
+ld r28, X
+pop r0
+pop r1
+pop r2
+pop r3
+pop r4
+pop r5
+pop r6
+pop r7
+pop r8
+pop r9
+pop r10
+pop r11
+pop r12
+pop r13
+pop r14
+pop r15
+pop r16
+pop r17
+pop r18
+pop r19
+pop r20
+pop r21
+pop r22
+pop r23
+pop r24
+pop r25
+pop r26
+pop r27
+pop r28
+pop r29
+pop r30
+pop r31
 
  ;  0 "" 2
 	.stabn	68,0,112,.LM39-.LFBB3
 .LM39:
 /* #NOAPP */
 	movw r30,r16
-	ldd r24,Z+34
+	ldd r24,Z+38
 	ori r24,lo8(8)
-	std Z+34,r24
+	std Z+38,r24
 	rjmp .L12
 .L13:
 	.stabn	68,0,117,.LM40-.LFBB3
@@ -556,38 +583,44 @@ ld r31, X+
 	movw r26,r16
 /* #APP */
  ;  117 "test.c" 1
-	ld r0, X+
-ld r1, X+
-ld r2, X+
-ld r3, X+
-ld r4, X+
-ld r5, X+
-ld r6, X+
-ld r7, X+
-ld r8, X+
-ld r9, X+
-ld r10, X+
-ld r11, X+
-ld r12, X+
-ld r13, X+
-ld r14, X+
-ld r15, X+
-ld r16, X+
-ld r17, X+
-ld r18, X+
-ld r19, X+
-ld r20, X+
-ld r21, X+
-ld r22, X+
-ld r23, X+
-ld r24, X+
-ld r25, X+
-ld r26, X+
-ld r27, X+
-ld r28, X+
+	ld __tmp_reg__, X+
+out __SP_H__, __tmp_reg__
+ld __tmp_reg__, X+
+out __SP_L__, __tmp_reg__
 ld r29, X+
-ld r30, X+
-ld r31, X+
+ld r28, X+
+pop r0
+pop r1
+pop r2
+pop r3
+pop r4
+pop r5
+pop r6
+pop r7
+pop r8
+pop r9
+pop r10
+pop r11
+pop r12
+pop r13
+pop r14
+pop r15
+pop r16
+pop r17
+pop r18
+pop r19
+pop r20
+pop r21
+pop r22
+pop r23
+pop r24
+pop r25
+pop r26
+pop r27
+pop r28
+pop r29
+pop r30
+pop r31
 ijmp
 
  ;  0 "" 2
@@ -596,44 +629,44 @@ ijmp
 	.stabn	68,0,120,.LM41-.LFBB3
 .LM41:
 	movw r30,r16
-	ldd r24,Z+34
+	ldd r24,Z+38
 	sbrs r24,3
 	rjmp .L14
-	ldd r24,Z+37
-	ldd r25,Z+38
+	ldd r24,Z+39
+	ldd r25,Z+40
 	or r24,r25
 	breq .L14
 	.stabn	68,0,122,.LM42-.LFBB3
 .LM42:
-	ldd __tmp_reg__,Z+41
-	ldd r31,Z+42
+	ldd __tmp_reg__,Z+43
+	ldd r31,Z+44
 	mov r30,__tmp_reg__
 	movw r26,r16
-	adiw r26,39
+	adiw r26,41
 	ld r18,X+
 	ld r19,X
-	sbiw r26,39+1
-	ldd r24,Z+39
-	ldd r25,Z+40
+	sbiw r26,41+1
+	ldd r24,Z+41
+	ldd r25,Z+42
 	cp r24,r18
 	cpc r25,r19
 	brne .L15
 	.stabn	68,0,124,.LM43-.LFBB3
 .LM43:
-	sts (mainRegs+39)+1,__zero_reg__
-	sts mainRegs+39,__zero_reg__
+	sts (mainRegs+41)+1,__zero_reg__
+	sts mainRegs+41,__zero_reg__
 	rjmp .L14
 .L15:
 	.stabn	68,0,128,.LM44-.LFBB3
 .LM44:
-	std Z+40,r19
-	std Z+39,r18
+	std Z+42,r19
+	std Z+41,r18
 .L14:
 	.stabn	68,0,131,.LM45-.LFBB3
 .LM45:
 	movw r30,r16
-	ldd r16,Z+39
-	ldd r17,Z+40
+	ldd r16,Z+41
+	ldd r17,Z+42
 	.stabn	68,0,132,.LM46-.LFBB3
 .LM46:
 	ldi r24,lo8(.LC1)
@@ -642,8 +675,8 @@ ijmp
 .L10:
 	.stabn	68,0,78,.LM47-.LFBB3
 .LM47:
-	lds r24,mainRegs+39
-	lds r25,(mainRegs+39)+1
+	lds r24,mainRegs+41
+	lds r25,(mainRegs+41)+1
 	or r24,r25
 	breq .+2
 	rjmp .L16
@@ -688,15 +721,15 @@ main:
 	push r28
 	in r28,__SP_L__
 	in r29,__SP_H__
-	subi r28,lo8(-(-30135))
-	sbci r29,hi8(-(-30135))
+	subi r28,lo8(-(-30141))
+	sbci r29,hi8(-(-30141))
 	in __tmp_reg__,__SREG__
 	cli
 	out __SP_H__,r29
 	out __SREG__,__tmp_reg__
 	out __SP_L__,r28
 /* prologue: function */
-/* frame size = 30135 */
+/* frame size = 30141 */
 	.stabn	68,0,139,.LM50-.LFBB4
 .LM50:
 	rcall .
@@ -707,8 +740,8 @@ main:
 	in r31,__SP_H__
 	std Z+2,r25
 	std Z+1,r24
-	ldi r24,lo8(45)
-	ldi r25,hi8(45)
+	ldi r24,lo8(47)
+	ldi r25,hi8(47)
 	std Z+4,r25
 	std Z+3,r24
 	rcall printf
@@ -726,31 +759,31 @@ main:
 	ldi r20,lo8(10000)
 	ldi r21,hi8(10000)
 	movw r18,r28
-	subi r18,lo8(-(136))
-	sbci r19,hi8(-(136))
+	subi r18,lo8(-(142))
+	sbci r19,hi8(-(142))
 	rcall fibre_create
 	.stabn	68,0,146,.LM52-.LFBB4
 .LM52:
 	movw r24,r28
-	adiw r24,46
+	adiw r24,48
 	movw r22,r16
 	ldi r20,lo8(10000)
 	ldi r21,hi8(10000)
 	movw r18,r28
-	subi r18,lo8(-(10136))
-	sbci r19,hi8(-(10136))
+	subi r18,lo8(-(10142))
+	sbci r19,hi8(-(10142))
 	rcall fibre_create
 	.stabn	68,0,147,.LM53-.LFBB4
 .LM53:
 	movw r24,r28
-	subi r24,lo8(-(91))
-	sbci r25,hi8(-(91))
+	subi r24,lo8(-(95))
+	sbci r25,hi8(-(95))
 	movw r22,r16
 	ldi r20,lo8(10000)
 	ldi r21,hi8(10000)
 	movw r18,r28
-	subi r18,lo8(-(20136))
-	sbci r19,hi8(-(20136))
+	subi r18,lo8(-(20142))
+	sbci r19,hi8(-(20142))
 	rcall fibre_create
 	.stabn	68,0,150,.LM54-.LFBB4
 .LM54:
@@ -765,8 +798,8 @@ main:
 	ldi r24,lo8(0)
 	ldi r25,hi8(0)
 /* epilogue start */
-	subi r28,lo8(-(30135))
-	sbci r29,hi8(-(30135))
+	subi r28,lo8(-(30141))
+	sbci r29,hi8(-(30141))
 	in __tmp_reg__,__SREG__
 	cli
 	out __SP_H__,r29
@@ -779,7 +812,7 @@ main:
 	ret
 	.size	main, .-main
 	.stabs	"routineRegs:(0,18)=ar(0,19)=r(0,19);0;0177777;;0;2;(8,6)",128,0,141,1
-	.stabs	"stack:(0,20)=ar(0,19);0;2;(0,21)=ar(0,19);0;9999;(0,2)",128,0,142,136
+	.stabs	"stack:(0,20)=ar(0,19);0;2;(0,21)=ar(0,19);0;9999;(0,2)",128,0,142,142
 	.stabn	192,0,0,.LFBB4-.LFBB4
 	.stabn	224,0,0,.Lscope4-.LFBB4
 .Lscope4:
@@ -832,15 +865,15 @@ blah:
 	.stabn	68,0,10,.LM60-.LFBB5
 .LM60:
 	movw r30,r16
-	ldd r18,Z+34
+	ldd r18,Z+38
 	ori r18,lo8(2)
-	std Z+34,r18
+	std Z+38,r18
 	.stabn	68,0,11,.LM61-.LFBB5
 .LM61:
 	ldi r24,lo8(gs(.L21))
 	ldi r25,hi8(gs(.L21))
-	std Z+33,r25
-	std Z+32,r24
+	std Z+37,r25
+	std Z+36,r24
 	pop __tmp_reg__
 	pop __tmp_reg__
 	pop __tmp_reg__
@@ -854,45 +887,51 @@ blah:
 .LM63:
 /* #APP */
  ;  17 "test.c" 1
-	st Z+, r0
-st Z+, r1
-st Z+, r2
-st Z+, r3
-st Z+, r4
-st Z+, r5
-st Z+, r6
-st Z+, r7
-st Z+, r8
-st Z+, r9
-st Z+, r10
-st Z+, r11
-st Z+, r12
-st Z+, r13
-st Z+, r14
-st Z+, r15
-st Z+, r16
-st Z+, r17
-st Z+, r18
-st Z+, r19
-st Z+, r20
-st Z+, r21
-st Z+, r22
-st Z+, r23
-st Z+, r24
-st Z+, r25
-st Z+, r26
-st Z+, r27
-st Z+, r28
+	push r0
+push r1
+push r2
+push r3
+push r4
+push r5
+push r6
+push r7
+push r8
+push r9
+push r10
+push r11
+push r12
+push r13
+push r14
+push r15
+push r16
+push r17
+push r18
+push r19
+push r20
+push r21
+push r22
+push r23
+push r24
+push r25
+push r26
+push r27
+push r28
+push r29
+push r30
+push r31
+in __tmp_reg__, __SP_H__
+st Z+, __tmp_reg__
+in __tmp_reg__, __SP_L__
+st Z+, __tmp_reg__
 st Z+, r29
-st Z+, r30
-st Z+, r31
+st Z, r28
 
  ;  0 "" 2
 	.stabn	68,0,18,.LM64-.LFBB5
 .LM64:
 /* #NOAPP */
-	lds r30,mainRegs+32
-	lds r31,(mainRegs+32)+1
+	lds r30,mainRegs+36
+	lds r31,(mainRegs+36)+1
 /* #APP */
  ;  18 "test.c" 1
 	ijmp
@@ -921,15 +960,15 @@ st Z+, r31
 	.stabn	68,0,10,.LM66-.LFBB5
 .LM66:
 	movw r30,r16
-	ldd r18,Z+34
+	ldd r18,Z+38
 	ori r18,lo8(2)
-	std Z+34,r18
+	std Z+38,r18
 	.stabn	68,0,11,.LM67-.LFBB5
 .LM67:
 	ldi r24,lo8(gs(.L23))
 	ldi r25,hi8(gs(.L23))
-	std Z+33,r25
-	std Z+32,r24
+	std Z+37,r25
+	std Z+36,r24
 	pop __tmp_reg__
 	pop __tmp_reg__
 	pop __tmp_reg__
@@ -943,45 +982,51 @@ st Z+, r31
 .LM69:
 /* #APP */
  ;  17 "test.c" 1
-	st Z+, r0
-st Z+, r1
-st Z+, r2
-st Z+, r3
-st Z+, r4
-st Z+, r5
-st Z+, r6
-st Z+, r7
-st Z+, r8
-st Z+, r9
-st Z+, r10
-st Z+, r11
-st Z+, r12
-st Z+, r13
-st Z+, r14
-st Z+, r15
-st Z+, r16
-st Z+, r17
-st Z+, r18
-st Z+, r19
-st Z+, r20
-st Z+, r21
-st Z+, r22
-st Z+, r23
-st Z+, r24
-st Z+, r25
-st Z+, r26
-st Z+, r27
-st Z+, r28
+	push r0
+push r1
+push r2
+push r3
+push r4
+push r5
+push r6
+push r7
+push r8
+push r9
+push r10
+push r11
+push r12
+push r13
+push r14
+push r15
+push r16
+push r17
+push r18
+push r19
+push r20
+push r21
+push r22
+push r23
+push r24
+push r25
+push r26
+push r27
+push r28
+push r29
+push r30
+push r31
+in __tmp_reg__, __SP_H__
+st Z+, __tmp_reg__
+in __tmp_reg__, __SP_L__
+st Z+, __tmp_reg__
 st Z+, r29
-st Z+, r30
-st Z+, r31
+st Z, r28
 
  ;  0 "" 2
 	.stabn	68,0,18,.LM70-.LFBB5
 .LM70:
 /* #NOAPP */
-	lds r30,mainRegs+32
-	lds r31,(mainRegs+32)+1
+	lds r30,mainRegs+36
+	lds r31,(mainRegs+36)+1
 /* #APP */
  ;  18 "test.c" 1
 	ijmp
@@ -1010,15 +1055,15 @@ st Z+, r31
 	.stabn	68,0,10,.LM72-.LFBB5
 .LM72:
 	movw r30,r16
-	ldd r18,Z+34
+	ldd r18,Z+38
 	ori r18,lo8(2)
-	std Z+34,r18
+	std Z+38,r18
 	.stabn	68,0,11,.LM73-.LFBB5
 .LM73:
 	ldi r24,lo8(gs(.L25))
 	ldi r25,hi8(gs(.L25))
-	std Z+33,r25
-	std Z+32,r24
+	std Z+37,r25
+	std Z+36,r24
 	pop __tmp_reg__
 	pop __tmp_reg__
 	pop __tmp_reg__
@@ -1032,45 +1077,51 @@ st Z+, r31
 .LM75:
 /* #APP */
  ;  17 "test.c" 1
-	st Z+, r0
-st Z+, r1
-st Z+, r2
-st Z+, r3
-st Z+, r4
-st Z+, r5
-st Z+, r6
-st Z+, r7
-st Z+, r8
-st Z+, r9
-st Z+, r10
-st Z+, r11
-st Z+, r12
-st Z+, r13
-st Z+, r14
-st Z+, r15
-st Z+, r16
-st Z+, r17
-st Z+, r18
-st Z+, r19
-st Z+, r20
-st Z+, r21
-st Z+, r22
-st Z+, r23
-st Z+, r24
-st Z+, r25
-st Z+, r26
-st Z+, r27
-st Z+, r28
+	push r0
+push r1
+push r2
+push r3
+push r4
+push r5
+push r6
+push r7
+push r8
+push r9
+push r10
+push r11
+push r12
+push r13
+push r14
+push r15
+push r16
+push r17
+push r18
+push r19
+push r20
+push r21
+push r22
+push r23
+push r24
+push r25
+push r26
+push r27
+push r28
+push r29
+push r30
+push r31
+in __tmp_reg__, __SP_H__
+st Z+, __tmp_reg__
+in __tmp_reg__, __SP_L__
+st Z+, __tmp_reg__
 st Z+, r29
-st Z+, r30
-st Z+, r31
+st Z, r28
 
  ;  0 "" 2
 	.stabn	68,0,18,.LM76-.LFBB5
 .LM76:
 /* #NOAPP */
-	lds r30,mainRegs+32
-	lds r31,(mainRegs+32)+1
+	lds r30,mainRegs+36
+	lds r31,(mainRegs+36)+1
 /* #APP */
  ;  18 "test.c" 1
 	ijmp
@@ -1110,7 +1161,7 @@ st Z+, r31
 .Lscope5:
 	.stabs	"",36,0,0,.Lscope5-.LFBB5
 	.stabd	78,0,0
-	.lcomm mainRegs,45
+	.lcomm mainRegs,47
 	.stabs	"mainRegs:S(0,22)=B(8,6)",40,0,5,mainRegs
 	.stabs	"",100,0,0,.Letext0
 .Letext0:

@@ -13,45 +13,13 @@ typedef void (*fibreType)(struct csd *);
 struct csd 
 {
 #ifdef __AVR__
-	uint8_t r0;
-	uint8_t r1;
-	uint8_t r2;
-	uint8_t r3;
-	uint8_t r4;
-	uint8_t r5;
-	uint8_t r6;
-	uint8_t r7;
-	uint8_t r8;
-	uint8_t r9;
-	uint8_t r10;
-	uint8_t r11;
-	uint8_t r12;
-	uint8_t r13;
-	uint8_t r14;
-	uint8_t r15;
-	uint8_t r16;
-	uint8_t r17;
-	uint8_t r18;
-	uint8_t r19;
-	uint8_t r20;
-	uint8_t r21;
-	uint8_t r22;
-	uint8_t r23;
-	uint8_t r24;
-	uint8_t r25;
-	uint8_t r26;
-	uint8_t r27;
-	uint8_t r28;
-	uint8_t r29;
-	uint8_t r30;
-	uint8_t r31;
 #else
 #endif
 
 	char *sp;
 	char *bp;
 
-	void *retAdd;
+	fibreType retAdd;
 
 	//These flags contain statuses about the fibre
 	char flags;
@@ -92,14 +60,16 @@ typedef struct csd coStData;
 #ifdef __AVR__
 #define setStackAndCallToAdd(sp,add) __asm__ \
 ( \
-	"out __SP_L, %A0\n" \
-	"out __SP_H, %B0\n" \
-	"in r28, __SP_L__\n" \
+	"out __SP_H__, %B0\n" \
+	"out __SP_L__, %A0\n" \
+	\
 	"in r29, __SP_H__\n" \
+	"in r28, __SP_L__\n" \
+	\
 	"icall\n" \
 	\
 	: \
-	:"r"(sp),"z"(add) \
+	:"e"(sp),"z"(add) \
 )
 #else
 #define setStackAndCallToAdd(sp,add) __asm__ \
@@ -110,43 +80,6 @@ typedef struct csd coStData;
 	\
 	: \
 	:"a"(sp),"b"(add) \
-)
-#endif
-
-#ifdef __AVR__
-#define setStack(sp) __asm__ \
-( \
-	"in r28, __SP_L__\n" \
-	"in r29, __SP_H__\n" \
-	\
-	: \
-	:"q"(sp) \
-)
-#else
-#define setStack(sp) __asm__ \
-( \
-	"movl %%eax, %%ebp\n" \
-	"movl %%eax, %%esp\n" \
-	\
-	: \
-	:"a"(sp) \
-)
-#endif
-
-#ifdef __AVR__
-#define callToAdd(add) __asm__ \
-( \
-	"icall\n" \
-	: \
-	:"z"(add) \
-)
-#else
-#define callToAdd(add) __asm__ \
-( \
-	"call *%%eax" \
-	\
-	: \
-	:"a"(add) \
 )
 #endif
 
@@ -171,38 +104,46 @@ typedef struct csd coStData;
 #ifdef __AVR__
 #define regSave(buf) __asm__ \
 ( \
-	"st %a0+, r0\n" \
-	"st %a0+, r1\n" \
-	"st %a0+, r2\n" \
-	"st %a0+, r3\n" \
-	"st %a0+, r4\n" \
-	"st %a0+, r5\n" \
-	"st %a0+, r6\n" \
-	"st %a0+, r7\n" \
-	"st %a0+, r8\n" \
-	"st %a0+, r9\n" \
-	"st %a0+, r10\n" \
-	"st %a0+, r11\n" \
-	"st %a0+, r12\n" \
-	"st %a0+, r13\n" \
-	"st %a0+, r14\n" \
-	"st %a0+, r15\n" \
-	"st %a0+, r16\n" \
-	"st %a0+, r17\n" \
-	"st %a0+, r18\n" \
-	"st %a0+, r19\n" \
-	"st %a0+, r20\n" \
-	"st %a0+, r21\n" \
-	"st %a0+, r22\n" \
-	"st %a0+, r23\n" \
-	"st %a0+, r24\n" \
-	"st %a0+, r25\n" \
-	"st %a0+, r26\n" \
-	"st %a0+, r27\n" \
-	"st %a0+, r28\n" \
+	"push r0\n" \
+	"push r1\n" \
+	"push r2\n" \
+	"push r3\n" \
+	"push r4\n" \
+	"push r5\n" \
+	"push r6\n" \
+	"push r7\n" \
+	"push r8\n" \
+	"push r9\n" \
+	"push r10\n" \
+	"push r11\n" \
+	"push r12\n" \
+	"push r13\n" \
+	"push r14\n" \
+	"push r15\n" \
+	"push r16\n" \
+	"push r17\n" \
+	"push r18\n" \
+	"push r19\n" \
+	"push r20\n" \
+	"push r21\n" \
+	"push r22\n" \
+	"push r23\n" \
+	"push r24\n" \
+	"push r25\n" \
+	"push r26\n" \
+	"push r27\n" \
+	"push r28\n" \
+	"push r29\n" \
+	"push r30\n" \
+	"push r31\n" \
+	\
+	"in __tmp_reg__, __SP_H__\n" \
+	"st %a0+, __tmp_reg__\n" \
+	"in __tmp_reg__, __SP_L__\n" \
+	"st %a0+, __tmp_reg__\n" \
+	\
 	"st %a0+, r29\n" \
-	"st %a0+, r30\n" \
-	"st %a0+, r31\n" \
+	"st %a0, r28\n" \
 	\
 	: \
 	:"e"(buf) \
@@ -229,38 +170,46 @@ typedef struct csd coStData;
 #ifdef __AVR__
 #define regRestore(buf) __asm__ \
 ( \
-	"ld r0, %a0+\n" \
-	"ld r1, %a0+\n" \
-	"ld r2, %a0+\n" \
-	"ld r3, %a0+\n" \
-	"ld r4, %a0+\n" \
-	"ld r5, %a0+\n" \
-	"ld r6, %a0+\n" \
-	"ld r7, %a0+\n" \
-	"ld r8, %a0+\n" \
-	"ld r9, %a0+\n" \
-	"ld r10, %a0+\n" \
-	"ld r11, %a0+\n" \
-	"ld r12, %a0+\n" \
-	"ld r13, %a0+\n" \
-	"ld r14, %a0+\n" \
-	"ld r15, %a0+\n" \
-	"ld r16, %a0+\n" \
-	"ld r17, %a0+\n" \
-	"ld r18, %a0+\n" \
-	"ld r19, %a0+\n" \
-	"ld r20, %a0+\n" \
-	"ld r21, %a0+\n" \
-	"ld r22, %a0+\n" \
-	"ld r23, %a0+\n" \
-	"ld r24, %a0+\n" \
-	"ld r25, %a0+\n" \
-	"ld r26, %a0+\n" \
-	"ld r27, %a0+\n" \
-	"ld r28, %a0+\n" \
+	"ld __tmp_reg__, %a0+\n" \
+	"out __SP_H__, __tmp_reg__\n" \
+	"ld __tmp_reg__, %a0+\n" \
+	"out __SP_L__, __tmp_reg__\n" \
+	\
 	"ld r29, %a0+\n" \
-	"ld r30, %a0+\n" \
-	"ld r31, %a0+\n" \
+	"ld r28, %a0\n" \
+	\
+	"pop r0\n" \
+	"pop r1\n" \
+	"pop r2\n" \
+	"pop r3\n" \
+	"pop r4\n" \
+	"pop r5\n" \
+	"pop r6\n" \
+	"pop r7\n" \
+	"pop r8\n" \
+	"pop r9\n" \
+	"pop r10\n" \
+	"pop r11\n" \
+	"pop r12\n" \
+	"pop r13\n" \
+	"pop r14\n" \
+	"pop r15\n" \
+	"pop r16\n" \
+	"pop r17\n" \
+	"pop r18\n" \
+	"pop r19\n" \
+	"pop r20\n" \
+	"pop r21\n" \
+	"pop r22\n" \
+	"pop r23\n" \
+	"pop r24\n" \
+	"pop r25\n" \
+	"pop r26\n" \
+	"pop r27\n" \
+	"pop r28\n" \
+	"pop r29\n" \
+	"pop r30\n" \
+	"pop r31\n" \
 	\
 	: \
 	:"e"(buf) \
@@ -286,38 +235,46 @@ typedef struct csd coStData;
 #ifdef __AVR__
 #define regRestoreAndJmpToAdd(buf) __asm__ \
 ( \
-	"ld r0, %a0+\n" \
-	"ld r1, %a0+\n" \
-	"ld r2, %a0+\n" \
-	"ld r3, %a0+\n" \
-	"ld r4, %a0+\n" \
-	"ld r5, %a0+\n" \
-	"ld r6, %a0+\n" \
-	"ld r7, %a0+\n" \
-	"ld r8, %a0+\n" \
-	"ld r9, %a0+\n" \
-	"ld r10, %a0+\n" \
-	"ld r11, %a0+\n" \
-	"ld r12, %a0+\n" \
-	"ld r13, %a0+\n" \
-	"ld r14, %a0+\n" \
-	"ld r15, %a0+\n" \
-	"ld r16, %a0+\n" \
-	"ld r17, %a0+\n" \
-	"ld r18, %a0+\n" \
-	"ld r19, %a0+\n" \
-	"ld r20, %a0+\n" \
-	"ld r21, %a0+\n" \
-	"ld r22, %a0+\n" \
-	"ld r23, %a0+\n" \
-	"ld r24, %a0+\n" \
-	"ld r25, %a0+\n" \
-	"ld r26, %a0+\n" \
-	"ld r27, %a0+\n" \
-	"ld r28, %a0+\n" \
+	"ld __tmp_reg__, %a0+\n" \
+	"out __SP_H__, __tmp_reg__\n" \
+	"ld __tmp_reg__, %a0+\n" \
+	"out __SP_L__, __tmp_reg__\n" \
+	\
 	"ld r29, %a0+\n" \
-	"ld r30, %a0+\n" \
-	"ld r31, %a0+\n" \
+	"ld r28, %a0+\n" \
+	\
+	"pop r0\n" \
+	"pop r1\n" \
+	"pop r2\n" \
+	"pop r3\n" \
+	"pop r4\n" \
+	"pop r5\n" \
+	"pop r6\n" \
+	"pop r7\n" \
+	"pop r8\n" \
+	"pop r9\n" \
+	"pop r10\n" \
+	"pop r11\n" \
+	"pop r12\n" \
+	"pop r13\n" \
+	"pop r14\n" \
+	"pop r15\n" \
+	"pop r16\n" \
+	"pop r17\n" \
+	"pop r18\n" \
+	"pop r19\n" \
+	"pop r20\n" \
+	"pop r21\n" \
+	"pop r22\n" \
+	"pop r23\n" \
+	"pop r24\n" \
+	"pop r25\n" \
+	"pop r26\n" \
+	"pop r27\n" \
+	"pop r28\n" \
+	"pop r29\n" \
+	"pop r30\n" \
+	"pop r31\n" \
 	"ijmp\n" \
 	\
 	: \

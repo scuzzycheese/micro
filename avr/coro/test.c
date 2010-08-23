@@ -22,21 +22,21 @@ void fibre_yield(coStData *rt)
 void blah(coStData *rt)
 {
 	int count = 0;
-	printf("Starting blah()\n");
+	//printf("Starting blah()\n");
 
-	printf("blah() count: %d\n", count);
+	//printf("blah() count: %d\n", count);
 	count ++;
 	fibre_yield(rt);
 
-	printf("blah() count: %d\n", count);
+	//printf("blah() count: %d\n", count);
 	count ++;
 	fibre_yield(rt);
 
-	printf("blah() count: %d\n", count);
+	//printf("blah() count: %d\n", count);
 	count ++;
 	fibre_yield(rt);
 
-	printf("blah() count: %d\n", count);
+	//printf("blah() count: %d\n", count);
 }
 
 
@@ -77,7 +77,7 @@ void fibres_start()
 	//and carefully
 	while(mainRegs.next != NULL)
 	{
-		printf("Begin loop\n");
+		//printf("Begin loop\n");
 		CLRBIT(curCoRo->flags, JMPBIT); // = JMPFROMMAIN
 
 		//TODO: check this out
@@ -129,27 +129,27 @@ void fibres_start()
 			}
 		}
 		curCoRo = curCoRo->next;
-		printf("End loop\n");
+		//printf("End loop\n");
 	}
 }
 
 
 int main(int argc, char **argv)
 {
-	printf("Co-Routine storage size: %d\n", sizeof(coStData));
+	//printf("Co-Routine storage size: %d\n", sizeof(coStData));
 
 	coStData routineRegs[3];
-	char stack[3][10000];
+	char stack[3][100];
 
 	//set up the fibres
-	fibre_create(&(routineRegs[0]), blah, 10000, stack[0]);
-	fibre_create(&(routineRegs[1]), blah, 10000, stack[1]);
-	fibre_create(&(routineRegs[2]), blah, 10000, stack[2]);
+	fibre_create(&(routineRegs[0]), blah, 100, stack[0]);
+	fibre_create(&(routineRegs[1]), blah, 100, stack[1]);
+	fibre_create(&(routineRegs[2]), blah, 100, stack[2]);
 
 	//start the fibres
 	fibres_start();
 
-	printf("Fibres finished\n");
+	//printf("Fibres finished\n");
 
 	return 0;
 }
