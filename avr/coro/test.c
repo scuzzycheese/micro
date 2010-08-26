@@ -5,6 +5,7 @@
 __volatile__ static coStData mainRegs;
 
 //this has to get routineRegs dynamically
+void fibre_yield(coStData *rt) __attribute__((noinline));
 void fibre_yield(coStData *rt)
 {
 	SETBIT(rt->flags, JMPBIT); // = JMPFROMROUTINE
@@ -84,17 +85,11 @@ void fibres_start()
 {
 	coStData *curCoRo = mainRegs.next;
 
+	regSave(&mainRegs);
 	while(mainRegs.next != NULL)
 	{
-		//printf("Begin loop\n");
 		CLRBIT(curCoRo->flags, JMPBIT); // = JMPFROMMAIN
 
-		//TODO: check this out
-		//I might be able to move this out the while loop, as any changes
-		//to the registers up to this point are inconsiquential
-		regSave(&mainRegs);
-		//mainRegs.retAdd = &&MAINRET;
-		//MAINRET:
 		__asm__("MAINRET:");
 		regRestore(&mainRegs);
 

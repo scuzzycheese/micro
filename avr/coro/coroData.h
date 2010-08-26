@@ -63,9 +63,6 @@ typedef struct csd coStData;
 	"out __SP_H__, %B0\n" \
 	"out __SP_L__, %A0\n" \
 	\
-	"in r29, __SP_H__\n" \
-	"in r28, __SP_L__\n" \
-	\
 	"icall\n" \
 	\
 	: \
