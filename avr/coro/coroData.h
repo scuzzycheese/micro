@@ -146,6 +146,23 @@ typedef struct csd coStData;
 	:"e"(buf) \
 )
 #else
+#define regSaveAndJumpToMain(buf) __asm__ \
+( \
+	"pushl %%eax\n" \
+	"pushl %%ebx\n" \
+	"pushl %%esi\n" \
+	"pushl %%edi\n" \
+	"pushl %%esp\n" \
+	"pushl %%ecx\n" \
+	"pushl %%ebp\n" \
+	"pushl %%edx\n" \
+	"movl %%esp, (%%eax)\n" \
+	\
+	"jmp MAINRET\n" \
+	\
+	: \
+	:"a"(buf) \
+)
 #endif
 
 #ifdef __AVR__
@@ -195,6 +212,7 @@ typedef struct csd coStData;
 #else
 #define regSave(buf) __asm__ \
 ( \
+	"pushl %%eax\n" \
 	"pushl %%ebx\n" \
 	"pushl %%esi\n" \
 	"pushl %%edi\n" \
@@ -203,7 +221,6 @@ typedef struct csd coStData;
 	"pushl %%ebp\n" \
 	"pushl %%edx\n" \
 	"movl %%esp, (%%eax)\n" \
-	"movl %%ebp, (4)(%%eax)\n" \
 	\
 	: \
 	:"a"(buf) \
@@ -259,7 +276,6 @@ typedef struct csd coStData;
 #define regRestore(buf) __asm__ \
 ( \
 	"movl (%%eax), %%esp\n" \
-	"movl (4)(%%eax), %%ebp\n" \
 	"popl %%edx\n" \
 	"popl %%ebp\n" \
 	"popl %%ecx\n" \
@@ -267,6 +283,7 @@ typedef struct csd coStData;
 	"popl %%edi\n" \
 	"popl %%esi\n" \
 	"popl %%ebx\n" \
+	"popl %%eax\n" \
 	\
 	: \
 	:"a"(buf) \
@@ -319,10 +336,9 @@ typedef struct csd coStData;
 	:"z"(buf) \
 )
 #else
-#define regRestoreAndJmpToAdd(buf) __asm__ \
+#define regRestoreAndJmpToYeild(buf) __asm__ \
 ( \
 	"movl (%%eax), %%esp\n" \
-	"movl (4)(%%eax), %%ebp\n" \
 	"popl %%edx\n" \
 	"popl %%ebp\n" \
 	"popl %%ecx\n" \
@@ -330,7 +346,8 @@ typedef struct csd coStData;
 	"popl %%edi\n" \
 	"popl %%esi\n" \
 	"popl %%ebx\n" \
-	"jmp *(8)(%%eax)" \
+	"popl %%eax\n" \
+	"jmp FIBRET" \
 	\
 	: \
 	:"a"(buf) \
