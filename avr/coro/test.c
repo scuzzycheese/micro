@@ -8,14 +8,15 @@ __volatile__ static coStData mainRegs;
 void fibre_yield(coStData *rt)
 {
 	SETBIT(rt->flags, JMPBIT); // = JMPFROMROUTINE
-	rt->retAdd = &&FIBRET;
-	FIBRET:
-	if(GETBIT(rt->flags, JMPBIT) == JMPFROMROUTINE)
+	//rt->retAdd = &&FIBRET;
+	__asm__("FIBRET:");
+	if(GETBIT(rt->flags, JMPBIT))
 	{
 		//I think it's safer for the routine to save it's own registers and stack data
 		//it means that it can self unschedule
-		regSave(rt);
-		jmpToAdd(mainRegs.retAdd);
+		//regSave(rt);
+		//jmpToAdd(mainRegs.retAdd);
+		regSaveAndJumpToMain(rt);
 	}
 }
 
@@ -84,8 +85,9 @@ void fibres_start()
 		//I might be able to move this out the while loop, as any changes
 		//to the registers up to this point are inconsiquential
 		regSave(&mainRegs);
-		mainRegs.retAdd = &&MAINRET;
-		MAINRET:
+		//mainRegs.retAdd = &&MAINRET;
+		//MAINRET:
+		__asm__("MAINRET:");
 		regRestore(&mainRegs);
 
 		//This might be a few too many checks
@@ -114,7 +116,7 @@ void fibres_start()
 			else
 			{
 				//This is designed to replace to two calls below
-				regRestoreAndJmpToAdd(curCoRo);
+				regRestoreAndJmpToYeild(curCoRo);
 			}
 		}
 		if(GETBIT(curCoRo->flags, FINISHED) && curCoRo->mallocStack)

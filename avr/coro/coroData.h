@@ -41,7 +41,7 @@ typedef struct csd coStData;
 
 //Different status depending on where we jump from
 #define JMPFROMMAIN 0
-#define JMPFROMROUTINE 1
+#define JMPFROMROUTINE 2
 
 //Different jump types
 #define CALL 0
@@ -53,7 +53,7 @@ typedef struct csd coStData;
 //some helper macros for getting and setting bits
 #define SETBIT(data,field) (data |= (1 << field))
 #define CLRBIT(data,field) (data &= ~(1 << field))
-#define GETBIT(data,field) ((data & (1 << field)) > 0)
+#define GETBIT(data,field) (data & (1 << field))
 
 
 //This is a hopefull combination of setStack and callToAdd
@@ -100,6 +100,53 @@ typedef struct csd coStData;
 	:"a"(add) \
 )
 #endif
+#ifdef __AVR__
+#define regSaveAndJumpToMain(buf) __asm__ \
+( \
+	"push r0\n" \
+	"push r1\n" \
+	"push r2\n" \
+	"push r3\n" \
+	"push r4\n" \
+	"push r5\n" \
+	"push r6\n" \
+	"push r7\n" \
+	"push r8\n" \
+	"push r9\n" \
+	"push r10\n" \
+	"push r11\n" \
+	"push r12\n" \
+	"push r13\n" \
+	"push r14\n" \
+	"push r15\n" \
+	"push r16\n" \
+	"push r17\n" \
+	"push r18\n" \
+	"push r19\n" \
+	"push r20\n" \
+	"push r21\n" \
+	"push r22\n" \
+	"push r23\n" \
+	"push r24\n" \
+	"push r25\n" \
+	"push r26\n" \
+	"push r27\n" \
+	"push r28\n" \
+	"push r29\n" \
+	"push r30\n" \
+	"push r31\n" \
+	\
+	"in __tmp_reg__, __SP_L__\n" \
+	"st %a0+, __tmp_reg__\n" \
+	"in __tmp_reg__, __SP_H__\n" \
+	"st %a0, __tmp_reg__\n" \
+	\
+	"rcall MAINRET\n" \
+	: \
+	:"e"(buf) \
+)
+#else
+#endif
 
 #ifdef __AVR__
 #define regSave(buf) __asm__ \
@@ -137,13 +184,10 @@ typedef struct csd coStData;
 	"push r30\n" \
 	"push r31\n" \
 	\
-	"in __tmp_reg__, __SP_H__\n" \
-	"st %a0+, __tmp_reg__\n" \
 	"in __tmp_reg__, __SP_L__\n" \
 	"st %a0+, __tmp_reg__\n" \
-	\
-	"st %a0+, r29\n" \
-	"st %a0, r28\n" \
+	"in __tmp_reg__, __SP_H__\n" \
+	"st %a0, __tmp_reg__\n" \
 	\
 	: \
 	:"e"(buf) \
@@ -171,12 +215,9 @@ typedef struct csd coStData;
 #define regRestore(buf) __asm__ \
 ( \
 	"ld __tmp_reg__, %a0+\n" \
-	"out __SP_H__, __tmp_reg__\n" \
-	"ld __tmp_reg__, %a0+\n" \
 	"out __SP_L__, __tmp_reg__\n" \
-	\
-	"ld r29, %a0+\n" \
-	"ld r28, %a0\n" \
+	"ld __tmp_reg__, %a0+\n" \
+	"out __SP_H__, __tmp_reg__\n" \
 	\
 	"pop r0\n" \
 	"pop r1\n" \
@@ -233,15 +274,12 @@ typedef struct csd coStData;
 #endif
 
 #ifdef __AVR__
-#define regRestoreAndJmpToAdd(buf) __asm__ \
+#define regRestoreAndJmpToYeild(buf) __asm__ \
 ( \
 	"ld __tmp_reg__, %a0+\n" \
-	"out __SP_H__, __tmp_reg__\n" \
-	"ld __tmp_reg__, %a0+\n" \
 	"out __SP_L__, __tmp_reg__\n" \
-	\
-	"ld r29, %a0+\n" \
-	"ld r28, %a0+\n" \
+	"ld __tmp_reg__, %a0+\n" \
+	"out __SP_H__, __tmp_reg__\n" \
 	\
 	"pop r0\n" \
 	"pop r1\n" \
@@ -275,10 +313,10 @@ typedef struct csd coStData;
 	"pop r29\n" \
 	"pop r30\n" \
 	"pop r31\n" \
-	"ijmp\n" \
+	"rjmp FIBRET\n" \
 	\
 	: \
-	:"e"(buf) \
+	:"z"(buf) \
 )
 #else
 #define regRestoreAndJmpToAdd(buf) __asm__ \
