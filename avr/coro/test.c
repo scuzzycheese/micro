@@ -84,8 +84,6 @@ void fibres_start()
 {
 	coStData *curCoRo = mainRegs.next;
 
-	//This is the sheduler, it needs lots of work
-	//and carefully
 	while(mainRegs.next != NULL)
 	{
 		//printf("Begin loop\n");
@@ -153,14 +151,14 @@ int main(int argc, char **argv)
 	#endif
 
 	coStData routineRegs[3];
-	#ifndef __VAR__
+	#ifndef __AVR__
 	char stack[3][10000];
 	#else
 	char stack[3][100];
 	#endif
 
 	//set up the fibres
-	#ifndef __VAR__
+	#ifndef __AVR__
 	fibre_create(&(routineRegs[0]), blah, 10000, stack[0]);
 	fibre_create(&(routineRegs[1]), blah, 10000, stack[1]);
 	fibre_create(&(routineRegs[2]), blah, 10000, stack[2]);
