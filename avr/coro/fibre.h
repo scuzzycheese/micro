@@ -12,12 +12,11 @@ typedef void (*fibreType)(struct csd *);
 //NOTE: this is packed, to make it as small as possible
 struct csd 
 {
-#ifdef __AVR__
-#else
-#endif
 
 	char *sp;
+#ifndef __AVR__
 	char *bp;
+#endif
 
 	fibreType retAdd;
 
