@@ -1,5 +1,5 @@
-#ifndef CORODATAH
-#define CORODATAH
+#ifndef FIBREH
+#define FIBREH
 #ifdef __AVR__
 #include <avr/io.h>
 #endif
@@ -350,6 +350,12 @@ typedef struct csd coStData;
 	:"a"(buf) \
 )
 #endif
+
+
+__volatile__ static coStData mainRegs;
+void fibre_yield(coStData *rt) __attribute__((noinline));
+void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer)
+void fibres_start()
 
 
 #endif
