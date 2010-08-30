@@ -14,7 +14,7 @@ struct csd
 {
 
 	char *sp;
-#ifndef __AVR__
+#ifdef X86
 	char *bp;
 #endif
 
@@ -67,7 +67,7 @@ typedef struct csd coStData;
 	: \
 	:"e"(sp),"z"(add) \
 )
-#else
+#elif defined(X86)
 #define setStackAndCallToAdd(sp,add) __asm__ \
 ( \
 	"movl %%eax, %%ebp\n" \
@@ -87,7 +87,7 @@ typedef struct csd coStData;
 	: \
 	:"z"(add) \
 )
-#else
+#elif defined(X86)
 #define jmpToAdd(add) __asm__ \
 ( \
 	"jmp *%%eax" \
@@ -141,7 +141,7 @@ typedef struct csd coStData;
 	: \
 	:"e"(buf) \
 )
-#else
+#elif defined(X86)
 #define regSaveAndJumpToMain(buf) __asm__ \
 ( \
 	"pushl %%eax\n" \
@@ -205,7 +205,7 @@ typedef struct csd coStData;
 	: \
 	:"e"(buf) \
 )
-#else
+#elif defined(X86)
 #define regSave(buf) __asm__ \
 ( \
 	"pushl %%eax\n" \
@@ -268,7 +268,7 @@ typedef struct csd coStData;
 	: \
 	:"e"(buf) \
 )
-#else
+#elif defined(X86)
 #define regRestore(buf) __asm__ \
 ( \
 	"movl (%%eax), %%esp\n" \
@@ -331,7 +331,7 @@ typedef struct csd coStData;
 	: \
 	:"z"(buf) \
 )
-#else
+#elif defined(X86)
 #define regRestoreAndJmpToYeild(buf) __asm__ \
 ( \
 	"movl (%%eax), %%esp\n" \

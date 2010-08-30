@@ -1,7 +1,7 @@
 all: test-avr
 
 test-x86: test.c fibre.h fibre.c
-	gcc -g3 -O0 -o test fibre.c test.c
+	gcc -g3 -O0 -o test fibre.c test.c -DX86
 
 test-avr: test.c fibre.h fibre.c
 	avr-gcc -g -O0 -mcall-prologues -mmcu=atmega48 -std=c99 -c fibre.c
