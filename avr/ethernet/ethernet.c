@@ -24,6 +24,8 @@
 #include <arpa/inet.h>
 #include <netpacket/packet.h>
 
+#include <sys/select.h>
+#include <sys/time.h>
 
 
 
@@ -45,6 +47,7 @@
 #include "timer.h"
 #include "uart.h"
 #include "config.h"
+#include "fibre.h"
 
 #ifdef DEBUGSOCK
 #include <stdio.h>
@@ -139,7 +142,9 @@ void socketInit()
 }
 #endif
 
-int main()
+
+
+void mainUIPLoop(coStData *rt)
 {
 
 	int i;
@@ -225,25 +230,9 @@ int main()
 	while(1)
 	{
 		uip_len = enc28j60PacketReceive(UIP_BUFSIZE, uip_buf);
+		fibre_yield(rt);
 		if(uip_len > 0)
 		{
-			/*test
-			int tl = 0;
-			printf("Packet Data: ");
-			fflush(NULL);
-			for(tl = 0; tl < uip_len; tl++)
-			{
-				printf("%X ", uip_buf[tl]);
-				fflush(NULL);
-			}
-			printf("\n");
-			fflush(NULL);
-			test end*/
-
-			#ifdef DEBUGSOCK
-			sprintf(data, "Packet Length: %d\r\n", uip_len);
-			writeLn(data);
-			#endif
 			if(BUF->type == htons(UIP_ETHTYPE_IP))
 			{
 				uip_arp_ipin();
@@ -254,37 +243,21 @@ int main()
 				if(uip_len > 0)
 				{
 					uip_arp_out();
-					#ifdef DEBUGSOCK
-					writeLn("Sending IP Packet...");
-					#endif
 					enc28j60PacketSend(uip_len, uip_buf);
-					#ifdef DEBUGSOCK
-					writeLn(" Done!\r\n");
-					#endif
+					fibre_yield(rt);
 				}
 			}
 			else if(BUF->type == htons(UIP_ETHTYPE_ARP))
 			{
-				#ifdef DEBUGSOCK
-				writeLn("ARP Packet recieved\r\n");
-				#endif
 				uip_arp_arpin();
 				//	If the above function invocation resulted in data that
 				//	should be sent out on the network, the global variable
 				//	uip_len is set to a value > 0.
 				if(uip_len > 0)
 				{
-					#ifdef DEBUGSOCK
-					writeLn("Sending ARP Packet...");
-					#endif
 					enc28j60PacketSend(uip_len, uip_buf);
-					#ifdef DEBUGSOCK
-					writeLn(" Done!\r\n");
-					#endif
+					fibre_yield(rt);
 				}
-				#ifdef DEBUGSOCK
-				else writeLn("uip_len is not bigger than 0\r\n");
-				#endif
 			}
 		}
 		else if(timer_expired(&periodic_timer))
@@ -299,13 +272,8 @@ int main()
 				if(uip_len > 0)
 				{
 					uip_arp_out();
-					#ifdef DEBUGSOCK
-					writeLn("Sending OTHER Packet...");
-					#endif
 					enc28j60PacketSend(uip_len, uip_buf);
-					#ifdef DEBUGSOCK
-					writeLn(" Done!\r\n");
-					#endif
+					fibre_yield(rt);
 				}
 			}
 
@@ -319,13 +287,8 @@ int main()
 				if(uip_len > 0)
 				{
 					uip_arp_out();
-					#ifdef DEBUGSOCK
-					writeLn("Sending UIPARP Packet...");
-					#endif
 					enc28j60PacketSend(uip_len, uip_buf);
-					#ifdef DEBUGSOCK
-					writeLn(" Done!\r\n");
-					#endif
+					fibre_yield(rt);
 				}
 			}
 #endif // UIP_UDP
@@ -339,8 +302,85 @@ int main()
 				uip_arp_timer();
 			}
 		}
+		fibre_yield(rt);
 	}
-	
+#ifdef X86
+	close(linSock);
+#endif
+
+}
+
+#ifdef X86
+int kbhit()
+{
+    struct timeval tv;
+    fd_set fds;
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
+    select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
+    return FD_ISSET(STDIN_FILENO, &fds);
+}
+
+void keyChecker(coStData *rt)
+{
+
+	while(1)
+	{
+		if(kbhit())
+		{
+			char inp[100];
+			int n;
+			errno = 0;
+
+			n = scanf("%s", inp);
+			if(n > 0)
+			{
+				if(strcmp(inp, "exit") == 0)
+				{
+					printf("exiting...\n");
+					close(linSock);
+					exit(0);
+				}
+			}
+			else if(errno != 0)
+			{
+				perror("scanf");
+			}
+			else
+			{
+				printf("something else went wrong!!!\n");
+			}
+
+		}
+		fibre_yield(rt);
+	}
+}
+#endif
+
+
+int main()
+{
+
+	coStData routineRegs[2];
+	#ifdef X86
+	char stack[2][10000];
+	#else
+	char stack[1][100];
+	#endif
+
+	//set up the fibres
+	#ifdef X86
+	fibre_create(&(routineRegs[0]), mainUIPLoop, 10000, stack[0]);
+	fibre_create(&(routineRegs[1]), keyChecker, 10000, stack[1]);
+	#else
+	fibre_create(&(routineRegs[0]), mainUIPLoop, 100, stack[0]);
+	#endif
+
+	//start the fibres
+	fibres_start();
+
 
 	return 0;
 }

@@ -4,7 +4,7 @@ CHIP = -mmcu=atmega644
 #DEBUG= -DDEBUGSOCK
 OPT = -Os -mcall-prologues
 #OPT = -mcall-prologues
-OPTX86 = -g3 -DX86
+OPTX86 = -O0 -g3 -DX86
 
 GENPATH =
 
@@ -18,6 +18,7 @@ PSOCK = ../uip/uip/psock.c
 CLOCK = clock-arch.c
 TIMER = ../uip/uip/timer.c
 
+FIBRE = ../coro
 
 UART = uart.c
 
@@ -30,7 +31,8 @@ UARTSTUFF = ${UART}
 AVRLIBINCLUDES = -I/usr/lib/avr/include/
 UIPLIBPATH = -I../uip/uip/
 AVRLIBPATH = -I../avrlib/
-MYPATH = -I. ${GENPATH}
+FIBINC = -I ${FIBRE}
+MYPATH = -I. ${GENPATH} ${FIBINC}
 LIBPATH = ${AVRLIBINCLUDES} ${UIPLIBPATH} ${AVRLIBPATH} ${MYPATH}
 
 #===MODULES===
@@ -40,8 +42,8 @@ ERROR404 = pages/404.o
 MODULES = ${INDEX} ${IMAGE} ${ERROR404}
 
 
-all:uip.o ${SERVICE} avrlib uart ethernet.o hash ${MODULES}
-	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf ethernet.o uip.o avrlib.o ${SERVICE} uart.o libhash/libhash.o ${MODULES} -lm ${LIBPATH}
+all:uip.o ${SERVICE} avrlib uart ethernet.o hash ${MODULES} fibre
+	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf ethernet.o uip.o avrlib.o ${SERVICE} uart.o libhash/libhash.o ${MODULES} ${FIBRE}/fibre.o -lm ${LIBPATH}
 
 ethernet.o: ethernet.c
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c ethernet.c -o ethernet.o ${LIBPATH}
@@ -68,14 +70,17 @@ hash: libhash/libhash.c libhash/libhash.h
 ${MODULES}: ${@:.o=.c} ${@:.o=.h}
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${@:.o=.c} -o $@ ${LIBPATH}
 
+fibre: ${FIBRE}/fibre.c ${FIBRE}/fibre.h
+	@${MAKE} -C ${FIBRE}/ -f Makefile
 
 
 
 
 
 
-x86:uip-x86 service-x86 uart-x86 ethernet-x86 hash-x86 modules-x86
-	${CCX86} ${DEBUG} ${OPTX86} -o ethernet ethernet.o uip.o service.o uart.o libhash/libhash.o pages/index-x86.o pages/404-x86.o -lm
+
+x86:uip-x86 service-x86 uart-x86 ethernet-x86 hash-x86 modules-x86 fibre-x86
+	${CCX86} ${DEBUG} ${OPTX86} -o ethernet ethernet.o uip.o service.o uart.o libhash/libhash.o pages/index-x86.o pages/404-x86.o ${FIBRE}/fibre.o -lm
 
 ethernet-x86: ethernet.c
 	${CCX86} ${DEBUG} ${OPTX86} -c ethernet.c -o ethernet.o ${UIPLIBPATH} ${MYPATH}
@@ -92,6 +97,8 @@ modules-x86:
 	${CCX86} ${DEBUG} ${OPTX86} -c -combine pages/index-x86.c -o pages/index-x86.o ${UIPLIBPATH} ${MYPATH}
 	${CCX86} ${DEBUG} ${OPTX86} -c -combine pages/404.c -o pages/404-x86.o ${UIPLIBPATH} ${MYPATH}
 
+fibre-x86: ${FIBRE}/fibre.c ${FIBRE}/fibre.h
+	@${MAKE} -C ${FIBRE}/ -f Makefile x86
 
 
 
@@ -110,3 +117,4 @@ fuse:
 
 clean:
 	rm -Rf uip.o ${SERVICE} avrlib.o uart.o ethernet.o ethernet ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}
+	@${MAKE} -C ${FIBRE}/ -f Makefile clean
