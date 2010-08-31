@@ -2,8 +2,12 @@
 #include <stdlib.h>
 #include "fibre.h"
 
-void blah(coStData *rt)
+void blah(coStData *rt, void *ar)
 {
+	int arg1 = (int)ar;
+
+	printf("Argument: %d\n", arg1);
+
 	int count = 0;
 	#ifndef __AVR__
 	printf("Starting blah()\n");
@@ -50,13 +54,13 @@ int main(int argc, char **argv)
 
 	//set up the fibres
 	#ifndef __AVR__
-	fibre_create(&(routineRegs[0]), blah, 10000, stack[0]);
-	fibre_create(&(routineRegs[1]), blah, 10000, stack[1]);
-	fibre_create(&(routineRegs[2]), blah, 10000, stack[2]);
+	fibre_create(&(routineRegs[0]), blah, 10000, stack[0], (void *)5);
+	fibre_create(&(routineRegs[1]), blah, 10000, stack[1], (void *)10);
+	fibre_create(&(routineRegs[2]), blah, 10000, stack[2], (void *)15);
 	#else
-	fibre_create(&(routineRegs[0]), blah, 100, stack[0]);
-	fibre_create(&(routineRegs[1]), blah, 100, stack[1]);
-	fibre_create(&(routineRegs[2]), blah, 100, stack[2]);
+	fibre_create(&(routineRegs[0]), blah, 100, stack[0], NULL);
+	fibre_create(&(routineRegs[1]), blah, 100, stack[1], NULL);
+	fibre_create(&(routineRegs[2]), blah, 100, stack[2], NULL);
 	#endif
 
 	//start the fibres

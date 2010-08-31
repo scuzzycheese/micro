@@ -7,7 +7,7 @@
 //Some lovely foward declairation
 struct csd;
 
-typedef void (*fibreType)(struct csd *);
+typedef void (*fibreType)(struct csd *, void *ar);
 
 //NOTE: this is packed, to make it as small as possible
 struct csd 
@@ -353,7 +353,7 @@ typedef struct csd coStData;
 
 __volatile__ static coStData mainRegs;
 void fibre_yield(coStData *rt) __attribute__((noinline));
-void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer);
+void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer, void *arg);
 void fibres_start();
 
 

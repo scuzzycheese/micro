@@ -18,7 +18,7 @@ void fibre_yield(coStData *rt)
 	}
 }
 
-void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer)
+void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer, void *arg)
 {
 	CLRBIT(regs->flags, JMPBIT); // = JMPFROMMAINw
 	CLRBIT(regs->flags, CALLSTATUS); // = CALL
@@ -28,6 +28,19 @@ void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPoin
 	regs->retAdd = rAdd;
 	regs->mallocStack = stackPointer;
 	regs->sp = regs->mallocStack + (stackSize - 1);
+
+
+	//Copy the arguments a user might want, onto the stack
+	regs->sp -= sizeof(arg);
+	*((coStData **)regs->sp) = arg;
+
+	//copy a pointer to the specific routine's reg data structure
+	//onto it's stack so it's passed in as an argument
+	regs->sp -= sizeof(coStData *);
+	//I think this will always be on aligned data, but must double check, otherwise
+	//it'll cause a bus error on some architechtures if it's not aligned
+	*((coStData **)regs->sp) = regs;
+
 
 	if(mainRegs.next == NULL)
 	{
@@ -67,13 +80,6 @@ void fibres_start()
 				//We should onyl get in here once per routine,
 				//there after we jmp back, not call back
 				SETBIT(curCoRo->flags, CALLSTATUS); // = JMP
-
-				//copy a pointer to the specific routine's reg data structure
-				//onto it's stack so it's passed in as an argument
-				curCoRo->sp -= sizeof(coStData *);
-				//I think this will always be on aligned data, but must double check, otherwise
-				//it'll cause a bus error on some architechtures if it's not aligned
-				*((coStData **)curCoRo->sp) = curCoRo;
 
 				//This is designed to replace to two calls below
 				setStackAndCallToAdd(curCoRo->sp, curCoRo->retAdd);
