@@ -356,6 +356,7 @@ __volatile__ static coStData mainRegs;
 void fibre_yield(coStData *rt) __attribute__((noinline));
 void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer, void *arg);
 void fibres_start();
+void preUIpInit();
 
 
 
