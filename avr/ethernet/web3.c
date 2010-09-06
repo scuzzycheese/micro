@@ -10,18 +10,14 @@ char stacks[UIP_CONNS][10000];
 
 void webAppFunc(coStData *regs, void *blah)
 {
-
-	if(uip_newdata())
+	while(1)
 	{
-		uip_send("ok\n", 3);
+		if(uip_newdata() || uip_rexmit())
+		{
+			uip_send("ok\n", 3);
+		}
 		fibre_yield(regs);
 	}
-
-	if(uip_rexmit())
-	{
-		uip_send("Had to retransmit\n", 18);
-	}
-
 }
 
 void preUIpInit()
