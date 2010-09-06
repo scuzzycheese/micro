@@ -1,4 +1,4 @@
-#include "web2.h"
+#include "web3.h"
 #include "uip.h"
 #include <string.h>
 
@@ -6,165 +6,113 @@
 #include "pages/index.h"
 #include "libhash/libhash.h"
 
-static int handle_connection(struct web_state *ws);
-static pageFunc comm = NULL;
+char stacks[UIP_CONNS][10000];
 
-//This might be wastefull
-char *getVars[webVarSize * 2];
+void webAppFunc(coStData *regs, void *blah)
+{
 
-hshObj fls;
+	if(uip_newdata())
+	{
+		uip_send("ok\n", 3);
+		fibre_yield(regs);
+	}
+
+	if(uip_rexmit())
+	{
+		uip_send("Had to retransmit\n", 18);
+	}
+
+}
+
+void preUIpInit()
+{
+	int c;
+	for(c = 0; c < UIP_CONNS; ++c)
+	{
+		//NOTE: This is just a placeholder, there is lots to sort out.
+		fibre_create(&(uip_conns[c].appstate), webAppFunc, 1000, stacks[c], 0);
+	}
+}
+
 void web_init(void)
 {
-	fls = newHashObject();
-	fls->addIndexString(fls, "/index.html", indexPage);
-
 	uip_listen(HTONS(80));
 }
 
 void web_appcall(void)
 {
-	struct web_state *ws = &(uip_conn->appstate);
-	printf("Webserver hit...\n");
-	if(uip_connected())
+	coStData *curCoRo = &(uip_conn->appstate);
+	regSave(&mainRegs);
+
+	CLRBIT(curCoRo->flags, JMPBIT); // = JMPFROMMAIN
+	__asm__("MAINRET:");
+	regRestore(&mainRegs);
+
+	if(GETBIT(curCoRo->flags, JMPBIT) == JMPFROMMAIN && !GETBIT(curCoRo->flags, FINISHED) && GETBIT(curCoRo->flags, SHEDULED))
 	{
-		printf("Socket Connected\n");
+		if(GETBIT(curCoRo->flags, CALLSTATUS) == CALL)
+		{
+			//We should onyl get in here once per routine,
+			//there after we jmp back, not call back
+			SETBIT(curCoRo->flags, CALLSTATUS); // = JMP
+
+			//This is designed to replace to two calls below
+			setStackAndCallToAdd(curCoRo->sp, curCoRo->retAdd);
+			//Put us back into the right stack frame
+			regRestore(&mainRegs);
+			//Believe if or not, if we get here, the routine is finished
+			//SETBIT(curCoRo->flags, FINISHED);
+		}
+		else
+		{
+			//This is designed to replace to two calls below
+			regRestoreAndJmpToYeild(curCoRo);
+		}
 	}
-	handle_connection(ws);
+
+
 
 }
 
-static int handle_connection(struct web_state *ws)
+
+
+
+//this has to get routineRegs dynamically
+void fibre_yield(coStData *rt)
 {
-	comm = NULL;
-	//wait for data
-	//while(!uip_newdata());
-
-	char *dataPtr = NULL;
-	char *dataPtrBegin = NULL;
-	uint16_t len = 0;
-	void *jmp = NULL;
-
-	//when it arrives, process it
-	while(uip_newdata())
+	SETBIT(rt->flags, JMPBIT); // = JMPFROMROUTINE
+	//rt->retAdd = &&FIBRET;
+	__asm__("FIBRET:");
+	if(GETBIT(rt->flags, JMPBIT))
 	{
-		len = uip_datalen();
-		dataPtr = (char *)uip_appdata;
-		dataPtrBegin = dataPtr;
-		jmp = NULL;
-
-		if(jmp)
-		{
-			goto *jmp;
-		}
-
-		printf("DATA LEN: %d\n", len);
-
-
-		if(len > 0)
-		{
-			if(strncmp(dataPtr, "GET ", 4) != 0)
-			{
-				uip_close();
-				return;
-			}
-
-			while(*(dataPtr ++) != ISO_space);
-
-			if(*dataPtr != ISO_slash)
-			{
-				uip_close();
-				return;
-			}
-
-			if(dataPtr >= dataPtrBegin + len)
-			{
-				jmp = &&RET1;
-			}
-			RET1:
-
-			dataPtr ++;
-
-			if(dataPtr >= dataPtrBegin + len)
-			{
-				jmp = &&RET2;
-			}
-			RET2:
-
-			if(*dataPtr == ISO_space)
-			{
-				strncpy(ws->filename, "/index.html", sizeof(ws->filename));
-			}
-			else
-			{
-				dataPtr[len - 1] = 0;
-				strncpy(ws->filename, dataPtr, sizeof(ws->filename));
-			}
-
-
-			char *req = ws->filename;
-			while(*(req ++))
-			{
-				if(*req == ISO_question) *req = 0;
-			}
-
-			memset(getVars, 0x00, sizeof(getVars));
-
-			//This is dangrous parsing, that needs to be secured
-			char *varKey = req;
-			char *varValue = NULL;
-
-			//add the first Key to the array
-			int varCount = 0;
-			getVars[varCount] = varKey;
-			varCount ++;
-
-			while(*(req ++) && varCount < (webVarSize * 2))
-			{
-				if(*req == ISO_equals)
-				{
-					*req = 0;
-					req ++;
-					varValue = req;
-					getVars[varCount] = varValue;
-					varCount ++;
-				}
-				if(*req == ISO_amp || !(*req))
-				{
-					*req = 0;
-					req ++;
-					varKey = req;
-					getVars[varCount] = varKey;
-					varCount ++;
-				}
-			}
-
-
-			//NOTE: This line causes a bug in GCC, BUG 27192
-			//WORKAROUND: don't let the compiler optimise
-			comm = fls->findIndexString(fls, ws->filename);
-
-			if(dataPtr >= dataPtrBegin + len)
-			{
-				jmp = &&RET3;
-			}
-			RET3:
-			asm("nop");
-		}
+		//I think it's safer for the routine to save it's own registers and stack data
+		//it means that it can self unschedule
+		//regSave(rt);
+		//jmpToAdd(mainRegs.retAdd);
+		regSaveAndJumpToMain(rt);
 	}
-
-	if(comm)
-	{
-		//Send headers. This mechanism needs to be more complex, but it's ok for now
-		uip_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", strlen("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n"));
-
-		comm(getVars, ws);
-	}
-	else
-	{
-		uip_send("HTTP/1.0 404 Not Found\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", strlen("HTTP/1.0 404 Not Found\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n"));
-		error404(NULL, ws);
-	}
-	uip_close();
 }
 
+void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer, void *arg)
+{
+	CLRBIT(regs->flags, JMPBIT); // = JMPFROMMAINw
+	CLRBIT(regs->flags, CALLSTATUS); // = CALL
+	CLRBIT(regs->flags, FINISHED);
+	SETBIT(regs->flags, SHEDULED);
 
+	regs->retAdd = rAdd;
+	regs->mallocStack = stackPointer;
+	regs->sp = regs->mallocStack + (stackSize - 1);
+
+
+	//Copy the arguments a user might want, onto the stack
+	regs->sp -= sizeof(arg);
+	*((coStData **)regs->sp) = arg;
+
+	//copy a pointer to the specific routine's reg data structure
+	//onto it's stack so it's passed in as an argument
+	regs->sp -= sizeof(coStData *);
+	//I think this will always be on aligned data, but must double check, otherwise
+	//it'll cause a bus error on some architechtures if it's not aligned
+	*((coStData **)regs->sp) = regs;
+}

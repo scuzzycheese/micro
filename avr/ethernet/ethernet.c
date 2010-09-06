@@ -27,7 +27,7 @@
 #include <sys/select.h>
 #include <sys/time.h>
 
-
+#include <signal.h>
 
 #else
 #include "global.h"
@@ -47,7 +47,6 @@
 #include "timer.h"
 #include "uart.h"
 #include "config.h"
-#include "fibre.h"
 
 #ifdef DEBUGSOCK
 #include <stdio.h>
@@ -82,6 +81,7 @@ void WDT_off(void)
 #define TOTAL_HEADER_LENGTH (IP_TCP_HEADER_LENGTH+ETHERNET_HEADER_LENGTH)
 
 #ifdef X86
+int exiter;
 void delay_ms(unsigned int ms)
 {
 	//This may be problematic if you wanna use this for more than one second
@@ -144,7 +144,7 @@ void socketInit()
 
 
 
-void mainUIPLoop(coStData *rt)
+void mainUIPLoop()
 {
 
 	int i;
@@ -175,6 +175,9 @@ void mainUIPLoop(coStData *rt)
 	#else
 	socketInit();
 	#endif
+
+	//This HAS to happen before uip_init
+	preUIpInit();
 
 	uip_init();
 
@@ -230,7 +233,6 @@ void mainUIPLoop(coStData *rt)
 	while(1)
 	{
 		uip_len = enc28j60PacketReceive(UIP_BUFSIZE, uip_buf);
-		fibre_yield(rt);
 		if(uip_len > 0)
 		{
 			if(BUF->type == htons(UIP_ETHTYPE_IP))
@@ -244,7 +246,6 @@ void mainUIPLoop(coStData *rt)
 				{
 					uip_arp_out();
 					enc28j60PacketSend(uip_len, uip_buf);
-					fibre_yield(rt);
 				}
 			}
 			else if(BUF->type == htons(UIP_ETHTYPE_ARP))
@@ -256,7 +257,6 @@ void mainUIPLoop(coStData *rt)
 				if(uip_len > 0)
 				{
 					enc28j60PacketSend(uip_len, uip_buf);
-					fibre_yield(rt);
 				}
 			}
 		}
@@ -273,7 +273,6 @@ void mainUIPLoop(coStData *rt)
 				{
 					uip_arp_out();
 					enc28j60PacketSend(uip_len, uip_buf);
-					fibre_yield(rt);
 				}
 			}
 
@@ -288,7 +287,6 @@ void mainUIPLoop(coStData *rt)
 				{
 					uip_arp_out();
 					enc28j60PacketSend(uip_len, uip_buf);
-					fibre_yield(rt);
 				}
 			}
 #endif // UIP_UDP
@@ -302,85 +300,40 @@ void mainUIPLoop(coStData *rt)
 				uip_arp_timer();
 			}
 		}
-		fibre_yield(rt);
-	}
 #ifdef X86
-	close(linSock);
+		if(exiter) break;
 #endif
-
+	}
+#ifdef X86
+	printf("Closing socket...  ");
+	shutdown(linSock, SHUT_RDWR);
+	close(linSock);
+	printf("Closed!\n");
+#endif
 }
+
 
 #ifdef X86
-int kbhit()
-{
-    struct timeval tv;
-    fd_set fds;
-    tv.tv_sec = 0;
-    tv.tv_usec = 0;
-    FD_ZERO(&fds);
-    FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
-    select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
-    return FD_ISSET(STDIN_FILENO, &fds);
-}
-
-void keyChecker(coStData *rt)
-{
-
-	while(1)
-	{
-		if(kbhit())
-		{
-			char inp[100];
-			int n;
-			errno = 0;
-
-			n = scanf("%s", inp);
-			if(n > 0)
-			{
-				if(strcmp(inp, "exit") == 0)
-				{
-					printf("exiting...\n");
-					close(linSock);
-					exit(0);
-				}
-			}
-			else if(errno != 0)
-			{
-				perror("scanf");
-			}
-			else
-			{
-				printf("something else went wrong!!!\n");
-			}
-
-		}
-		fibre_yield(rt);
-	}
-}
+void ex_program(int sig);
 #endif
 
 
 int main()
 {
+#ifdef X86
+	exiter = 0;
+	(void) signal(SIGINT, ex_program);
+#endif
 
-	coStData routineRegs[2];
-	#ifdef X86
-	char stack[2][10000];
-	#else
-	char stack[1][100];
-	#endif
-
-	//set up the fibres
-	#ifdef X86
-	fibre_create(&(routineRegs[0]), mainUIPLoop, 10000, stack[0]);
-	fibre_create(&(routineRegs[1]), keyChecker, 10000, stack[1]);
-	#else
-	fibre_create(&(routineRegs[0]), mainUIPLoop, 100, stack[0]);
-	#endif
-
-	//start the fibres
-	fibres_start();
-
+	mainUIPLoop();
 
 	return 0;
 }
+
+#ifdef X86
+void ex_program(int sig)
+{
+	printf("Caught signal: %d\n", sig);
+	exiter = 1;
+}
+#endif
