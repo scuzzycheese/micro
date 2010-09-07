@@ -12,9 +12,13 @@ void webAppFunc(coStData *regs, void *blah)
 {
 	while(1)
 	{
-		if(uip_newdata() || uip_rexmit())
+		if(uip_connected())
 		{
-			uip_send("ok\n", 3);
+			fib_send("Welcome\n", regs);
+		}
+		if(uip_newdata())
+		{
+			fib_send("ok\n", regs);
 		}
 		fibre_yield(regs);
 	}
