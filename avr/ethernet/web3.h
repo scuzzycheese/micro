@@ -368,7 +368,7 @@ void web_appcall(void);
 
 void web_init(void);
 
-#define fib_send(x, reg) do { uip_send(x, strlen(x)); fibre_yield(reg); } while(uip_rexmit())
-#define fib_send_len(x, len, reg) do { uip_send(x, len); fibre_yield(reg); } while(uip_rexmit())
+#define fib_send(x, reg) do { uip_send(x, strlen(x)); fibre_yield(reg); } while(!uip_acked() || uip_rexmit())
+#define fib_send_len(x, len, reg) do { uip_send(x, len); fibre_yield(reg); } while(!uip_acked() || uip_rexmit())
 
 #endif

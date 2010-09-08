@@ -10,15 +10,32 @@ char stacks[UIP_CONNS][10000];
 
 void webAppFunc(coStData *regs, void *blah)
 {
+	enum { NEW_CONNECTION, OLD_CONNECTION } conState;
 	while(1)
 	{
 		if(uip_connected())
 		{
-			fib_send("Welcome\n", regs);
+			conState = NEW_CONNECTION;
 		}
-		if(uip_newdata())
+		if(uip_newdata() && conState == NEW_CONNECTION)
 		{
-			fib_send("ok\n", regs);
+			uint16_t len = uip_datalen();
+			char *dataPtr = (char *)uip_appdata;
+			//char *dataPtrBegin = dataPtr;
+
+			if(strncmp(dataPtr, "GET ", 4) != 0)
+			{
+				conState = OLD_CONNECTION;
+				uip_close();
+				fibre_yield(regs);
+			}
+			else
+			{
+				fib_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", regs);
+				fib_send("hello\n", regs);
+				conState = OLD_CONNECTION;
+				uip_close();
+			}
 		}
 		fibre_yield(regs);
 	}
