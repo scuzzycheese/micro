@@ -34,16 +34,45 @@ void webAppFunc(coStData *regs, void *blah)
 			while(*dataPtr ++ != ISO_space);
 
 			char filename[20];
+			//There might be a better way to do this, I dunno
+			char argData[100];
+			struct argData args[5];
+
 			if(dataPtr[1] == ISO_space)
 			{
 				strcpy(filename, "/index.html");
+				dataPtr ++;
 			}
 			else
 			{
 				char *tmpPtr = filename;
 				while(*(tmpPtr ++) = *(dataPtr ++))
 				{
-					if(*dataPtr == ISO_question || *dataPtr == ISO_space) break;
+					if(*dataPtr == ISO_question || *dataPtr == ISO_space)
+					{
+						break;
+					}
+				}
+				if(*dataPtr == ISO_question)
+				{
+					dataPtr ++;
+					char *tmpPtr = argData;
+					uint8_t counter = 0;
+					while(counter < 5)
+					{
+						args[counter].argName = tmpPtr;
+						while((*(tmpPtr ++) = *(dataPtr ++)) != ISO_equals);
+						*(tmpPtr - 1) = 0x00;
+						args[counter].argValue = tmpPtr;
+						while(*dataPtr != ISO_amp && *dataPtr != ISO_space)
+						{
+							*(tmpPtr ++) = *(dataPtr ++);
+						}
+						*(tmpPtr ++) = 0x00;
+						if(*dataPtr == ISO_space) break;
+						dataPtr ++;
+						counter ++;
+					}
 				}
 			}
 
@@ -56,6 +85,7 @@ void webAppFunc(coStData *regs, void *blah)
 		fibre_yield(regs);
 	}
 }
+
 
 void preUIpInit()
 {
