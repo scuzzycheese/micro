@@ -48,12 +48,6 @@
 #include "uart.h"
 #include "config.h"
 
-#ifdef DEBUGSOCK
-#include <stdio.h>
-#include <stdlib.h>
-#endif
-
-
 //FUSES - HFUSE:99 LFUSE:EF
 //FUSES - HFUSE:91 LFUSE:EF
 
@@ -161,17 +155,9 @@ void mainUIPLoop()
 	#endif
 
 	#ifndef X86
-	usart_init();
-	#ifdef DEBUGSOCK
-	char tst[15];
-	sprintf(tst, "MCUSR: %d\r\n", MCUSR);
-	MCUSR = 0;
-	writeLn(tst);
-	#endif
 	clock_init();
 	enc28j60Init();
-	delay_ms(10);
-	enc28j60RegDump();
+	delay_ms(1);
 	#else
 	socketInit();
 	#endif
@@ -203,16 +189,6 @@ void mainUIPLoop()
 
 	uip_setethaddr(eaddr);
 
-	#ifdef DEBUGSOCK
-	char macData[100];
-	int maci;
-	for(maci = 0; maci < 6; maci ++)
-	{
-		sprintf(macData, "MAC%d: %X\r\n", maci, eaddr.addr[maci]);
-		writeLn(macData);
-	}
-	#endif
-
 	uip_ipaddr_t ipaddr;
 	uip_ipaddr(ipaddr, 168, 192, 17, 0);
 	uip_sethostaddr(ipaddr);
@@ -223,13 +199,7 @@ void mainUIPLoop()
 	uip_ipaddr(ipaddr, 255, 255, 0, 255);
 	uip_setnetmask(ipaddr);
 
-
-	//hello_world_init();
-	//httpd_init();
 	web_init();
-	#ifdef DEBUGSOCK
-	char data[100];
-	#endif
 	while(1)
 	{
 		uip_len = enc28j60PacketReceive(UIP_BUFSIZE, uip_buf);

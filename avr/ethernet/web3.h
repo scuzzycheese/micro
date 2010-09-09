@@ -8,6 +8,17 @@
 #include <avr/io.h>
 #endif
 
+#define ISO_nl      0x0a
+#define ISO_space   0x20
+#define ISO_bang    0x21
+#define ISO_percent 0x25
+#define ISO_period  0x2e
+#define ISO_slash   0x2f
+#define ISO_colon   0x3a
+#define ISO_question 0x3f
+#define ISO_equals  0x3d
+#define ISO_amp 0x26
+
 //Some lovely foward declairation
 struct csd;
 

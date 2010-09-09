@@ -28,15 +28,31 @@ void webAppFunc(coStData *regs, void *blah)
 				conState = OLD_CONNECTION;
 				uip_close();
 				fibre_yield(regs);
+				goto ENDLOOP;
+			}
+
+			while(*dataPtr ++ != ISO_space);
+
+			char filename[20];
+			if(dataPtr[1] == ISO_space)
+			{
+				strcpy(filename, "/index.html");
 			}
 			else
 			{
-				fib_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", regs);
-				fib_send("hello\n", regs);
-				conState = OLD_CONNECTION;
-				uip_close();
+				char *tmpPtr = filename;
+				while(*(tmpPtr ++) = *(dataPtr ++))
+				{
+					if(*dataPtr == ISO_question || *dataPtr == ISO_space) break;
+				}
 			}
+
+			fib_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", regs);
+			fib_send("hello\n", regs);
+			conState = OLD_CONNECTION;
+			uip_close();
 		}
+		ENDLOOP:
 		fibre_yield(regs);
 	}
 }
