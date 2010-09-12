@@ -1,10 +1,11 @@
 #include <string.h>
+#include "uipopt.h"
 #include "uip.h"
-#include "libhash/libhash.h"
+#include "web3.h"
 
 #ifndef IMAGE_H
 #define IMAGE_H
 
-int loadImage(char **vars, struct psock p);
+int loadImage(struct argData *args, coStData *regs);
 
 #endif

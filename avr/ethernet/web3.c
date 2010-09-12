@@ -11,8 +11,12 @@
 #include "pages/index.h"
 #endif
 
-
+#ifdef X86
 char stacks[UIP_CONNS][100000] = { 0 };
+#else
+char stacks[UIP_CONNS][100] = { 0 };
+#endif
+
 hshObj fls;
 
 void webAppFunc(coStData *regs, void *blah)
@@ -110,7 +114,11 @@ void preUIpInit()
 	for(c = 0; c < UIP_CONNS; ++c)
 	{
 		//NOTE: This is just a placeholder, there is lots to sort out.
+#ifdef X86
 		fibre_create(&(uip_conns[c].appstate), webAppFunc, 100000, stacks[c], 0);
+#else
+		fibre_create(&(uip_conns[c].appstate), webAppFunc, 100, stacks[c], 0);
+#endif
 	}
 }
 

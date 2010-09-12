@@ -4,7 +4,6 @@
 #include <string.h>
 #include "uipopt.h"
 #include "uip.h"
-#include "libhash/libhash.h"
 
 int error404(struct argData *args, coStData *regs);
 

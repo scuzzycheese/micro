@@ -1,5 +1,5 @@
 #include "image.h"
 
-int loadImage(char **vars, struct psock p)
+int loadImage(struct argData *args, coStData *regs)
 {
 }

@@ -148,16 +148,14 @@ void mainUIPLoop()
  
 	#ifndef X86
 	/*reset our ethernet chip*/
-	DDRD = 0xFF;
-	PORTD = 0x00;
-	delay_ms(100);
-	DDRD = 0x00;
-	#endif
+	DDRD = (1 << 6);
+	PORTD &= ~(1 << 6);
+	delay_ms(3000);
+	DDRD &= ~(1 << 6);
 
-	#ifndef X86
 	clock_init();
 	enc28j60Init();
-	delay_ms(1);
+	delay_ms(100);
 	#else
 	socketInit();
 	#endif
@@ -189,6 +187,7 @@ void mainUIPLoop()
 
 	uip_setethaddr(eaddr);
 
+#ifdef X86
 	uip_ipaddr_t ipaddr;
 	uip_ipaddr(ipaddr, 168, 192, 17, 0);
 	uip_sethostaddr(ipaddr);
@@ -198,6 +197,17 @@ void mainUIPLoop()
 
 	uip_ipaddr(ipaddr, 255, 255, 0, 255);
 	uip_setnetmask(ipaddr);
+#else
+	uip_ipaddr_t ipaddr;
+	uip_ipaddr(ipaddr, 192, 168, 0, 17);
+	uip_sethostaddr(ipaddr);
+
+	uip_ipaddr(ipaddr, 192, 168, 0, 1);
+	uip_setdraddr(ipaddr);
+
+	uip_ipaddr(ipaddr, 255, 255, 255, 0);
+	uip_setnetmask(ipaddr);
+#endif
 
 	web_init();
 	while(1)

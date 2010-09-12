@@ -101,7 +101,7 @@ install: ethernet.elf
 
 install-dragon: ethernet.elf
 	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
-	avrdude -p m644 -c dragon_isp -P usb -e -U flash:w:ethernet.hex
+	avrdude -B9 -p m644 -c dragon_isp -P usb -e -U flash:w:ethernet.hex
 
 fuse:
 	avrdude -p m644 -c dragon_isp -P usb -e -U hfuse:w:0x91:m -U lfuse:w:0xEF:m
