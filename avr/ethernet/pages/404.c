@@ -1,6 +1,6 @@
 #include "404.h"
 
-int error404(char **vars, struct web_state *ws)
+int error404(struct argData *args, coStData *regs)
 {
 	/*
 	PSOCK_BEGIN(&ws->po);

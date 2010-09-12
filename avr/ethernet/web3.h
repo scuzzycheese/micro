@@ -388,4 +388,9 @@ struct argData
 	char *argValue;
 };
 
+typedef int (*pageFunc)(struct argData *args, coStData *regs);
+
+//This is for libhash
+#define ptType pageFunc
+
 #endif

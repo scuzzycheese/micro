@@ -3,10 +3,17 @@
 #include <string.h>
 
 #include <stdio.h>
-#include "pages/index.h"
-#include "libhash/libhash.h"
 
-char stacks[UIP_CONNS][10000];
+#include "libhash/libhash.h"
+#ifdef X86
+#include "pages/index-x86.h"
+#else
+#include "pages/index.h"
+#endif
+
+
+char stacks[UIP_CONNS][100000] = { 0 };
+hshObj fls;
 
 void webAppFunc(coStData *regs, void *blah)
 {
@@ -33,10 +40,12 @@ void webAppFunc(coStData *regs, void *blah)
 
 			while(*dataPtr ++ != ISO_space);
 
-			char filename[20];
+			char filename[20] = { 0 };
 			//There might be a better way to do this, I dunno
-			char argData[100];
+			char argumentData[100] = { 0 };
 			struct argData args[5];
+
+			pageFunc comm = NULL;
 
 			if(dataPtr[1] == ISO_space)
 			{
@@ -56,7 +65,7 @@ void webAppFunc(coStData *regs, void *blah)
 				if(*dataPtr == ISO_question)
 				{
 					dataPtr ++;
-					char *tmpPtr = argData;
+					char *tmpPtr = argumentData;
 					uint8_t counter = 0;
 					while(counter < 5)
 					{
@@ -64,10 +73,7 @@ void webAppFunc(coStData *regs, void *blah)
 						while((*(tmpPtr ++) = *(dataPtr ++)) != ISO_equals);
 						*(tmpPtr - 1) = 0x00;
 						args[counter].argValue = tmpPtr;
-						while(*dataPtr != ISO_amp && *dataPtr != ISO_space)
-						{
-							*(tmpPtr ++) = *(dataPtr ++);
-						}
+						while(*dataPtr != ISO_amp && *dataPtr != ISO_space) *(tmpPtr ++) = *(dataPtr ++);
 						*(tmpPtr ++) = 0x00;
 						if(*dataPtr == ISO_space) break;
 						dataPtr ++;
@@ -76,8 +82,19 @@ void webAppFunc(coStData *regs, void *blah)
 				}
 			}
 
-			fib_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", regs);
-			fib_send("hello\n", regs);
+
+			comm = fls->findIndexString(fls, filename);
+			if(comm)
+			{
+				fib_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", regs);
+				comm(args, regs);
+			}
+			else
+			{
+				fib_send("HTTP/1.0 404 Not Found\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", regs);
+			}
+
+
 			conState = OLD_CONNECTION;
 			uip_close();
 		}
@@ -93,12 +110,15 @@ void preUIpInit()
 	for(c = 0; c < UIP_CONNS; ++c)
 	{
 		//NOTE: This is just a placeholder, there is lots to sort out.
-		fibre_create(&(uip_conns[c].appstate), webAppFunc, 1000, stacks[c], 0);
+		fibre_create(&(uip_conns[c].appstate), webAppFunc, 100000, stacks[c], 0);
 	}
 }
 
 void web_init(void)
 {
+	fls = newHashObject();
+	fls->addIndexString(fls, "/index.html", indexPage);
+
 	uip_listen(HTONS(80));
 }
 

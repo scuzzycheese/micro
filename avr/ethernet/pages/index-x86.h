@@ -4,7 +4,8 @@
 #include <string.h>
 #include "uipopt.h"
 #include "uip.h"
+#include "web3.h"
 
-int indexPage(char **vars, struct web_state *ws);
+int indexPage(struct argData *args, coStData *regs);
 
 #endif
