@@ -1,0 +1,13 @@
+EAGLE Version 4.16r2 Copyright (c) 1988-2006 CadSoft
+
+Electrical Rule Check for /home/scuzzy/devel/micro/pcb/webserver/webserver.sch at 10/07/2008 22:39:10 
+
+WARNING: Sheet 1/1: POWER Pin IC3 AGND connected to GND
+WARNING: Sheet 1/1: POWER Pin IC3 AVCC connected to N$43
+WARNING: Sheet 1/1: POWER Pin IC3 AREF connected to N$22
+WARNING: Sheet 1/1: POWER Pin IC3 VCC connected to +3V3
+
+Board and schematic are consistent
+
+    0 errors
+    4 warnings
