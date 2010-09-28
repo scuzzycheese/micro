@@ -9,6 +9,7 @@
 #include "pages/index-x86.h"
 #else
 #include "pages/index.h"
+#include "uart.h"
 #endif
 
 #ifdef X86
@@ -21,15 +22,19 @@ hshObj fls;
 
 void webAppFunc(coStData *regs, void *blah)
 {
+	writeLn("webserver called\r\n");
 	enum { NEW_CONNECTION, OLD_CONNECTION } conState;
 	while(1)
 	{
+		writeLn("entering while loop\r\n");
 		if(uip_connected())
 		{
+			writeLn("new connection to webserver!\r\n");
 			conState = NEW_CONNECTION;
 		}
 		if(uip_newdata() && conState == NEW_CONNECTION)
 		{
+			writeLn("new data detected\r\n");
 			uint16_t len = uip_datalen();
 			char *dataPtr = (char *)uip_appdata;
 			//char *dataPtrBegin = dataPtr;
@@ -103,7 +108,9 @@ void webAppFunc(coStData *regs, void *blah)
 			uip_close();
 		}
 		ENDLOOP:
+		writeLn("About to Yield\r\n");
 		fibre_yield(regs);
+		writeLn("return from yield\r\n");
 	}
 }
 
@@ -132,12 +139,15 @@ void web_init(void)
 
 void web_appcall(void)
 {
+	writeLn("web_appcall\r\n");
 	coStData *curCoRo = &(uip_conn->appstate);
 	regSave(&mainRegs);
+	writeLn("regSave complete\r\n");
 
 	CLRBIT(curCoRo->flags, JMPBIT); // = JMPFROMMAIN
 	__asm__("MAINRET:");
 	regRestore(&mainRegs);
+	writeLn("regRestore complete\r\n");
 
 	if(GETBIT(curCoRo->flags, JMPBIT) == JMPFROMMAIN && !GETBIT(curCoRo->flags, FINISHED) && GETBIT(curCoRo->flags, SHEDULED))
 	{
@@ -148,6 +158,7 @@ void web_appcall(void)
 			SETBIT(curCoRo->flags, CALLSTATUS); // = JMP
 
 			//This is designed to replace to two calls below
+			writeLn("about to jump to webserver\r\n");
 			setStackAndCallToAdd(curCoRo->sp, curCoRo->retAdd);
 			//Put us back into the right stack frame
 			regRestore(&mainRegs);
@@ -156,6 +167,7 @@ void web_appcall(void)
 		}
 		else
 		{
+			writeLn("going to jump BACK to web server...\r\n");
 			//This is designed to replace to two calls below
 			regRestoreAndJmpToYeild(curCoRo);
 		}
@@ -174,6 +186,7 @@ void fibre_yield(coStData *rt)
 	SETBIT(rt->flags, JMPBIT); // = JMPFROMROUTINE
 	//rt->retAdd = &&FIBRET;
 	__asm__("FIBRET:");
+	writeLn("return to fibre_yield\r\n");
 	if(GETBIT(rt->flags, JMPBIT))
 	{
 		//I think it's safer for the routine to save it's own registers and stack data
@@ -182,6 +195,7 @@ void fibre_yield(coStData *rt)
 		//jmpToAdd(mainRegs.retAdd);
 		regSaveAndJumpToMain(rt);
 	}
+	writeLn("gonna return to calling function from fibre_yield now\r\n");
 }
 
 void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer, void *arg)

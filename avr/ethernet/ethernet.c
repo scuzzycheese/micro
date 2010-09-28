@@ -136,10 +136,34 @@ void socketInit()
 }
 #endif
 
+#ifndef X86
+
+void ledDebugInit()
+{
+	DDRC = 3;
+	PORTC = 0;
+}
+
+void ledDebug(uint8_t flashes)
+{
+	while(flashes --)
+	{
+		_delay_ms(100);
+		PORTC = 2;
+		_delay_ms(100);
+		PORTC = 0;
+	}
+}
+
+#endif
+
 
 
 void mainUIPLoop()
 {
+
+	usart_init();
+
 
 	int i;
 
@@ -148,14 +172,18 @@ void mainUIPLoop()
  
 	#ifndef X86
 	/*reset our ethernet chip*/
-	DDRD = (1 << 6);
-	PORTD &= ~(1 << 6);
-	delay_ms(3000);
-	DDRD &= ~(1 << 6);
+	writeLn("Resetting the ENC28J69...");
+	DDRD = (1 << 5);
+	PORTD |= (1 << 5);
+	delay_ms(1000);
+	PORTD &= ~(1 << 5);
+	delay_ms(1000);
+	PORTD |= (1 << 5);
+	delay_ms(1000);
+	writeLn("Done!\r\n");
 
 	clock_init();
 	enc28j60Init();
-	delay_ms(100);
 	#else
 	socketInit();
 	#endif
@@ -209,14 +237,18 @@ void mainUIPLoop()
 	uip_setnetmask(ipaddr);
 #endif
 
+	enc28j60RegDump();
+
 	web_init();
 	while(1)
 	{
 		uip_len = enc28j60PacketReceive(UIP_BUFSIZE, uip_buf);
 		if(uip_len > 0)
 		{
+			//ledDebug(1);
 			if(BUF->type == htons(UIP_ETHTYPE_IP))
 			{
+				//ledDebug(2);
 				uip_arp_ipin();
 				uip_input();
 				//	If the above function invocation resulted in data that
@@ -230,6 +262,7 @@ void mainUIPLoop()
 			}
 			else if(BUF->type == htons(UIP_ETHTYPE_ARP))
 			{
+				//ledDebug(4);
 				uip_arp_arpin();
 				//	If the above function invocation resulted in data that
 				//	should be sent out on the network, the global variable
@@ -275,7 +308,6 @@ void mainUIPLoop()
 			if(timer_expired(&arp_timer))
 			{
 				//This is just to see how things are going
-				//enc28j60RegDump();
 				timer_reset(&arp_timer);
 				uip_arp_timer();
 			}
@@ -303,6 +335,9 @@ int main()
 #ifdef X86
 	exiter = 0;
 	(void) signal(SIGINT, ex_program);
+#else
+	ledDebugInit();
+	//ledDebug(4);
 #endif
 
 	mainUIPLoop();

@@ -105,6 +105,10 @@ install-dragon: ethernet.elf
 
 fuse:
 	avrdude -p m644 -c dragon_isp -P usb -e -U hfuse:w:0x91:m -U lfuse:w:0xEF:m
+	#avrdude -p m644 -c dragon_isp -P usb -e -U lfuse:w:0xff:m -U hfuse:w:0x99:m -U efuse:w:0xff:m
+
+reset:
+	avrdude -p m644 -c dragon_isp -P usb -n
 
 clean:
 	rm -Rf uip.o ${SERVICE} avrlib.o uart.o ethernet.o ethernet ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}

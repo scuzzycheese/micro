@@ -490,7 +490,7 @@ void enc28j60RegDump(void)
 //	else if(result & RST_B) writeLn("PHY in Reset   \r\n");
 //	else if(!(result & RST_10B)) writeLn("10BASE-T       \r\n");
 //	else if(!(result & RST_TXB)) writeLn("100BASE-T      \r\n");
-				
+
 	char data[100];
 	sprintf(data, "RevID: %d\r\n", enc28j60Read(EREVID));
 	writeLn(data);

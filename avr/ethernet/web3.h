@@ -341,7 +341,7 @@ typedef struct csd uip_tcp_appstate_t;
 	"rjmp FIBRET\n" \
 	\
 	: \
-	:"z"(buf) \
+	:"e"(buf) \
 )
 #elif defined(X86)
 #define regRestoreAndJmpToYeild(buf) __asm__ \
