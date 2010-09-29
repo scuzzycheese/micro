@@ -16,4 +16,7 @@ install:
 	avrdude -p m8 -P usb -c dragon_isp -e -U flash:w:nrf905.hex
 
 clean:
-	rm -Rf nrf905.hex nrf905.o nrf905.elf nRF905_example.o
+	rm -Rf nrf905.hex nrf905.o nrf905.elf nRF905_example.o nRF905.tar.gz
+
+tar:
+	tar -czf nRF905.tar.gz Makefile nrf905.c nRF905_conf.h nRF905_example.c nrf905.h SPIDefs.h

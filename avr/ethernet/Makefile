@@ -2,7 +2,7 @@ CC = avr-gcc
 CCX86 = gcc
 CHIP = -mmcu=atmega644
 #DEBUG= -DDEBUGSOCK
-OPT = -Os -mcall-prologues -std=c99
+OPT = -g3 -Os -mcall-prologues -std=c99
 #OPT = -mcall-prologues
 OPTX86 = -O0 -g3 -DX86
 
@@ -51,7 +51,7 @@ uip.o: ${UIPSTUFF}
 
 ${SERVICE}: ${SERVICE:.o=.c} ${SERVICE:.o=.h}
 	#don't optimise this module, otherwise it manifests a GCC bug
-	${CC} ${DEBUG} ${CHIP} -c -combine ${SERVICE:.o=.c} -o ${SERVICE} ${AVRLIBINCLUDES} ${UIPLIBPATH} ${MYPATH}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${SERVICE:.o=.c} -o ${SERVICE} ${AVRLIBINCLUDES} ${UIPLIBPATH} ${MYPATH}
 
 avrlib:
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${AVRLIBSTUFF} -o avrlib.o ${AVRLIBINCLUDES} ${AVRLIBPATH} ${MYPATH}

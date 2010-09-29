@@ -149,7 +149,7 @@ typedef struct csd uip_tcp_appstate_t;
 	"in __tmp_reg__, __SP_H__\n" \
 	"st %a0, __tmp_reg__\n" \
 	\
-	"rcall MAINRET\n" \
+	"rjmp MAINRET\n" \
 	: \
 	:"e"(buf) \
 )
@@ -241,7 +241,7 @@ typedef struct csd uip_tcp_appstate_t;
 ( \
 	"ld __tmp_reg__, %a0+\n" \
 	"out __SP_L__, __tmp_reg__\n" \
-	"ld __tmp_reg__, %a0+\n" \
+	"ld __tmp_reg__, %a0\n" \
 	"out __SP_H__, __tmp_reg__\n" \
 	\
 	"pop r31\n" \
@@ -303,7 +303,7 @@ typedef struct csd uip_tcp_appstate_t;
 ( \
 	"ld __tmp_reg__, %a0+\n" \
 	"out __SP_L__, __tmp_reg__\n" \
-	"ld __tmp_reg__, %a0+\n" \
+	"ld __tmp_reg__, %a0\n" \
 	"out __SP_H__, __tmp_reg__\n" \
 	\
 	"pop r31\n" \
