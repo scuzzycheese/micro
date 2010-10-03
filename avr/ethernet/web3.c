@@ -15,7 +15,7 @@
 #ifdef X86
 char stacks[UIP_CONNS][100000] = { 0 };
 #else
-char stacks[UIP_CONNS][300] = { 0 };
+char stacks[UIP_CONNS][100] = { 0 };
 #endif
 
 hshObj fls;
@@ -124,7 +124,7 @@ void preUIpInit()
 #ifdef X86
 		fibre_create(&(uip_conns[c].appstate), webAppFunc, 100000, stacks[c], 0);
 #else
-		fibre_create(&(uip_conns[c].appstate), webAppFunc, 300, stacks[c], 0);
+		fibre_create(&(uip_conns[c].appstate), webAppFunc, 100, stacks[c], 0);
 #endif
 	}
 }
@@ -142,12 +142,10 @@ void web_appcall(void)
 	writeLn("web_appcall\r\n");
 	coStData *curCoRo = &(uip_conn->appstate);
 	regSave(&mainRegs);
-	writeLn("regSave complete\r\n");
 
 	CLRBIT(curCoRo->flags, JMPBIT); // = JMPFROMMAIN
 	__asm__("MAINRET:");
 	regRestore(&mainRegs);
-	writeLn("regRestore complete\r\n");
 
 	if(GETBIT(curCoRo->flags, JMPBIT) == JMPFROMMAIN && !GETBIT(curCoRo->flags, FINISHED) && GETBIT(curCoRo->flags, SHEDULED))
 	{
@@ -158,7 +156,6 @@ void web_appcall(void)
 			SETBIT(curCoRo->flags, CALLSTATUS); // = JMP
 
 			//This is designed to replace to two calls below
-			writeLn("about to jump to webserver\r\n");
 			setStackAndCallToAdd(curCoRo->sp, curCoRo->retAdd);
 			//Put us back into the right stack frame
 			regRestore(&mainRegs);
@@ -167,7 +164,6 @@ void web_appcall(void)
 		}
 		else
 		{
-			writeLn("going to jump BACK to web server...\r\n");
 			//This is designed to replace to two calls below
 			regRestoreAndJmpToYeild(curCoRo);
 		}

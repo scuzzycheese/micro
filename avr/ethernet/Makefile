@@ -2,7 +2,7 @@ CC = avr-gcc
 CCX86 = gcc
 CHIP = -mmcu=atmega644
 #DEBUG= -DDEBUGSOCK
-OPT = -g3 -Os -mcall-prologues -std=c99
+OPT = -g -O0 -mcall-prologues -std=c99
 #OPT = -mcall-prologues
 OPTX86 = -O0 -g3 -DX86
 
@@ -41,6 +41,7 @@ MODULES = ${INDEX} ${IMAGE} ${ERROR404}
 
 all:uip.o ${SERVICE} avrlib uart ethernet.o hash ${MODULES}
 	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf ethernet.o uip.o avrlib.o ${SERVICE} uart.o libhash/libhash.o ${MODULES} -lm ${LIBPATH}
+	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
 
 ethernet.o: ethernet.c
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c ethernet.c -o ethernet.o ${LIBPATH}
@@ -96,15 +97,16 @@ modules-x86:
 
 
 install: ethernet.elf
-	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
 	avrdude -p m644 -c stk200 -e -E noreset -U flash:w:ethernet.hex
 
 install-dragon: ethernet.elf
-	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
 	avrdude -B9 -p m644 -c dragon_isp -P usb -e -U flash:w:ethernet.hex
 
+install-dragon-jtag: ethernet.elf
+	avrdude -vvv -B9 -p m644 -c dragon_jtag -P usb -e -U flash:w:ethernet.hex
+
 fuse:
-	avrdude -p m644 -c dragon_isp -P usb -e -U hfuse:w:0x91:m -U lfuse:w:0xEF:m
+	avrdude -p m644 -c dragon_isp -P usb -e -U hfuse:w:0x11:m -U lfuse:w:0xEF:m
 	#avrdude -p m644 -c dragon_isp -P usb -e -U lfuse:w:0xff:m -U hfuse:w:0x99:m -U efuse:w:0xff:m
 
 reset:

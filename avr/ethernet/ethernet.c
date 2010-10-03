@@ -235,9 +235,10 @@ void mainUIPLoop()
 
 	uip_ipaddr(ipaddr, 255, 255, 255, 0);
 	uip_setnetmask(ipaddr);
-#endif
 
 	enc28j60RegDump();
+#endif
+
 
 	web_init();
 	while(1)

@@ -1,5 +1,8 @@
 #include "FCPU.h"
+#include "inttypes.h"
+#ifndef X86
 #include <avr/interrupt.h>
+#endif
 
 #define SET_BAUD(baudRate) (((F_CPU / baudRate) / 16L) - 1);
 

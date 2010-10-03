@@ -36,7 +36,7 @@ void writeLn(char *strn)
 		putChar(*(strn ++));
 	}
 #else
-	printf(strn);
+	printf("%s", strn);
 #endif
 
 }
