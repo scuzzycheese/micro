@@ -22,7 +22,7 @@
 //Some lovely foward declairation
 struct csd;
 
-typedef void (*fibreType)(struct csd *, void *ar);
+typedef void (*fibreType)(void);
 
 //NOTE: this is packed, to make it as small as possible
 struct csd
@@ -69,7 +69,7 @@ typedef struct csd uip_tcp_appstate_t;
 
 //This is a hopefull combination of setStack and callToAdd
 #ifdef __AVR__
-#define setStackAndCallToAdd(sp,add) __asm__ \
+#define setStackAndCallToAdd(sp,add) __asm__ volatile \
 ( \
 	"out __SP_H__, %B0\n" \
 	"out __SP_L__, %A0\n" \
@@ -80,7 +80,7 @@ typedef struct csd uip_tcp_appstate_t;
 	:"e"(sp),"z"(add) \
 )
 #elif defined(X86)
-#define setStackAndCallToAdd(sp,add) __asm__ \
+#define setStackAndCallToAdd(sp,add) __asm__  \
 ( \
 	"movl %%eax, %%ebp\n" \
 	"movl %%eax, %%esp\n" \
@@ -92,7 +92,7 @@ typedef struct csd uip_tcp_appstate_t;
 #endif
 
 #ifdef __AVR__
-#define jmpToAdd(add) __asm__ \
+#define jmpToAdd(add) __asm__ volatile \
 ( \
 	"ijmp" \
 	\
@@ -109,8 +109,11 @@ typedef struct csd uip_tcp_appstate_t;
 )
 #endif
 #ifdef __AVR__
-#define regSaveAndJumpToMain(buf) __asm__ \
+#define regSaveAndJumpToMain(buf) __asm__ volatile \
 ( \
+	"push r0\n" \
+	"in r0, __SREG__\n" \
+	"cli\n" \
 	"push r0\n" \
 	"push r1\n" \
 	"push r2\n" \
@@ -148,6 +151,8 @@ typedef struct csd uip_tcp_appstate_t;
 	"st %a0+, __tmp_reg__\n" \
 	"in __tmp_reg__, __SP_H__\n" \
 	"st %a0, __tmp_reg__\n" \
+	\
+	"sei\n" \
 	\
 	"rjmp MAINRET\n" \
 	: \
@@ -174,8 +179,11 @@ typedef struct csd uip_tcp_appstate_t;
 #endif
 
 #ifdef __AVR__
-#define regSave(buf) __asm__ \
+#define regSave(buf) __asm__ volatile \
 ( \
+	"push r0\n" \
+	"in r0, __SREG__\n" \
+	"cli\n" \
 	"push r0\n" \
 	"push r1\n" \
 	"push r2\n" \
@@ -214,6 +222,8 @@ typedef struct csd uip_tcp_appstate_t;
 	"in __tmp_reg__, __SP_H__\n" \
 	"st %a0, __tmp_reg__\n" \
 	\
+	"sei\n" \
+	\
 	: \
 	:"e"(buf) \
 )
@@ -237,7 +247,7 @@ typedef struct csd uip_tcp_appstate_t;
 
 
 #ifdef __AVR__
-#define regRestore(buf) __asm__ \
+#define regRestore(buf) __asm__ volatile \
 ( \
 	"ld __tmp_reg__, %a0+\n" \
 	"out __SP_L__, __tmp_reg__\n" \
@@ -276,6 +286,8 @@ typedef struct csd uip_tcp_appstate_t;
 	"pop r2\n" \
 	"pop r1\n" \
 	"pop r0\n" \
+	"out __SREG__, r0\n" \
+	"pop r0\n" \
 	\
 	: \
 	:"e"(buf) \
@@ -299,7 +311,7 @@ typedef struct csd uip_tcp_appstate_t;
 #endif
 
 #ifdef __AVR__
-#define regRestoreAndJmpToYeild(buf) __asm__ \
+#define regRestoreAndJmpToYeild(buf) __asm__ volatile \
 ( \
 	"ld __tmp_reg__, %a0+\n" \
 	"out __SP_L__, __tmp_reg__\n" \
@@ -337,6 +349,8 @@ typedef struct csd uip_tcp_appstate_t;
 	"pop r3\n" \
 	"pop r2\n" \
 	"pop r1\n" \
+	"pop r0\n" \
+	"out __SREG__, r0\n" \
 	"pop r0\n" \
 	"rjmp FIBRET\n" \
 	\
@@ -365,7 +379,7 @@ typedef struct csd uip_tcp_appstate_t;
 
 __volatile__ static coStData mainRegs;
 void fibre_yield(coStData *rt) __attribute__((noinline));
-void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer, void *arg);
+void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer);
 void fibres_start();
 void preUIpInit();
 

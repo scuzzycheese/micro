@@ -19,8 +19,9 @@ char stacks[UIP_CONNS][100] = { 0 };
 #endif
 
 hshObj fls;
+coStData *currentFibre = NULL;
 
-void webAppFunc(coStData *regs, void *blah)
+void webAppFunc()
 {
 	writeLn("webserver called\r\n");
 	enum { NEW_CONNECTION, OLD_CONNECTION } conState;
@@ -43,7 +44,7 @@ void webAppFunc(coStData *regs, void *blah)
 			{
 				conState = OLD_CONNECTION;
 				uip_close();
-				fibre_yield(regs);
+				fibre_yield(currentFibre);
 				goto ENDLOOP;
 			}
 
@@ -95,12 +96,12 @@ void webAppFunc(coStData *regs, void *blah)
 			comm = fls->findIndexString(fls, filename);
 			if(comm)
 			{
-				fib_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", regs);
-				comm(args, regs);
+				fib_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", currentFibre);
+				comm(args, currentFibre);
 			}
 			else
 			{
-				fib_send("HTTP/1.0 404 Not Found\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", regs);
+				fib_send("HTTP/1.0 404 Not Found\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", currentFibre);
 			}
 
 
@@ -109,7 +110,7 @@ void webAppFunc(coStData *regs, void *blah)
 		}
 		ENDLOOP:
 		writeLn("About to Yield\r\n");
-		fibre_yield(regs);
+		fibre_yield(currentFibre);
 		writeLn("return from yield\r\n");
 	}
 }
@@ -122,9 +123,9 @@ void preUIpInit()
 	{
 		//NOTE: This is just a placeholder, there is lots to sort out.
 #ifdef X86
-		fibre_create(&(uip_conns[c].appstate), webAppFunc, 100000, stacks[c], 0);
+		fibre_create(&(uip_conns[c].appstate), webAppFunc, 100000, stacks[c]);
 #else
-		fibre_create(&(uip_conns[c].appstate), webAppFunc, 100, stacks[c], 0);
+		fibre_create(&(uip_conns[c].appstate), webAppFunc, 100, stacks[c]);
 #endif
 	}
 }
@@ -154,6 +155,9 @@ void web_appcall(void)
 			//We should onyl get in here once per routine,
 			//there after we jmp back, not call back
 			SETBIT(curCoRo->flags, CALLSTATUS); // = JMP
+
+			//There is a global indicator to keep track of the current fibre
+			currentFibre = curCoRo;
 
 			//This is designed to replace to two calls below
 			setStackAndCallToAdd(curCoRo->sp, curCoRo->retAdd);
@@ -194,7 +198,7 @@ void fibre_yield(coStData *rt)
 	writeLn("gonna return to calling function from fibre_yield now\r\n");
 }
 
-void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer, void *arg)
+void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer)
 {
 	CLRBIT(regs->flags, JMPBIT); // = JMPFROMMAINw
 	CLRBIT(regs->flags, CALLSTATUS); // = CALL
@@ -204,8 +208,13 @@ void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPoin
 	regs->retAdd = rAdd;
 	regs->mallocStack = stackPointer;
 	regs->sp = regs->mallocStack + (stackSize - 1);
-
-
+	//regs->sp = regs->mallocStack + (stackSize);
+/*
+#ifdef __AVR__
+	*((coStData **)(regs->sp - sizeof(arg))) = arg;
+	*((coStData **)(regs->sp - sizeof(arg) - sizeof(regs))) = regs;
+	regs->sp -= 2;
+#elif defined(X86)
 	//Copy the arguments a user might want, onto the stack
 	regs->sp -= sizeof(arg);
 	*((coStData **)regs->sp) = arg;
@@ -216,4 +225,6 @@ void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPoin
 	//I think this will always be on aligned data, but must double check, otherwise
 	//it'll cause a bus error on some architechtures if it's not aligned
 	*((coStData **)regs->sp) = regs;
+#endif
+ */
 }

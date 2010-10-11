@@ -2,7 +2,8 @@ CC = avr-gcc
 CCX86 = gcc
 CHIP = -mmcu=atmega644
 #DEBUG= -DDEBUGSOCK
-OPT = -g -O0 -mcall-prologues -std=c99
+OPT = -g3 -O0 -mcall-prologues -std=c99
+#OPT = -g -O0 -std=c99
 #OPT = -mcall-prologues
 OPTX86 = -O0 -g3 -DX86
 
@@ -103,7 +104,7 @@ install-dragon: ethernet.elf
 	avrdude -B9 -p m644 -c dragon_isp -P usb -e -U flash:w:ethernet.hex
 
 install-dragon-jtag: ethernet.elf
-	avrdude -vvv -B9 -p m644 -c dragon_jtag -P usb -e -U flash:w:ethernet.hex
+	avrdude -B9 -p m644 -c dragon_jtag -P usb -e -U flash:w:ethernet.hex
 
 fuse:
 	avrdude -p m644 -c dragon_isp -P usb -e -U hfuse:w:0x11:m -U lfuse:w:0xEF:m
