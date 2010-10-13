@@ -15,7 +15,7 @@
 #ifdef X86
 char stacks[UIP_CONNS][100000] = { 0 };
 #else
-char stacks[UIP_CONNS][100] = { 0 };
+char stacks[UIP_CONNS][200] = { 0 };
 #endif
 
 hshObj fls;
@@ -96,7 +96,12 @@ void webAppFunc()
 			comm = fls->findIndexString(fls, filename);
 			if(comm)
 			{
-				fib_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", currentFibre);
+				//fib_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", currentFibre);
+				do
+				{
+					uip_send( "HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n" , strlen( "HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n" ));
+					fibre_yield( currentFibre );
+				} while(! (uip_flags & 1 ) || (uip_flags & 4 ) );
 				comm(args, currentFibre);
 			}
 			else
@@ -125,7 +130,7 @@ void preUIpInit()
 #ifdef X86
 		fibre_create(&(uip_conns[c].appstate), webAppFunc, 100000, stacks[c]);
 #else
-		fibre_create(&(uip_conns[c].appstate), webAppFunc, 100, stacks[c]);
+		fibre_create(&(uip_conns[c].appstate), webAppFunc, 200, stacks[c]);
 #endif
 	}
 }
@@ -142,6 +147,8 @@ void web_appcall(void)
 {
 	writeLn("web_appcall\r\n");
 	coStData *curCoRo = &(uip_conn->appstate);
+	//There is a global indicator to keep track of the current fibre
+	currentFibre = curCoRo;
 	regSave(&mainRegs);
 
 	CLRBIT(curCoRo->flags, JMPBIT); // = JMPFROMMAIN
@@ -155,9 +162,6 @@ void web_appcall(void)
 			//We should onyl get in here once per routine,
 			//there after we jmp back, not call back
 			SETBIT(curCoRo->flags, CALLSTATUS); // = JMP
-
-			//There is a global indicator to keep track of the current fibre
-			currentFibre = curCoRo;
 
 			//This is designed to replace to two calls below
 			setStackAndCallToAdd(curCoRo->sp, curCoRo->retAdd);
@@ -193,6 +197,7 @@ void fibre_yield(coStData *rt)
 		//it means that it can self unschedule
 		//regSave(rt);
 		//jmpToAdd(mainRegs.retAdd);
+		writeLn("Jumping to main from fibre_yield\r\n");
 		regSaveAndJumpToMain(rt);
 	}
 	writeLn("gonna return to calling function from fibre_yield now\r\n");
