@@ -11,7 +11,6 @@ GENPATH =
 
 UIPF = ./uip/uip.c
 UIPARP = ./uip/uip_arp.c
-SERVICE = web3.o
 PSOCK = ./uip/psock.c
 CLOCK = clock-arch.c
 TIMER = ./uip/timer.c
@@ -30,14 +29,14 @@ MYPATH = -I. ${GENPATH} ${FIBINC}
 LIBPATH = ${AVRLIBINCLUDES} ${UIPLIBPATH} ${AVRLIBPATH} ${UARTLIBPATH} ${MYPATH}
 
 #===MODULES===
-INDEX = pages/index.o
-IMAGE = pages/image.o
-ERROR404 = pages/404.o
+INDEX = webserver/pages/index.o
+IMAGE = webserver/pages/image.o
+ERROR404 = webserver/pages/404.o
 MODULES = ${INDEX} ${IMAGE} ${ERROR404}
 
 
-all:uip.o ${SERVICE} enc28j60 uart ethernet.o hash ${MODULES}
-	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf ethernet.o uip.o enc28j60.o ${SERVICE} libuart/libuart.o libhash/libhash.o ${MODULES} -lm ${LIBPATH}
+all:uip.o webserver enc28j60 uart ethernet.o hash ${MODULES}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf ethernet.o uip.o enc28j60.o webserver/webserver.o libuart/libuart.o libhash/libhash.o ${MODULES} -lm ${LIBPATH}
 	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
 
 ethernet.o: ethernet.c
@@ -46,9 +45,8 @@ ethernet.o: ethernet.c
 uip.o: ${UIPSTUFF} 
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${UIPSTUFF} -o uip.o ${LIBPATH}
 
-${SERVICE}: ${SERVICE:.o=.c} ${SERVICE:.o=.h}
-	#don't optimise this module, otherwise it manifests a GCC bug
-	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${SERVICE:.o=.c} -o ${SERVICE} ${LIBPATH}
+webserver: webserver/web.c webserver/web.h
+	${CC} ${DEBUG} ${OPT} ${CHIP}	-c -combine webserver/web.c -o webserver/webserver.o ${LIBPATH}
 
 enc28j60:
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine enc28j60.c -o enc28j60.o ${LIBPATH}
@@ -62,7 +60,7 @@ hash: libhash/libhash.c libhash/libhash.h
 
 #build all our web pages
 ${MODULES}: ${@:.o=.c} ${@:.o=.h}
-	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${@:.o=.c} -o $@ ${LIBPATH}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${@:.o=.c} -o $@ ${LIBPATH} -I./webserver/
 
 
 
