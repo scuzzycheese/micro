@@ -45,7 +45,7 @@
 #include "uip.h"
 #include "uip_arp.h"
 #include "timer.h"
-#include "uart/uart.h"
+#include "libuart/uart.h"
 #include "config.h"
 
 //FUSES - HFUSE:99 LFUSE:EF

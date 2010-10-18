@@ -25,7 +25,7 @@ AVRLIBSTUFF = ${ENC28J60}
 AVRLIBINCLUDES = -I/usr/lib/avr/include/
 UIPLIBPATH = -I./uip/
 AVRLIBPATH = -I../avrlib/
-UARTLIBPATH = -I./uart/
+UARTLIBPATH = -I./libuart/
 MYPATH = -I. ${GENPATH} ${FIBINC}
 LIBPATH = ${AVRLIBINCLUDES} ${UIPLIBPATH} ${AVRLIBPATH} ${UARTLIBPATH} ${MYPATH}
 
@@ -37,7 +37,7 @@ MODULES = ${INDEX} ${IMAGE} ${ERROR404}
 
 
 all:uip.o ${SERVICE} enc28j60 uart ethernet.o hash ${MODULES}
-	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf ethernet.o uip.o enc28j60.o ${SERVICE} uart/uart.o libhash/libhash.o ${MODULES} -lm ${LIBPATH}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf ethernet.o uip.o enc28j60.o ${SERVICE} libuart/libuart.o libhash/libhash.o ${MODULES} -lm ${LIBPATH}
 	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
 
 ethernet.o: ethernet.c
@@ -53,8 +53,8 @@ ${SERVICE}: ${SERVICE:.o=.c} ${SERVICE:.o=.h}
 enc28j60:
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine enc28j60.c -o enc28j60.o ${LIBPATH}
 
-uart: uart/uart.c uart/uart.h
-	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine uart/uart.c -o uart/uart.o ${LIBPATH}
+uart: libuart/uart.c libuart/uart.h
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine libuart/uart.c -o libuart/libuart.o ${LIBPATH}
 
 hash: libhash/libhash.c libhash/libhash.h
 	#don't optimise this module, otherwise it manifests a GCC bug
