@@ -24,7 +24,7 @@
 #include <stdio.h>
 
 #include "timer.h"
-#include "uart.h"
+#include "uart/uart.h"
 
 
 #ifdef SPDR0
