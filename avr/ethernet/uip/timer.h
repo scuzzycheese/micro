@@ -1,5 +1,31 @@
+/**
+ * \defgroup timer Timer library
+ *
+ * The timer library provides functions for setting, resetting and
+ * restarting timers, and for checking if a timer has expired. An
+ * application must "manually" check if its timers have expired; this
+ * is not done automatically.
+ *
+ * A timer is declared as a \c struct \c timer and all access to the
+ * timer is made by a pointer to the declared timer.
+ *
+ * \note The timer library uses the \ref clock "Clock library" to
+ * measure time. Intervals should be specified in the format used by
+ * the clock library.
+ *
+ * @{
+ */
+
+
+/**
+ * \file
+ * Timer library header file.
+ * \author
+ * Adam Dunkels <adam@sics.se>
+ */
+
 /*
- * Copyright (c) 2001, Swedish Institute of Computer Science.
+ * Copyright (c) 2004, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,75 +52,35 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * This file is part of the lwIP TCP/IP stack.
+ * This file is part of the uIP TCP/IP stack
  *
  * Author: Adam Dunkels <adam@sics.se>
  *
- * $Id: httpd-fs.c,v 1.1 2006/06/07 09:13:08 adam Exp $
+ * $Id: timer.h,v 1.3 2006/06/11 21:46:39 adam Exp $
  */
+#ifndef __TIMER_H__
+#define __TIMER_H__
 
-#include "httpd.h"
-#include "httpd-fs.h"
+#include "clock.h"
 
-#ifndef NULL
-#define NULL 0
-#endif /* NULL */
+/**
+ * A timer.
+ *
+ * This structure is used for declaring a timer. The timer must be set
+ * with timer_set() before it can be used.
+ *
+ * \hideinitializer
+ */
+struct timer {
+  clock_time_t start;
+  clock_time_t interval;
+};
 
-#include "../dynaloader.h"
-#include "../libhash/libhash.h"
-extern dynld fileObject;
+void timer_set(struct timer *t, clock_time_t interval);
+void timer_reset(struct timer *t);
+void timer_restart(struct timer *t);
+int timer_expired(struct timer *t);
 
-/*-----------------------------------------------------------------------------------*/
-static u8_t
-httpd_fs_strcmp(const char *str1, const char *str2)
-{
-  u8_t i;
-  i = 0;
- loop:
+#endif /* __TIMER_H__ */
 
-  if(str2[i] == 0 ||
-     str1[i] == '\r' ||
-     str1[i] == '\n') {
-    return 0;
-  }
-
-  if(str1[i] != str2[i]) {
-    return 1;
-  }
-
-
-  ++i;
-  goto loop;
-}
-/*-----------------------------------------------------------------------------------*/
-int
-httpd_fs_open(const char *name, struct httpd_fs_file *file)
-{
-	writeLn(name);
-	writeLn("\r\n");
-	struct accessHolder *comm = NULL;
-
-	comm = fileObject->fetchPage(fileObject, name);
-	
-	if(comm)
-	{
-		comm->run(file);
-		return 1;
-	}
-
-	return 0;
-}
-/*-----------------------------------------------------------------------------------*/
-void
-httpd_fs_init(void)
-{
-}
-/*-----------------------------------------------------------------------------------*/
-#if HTTPD_FS_STATISTICS
-int httpd_fs_count
-(char *name)
-{
-  return 0;
-}
-#endif /* HTTPD_FS_STATISTICS */
-/*-----------------------------------------------------------------------------------*/
+/** @} */

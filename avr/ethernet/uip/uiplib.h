@@ -1,5 +1,13 @@
+/**
+ * \file
+ * Various uIP library functions.
+ * \author
+ * Adam Dunkels <adam@sics.se>
+ *
+ */
+
 /*
- * Copyright (c) 2001-2005, Adam Dunkels.
+ * Copyright (c) 2002, Adam Dunkels.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -7,9 +15,10 @@
  * are met:
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above
+ *    copyright notice, this list of conditions and the following
+ *    disclaimer in the documentation and/or other materials provided
+ *    with the distribution.
  * 3. The name of the author may not be used to endorse or promote
  *    products derived from this software without specific prior
  *    written permission.
@@ -26,37 +35,37 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This file is part of the uIP TCP/IP stack.
+ * This file is part of the uIP TCP/IP stack
  *
- * $Id: httpd.h,v 1.2 2006/06/11 21:46:38 adam Exp $
+ * $Id: uiplib.h,v 1.1 2006/06/07 09:15:19 adam Exp $
  *
  */
+#ifndef __UIPLIB_H__
+#define __UIPLIB_H__
 
-#ifndef __HTTPD_H__
-#define __HTTPD_H__
+/**
+ * \addtogroup uipconvfunc
+ * @{
+ */
 
-#include "psock.h"
-#include "httpd-fs.h"
+/**
+ * Convert a textual representation of an IP address to a numerical representation.
+ *
+ * This function takes a textual representation of an IP address in
+ * the form a.b.c.d and converts it into a 4-byte array that can be
+ * used by other uIP functions.
+ *
+ * \param addrstr A pointer to a string containing the IP address in
+ * textual form.
+ *
+ * \param addr A pointer to a 4-byte array that will be filled in with
+ * the numerical representation of the address.
+ *
+ * \retval 0 If the IP address could not be parsed.
+ * \retval Non-zero If the IP address was parsed.
+ */
+unsigned char uiplib_ipaddrconv(char *addrstr, unsigned char *addr);
 
-struct httpd_state {
-  unsigned char timer;
-  struct psock sin, sout;
-  struct pt outputpt, scriptpt;
-  char inputbuf[50];
-  char filename[20];
-  char state;
-  struct httpd_fs_file file;
-  int len;
-  char *scriptptr;
-  int scriptlen;
-  
-  unsigned short count;
-};
+/** @} */
 
-void httpd_init(void);
-void httpd_appcall(void);
-
-void httpd_log(char *msg);
-void httpd_log_file(u16_t *requester, char *file);
-
-#endif /* __HTTPD_H__ */
+#endif /* __UIPLIB_H__ */

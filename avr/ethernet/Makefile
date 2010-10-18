@@ -9,15 +9,12 @@ OPTX86 = -O0 -g3 -DX86
 
 GENPATH =
 
-UIPF = ../uip/uip/uip.c
-UIPARP = ../uip/uip/uip_arp.c
-#SERVICE = hello-world.c
-#SERVICE = -Iwebserver webserver/httpd.c webserver/http-strings.c webserver/httpd-fs.c webserver/httpd-cgi.c
-#SERVICE = web2.o
+UIPF = ./uip/uip.c
+UIPARP = ./uip/uip_arp.c
 SERVICE = web3.o
-PSOCK = ../uip/uip/psock.c
+PSOCK = ./uip/psock.c
 CLOCK = clock-arch.c
-TIMER = ../uip/uip/timer.c
+TIMER = ./uip/timer.c
 
 UART = uart.c
 
@@ -28,7 +25,7 @@ AVRLIBSTUFF = ${ENC28J60}
 UARTSTUFF = ${UART}
 
 AVRLIBINCLUDES = -I/usr/lib/avr/include/
-UIPLIBPATH = -I../uip/uip/
+UIPLIBPATH = -I./uip/
 AVRLIBPATH = -I../avrlib/
 MYPATH = -I. ${GENPATH} ${FIBINC}
 LIBPATH = ${AVRLIBINCLUDES} ${UIPLIBPATH} ${AVRLIBPATH} ${MYPATH}
