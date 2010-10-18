@@ -136,28 +136,6 @@ void socketInit()
 }
 #endif
 
-#ifndef X86
-
-void ledDebugInit()
-{
-	DDRC = 3;
-	PORTC = 0;
-}
-
-void ledDebug(uint8_t flashes)
-{
-	while(flashes --)
-	{
-		_delay_ms(100);
-		PORTC = 2;
-		_delay_ms(100);
-		PORTC = 0;
-	}
-}
-
-#endif
-
-
 
 void mainUIPLoop()
 {
@@ -172,14 +150,13 @@ void mainUIPLoop()
  
 	#ifndef X86
 	/*reset our ethernet chip*/
-	writeLn("Resetting the ENC28J69...");
+	writeLn("Resetting the ENC28J60...");
 	DDRD = (1 << 5);
 	PORTD |= (1 << 5);
-	delay_ms(1000);
 	PORTD &= ~(1 << 5);
-	delay_ms(1000);
+	delay_ms(10);
 	PORTD |= (1 << 5);
-	delay_ms(1000);
+	delay_ms(10);
 	writeLn("Done!\r\n");
 
 	clock_init();
@@ -336,9 +313,6 @@ int main()
 #ifdef X86
 	exiter = 0;
 	(void) signal(SIGINT, ex_program);
-#else
-	ledDebugInit();
-	//ledDebug(4);
 #endif
 
 	mainUIPLoop();
