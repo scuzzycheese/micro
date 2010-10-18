@@ -15,7 +15,7 @@
 #ifdef X86
 char stacks[UIP_CONNS][100000] = { 0 };
 #else
-char stacks[UIP_CONNS][200] = { 0 };
+char stacks[UIP_CONNS][400] = { 0 };
 #endif
 
 hshObj fls;
@@ -23,19 +23,19 @@ coStData *currentFibre = NULL;
 
 void webAppFunc()
 {
-	writeLn("webserver called\r\n");
+	//writeLn("webserver called\r\n");
 	enum { NEW_CONNECTION, OLD_CONNECTION } conState;
 	while(1)
 	{
-		writeLn("entering while loop\r\n");
+		//writeLn("entering while loop\r\n");
 		if(uip_connected())
 		{
-			writeLn("new connection to webserver!\r\n");
+			//writeLn("new connection to webserver!\r\n");
 			conState = NEW_CONNECTION;
 		}
 		if(uip_newdata() && conState == NEW_CONNECTION)
 		{
-			writeLn("new data detected\r\n");
+			//writeLn("new data detected\r\n");
 			uint16_t len = uip_datalen();
 			char *dataPtr = (char *)uip_appdata;
 			//char *dataPtrBegin = dataPtr;
@@ -53,7 +53,7 @@ void webAppFunc()
 			char filename[20] = { 0 };
 			//There might be a better way to do this, I dunno
 			char argumentData[100] = { 0 };
-			struct argData args[5];
+			struct argData args[5] = { 0 };
 
 			pageFunc comm = NULL;
 
@@ -96,12 +96,7 @@ void webAppFunc()
 			comm = fls->findIndexString(fls, filename);
 			if(comm)
 			{
-				//fib_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", currentFibre);
-				do
-				{
-					uip_send( "HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n" , strlen( "HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n" ));
-					fibre_yield( currentFibre );
-				} while(! (uip_flags & 1 ) || (uip_flags & 4 ) );
+				fib_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", currentFibre);
 				comm(args, currentFibre);
 			}
 			else
@@ -114,9 +109,9 @@ void webAppFunc()
 			uip_close();
 		}
 		ENDLOOP:
-		writeLn("About to Yield\r\n");
+		//writeLn("About to Yield\r\n");
 		fibre_yield(currentFibre);
-		writeLn("return from yield\r\n");
+		//writeLn("return from yield\r\n");
 	}
 }
 
@@ -130,7 +125,7 @@ void preUIpInit()
 #ifdef X86
 		fibre_create(&(uip_conns[c].appstate), webAppFunc, 100000, stacks[c]);
 #else
-		fibre_create(&(uip_conns[c].appstate), webAppFunc, 200, stacks[c]);
+		fibre_create(&(uip_conns[c].appstate), webAppFunc, 400, stacks[c]);
 #endif
 	}
 }
@@ -145,7 +140,7 @@ void web_init(void)
 
 void web_appcall(void)
 {
-	writeLn("web_appcall\r\n");
+	//writeLn("web_appcall\r\n");
 	coStData *curCoRo = &(uip_conn->appstate);
 	//There is a global indicator to keep track of the current fibre
 	currentFibre = curCoRo;
@@ -190,17 +185,17 @@ void fibre_yield(coStData *rt)
 	SETBIT(rt->flags, JMPBIT); // = JMPFROMROUTINE
 	//rt->retAdd = &&FIBRET;
 	__asm__("FIBRET:");
-	writeLn("return to fibre_yield\r\n");
+	//writeLn("return to fibre_yield\r\n");
 	if(GETBIT(rt->flags, JMPBIT))
 	{
 		//I think it's safer for the routine to save it's own registers and stack data
 		//it means that it can self unschedule
 		//regSave(rt);
 		//jmpToAdd(mainRegs.retAdd);
-		writeLn("Jumping to main from fibre_yield\r\n");
+		//writeLn("Jumping to main from fibre_yield\r\n");
 		regSaveAndJumpToMain(rt);
 	}
-	writeLn("gonna return to calling function from fibre_yield now\r\n");
+	//writeLn("gonna return to calling function from fibre_yield now\r\n");
 }
 
 void fibre_create(coStData *regs, fibreType rAdd, int stackSize, char *stackPointer)

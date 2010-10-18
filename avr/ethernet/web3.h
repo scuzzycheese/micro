@@ -113,7 +113,6 @@ typedef struct csd uip_tcp_appstate_t;
 ( \
 	"push r0\n" \
 	"in r0, __SREG__\n" \
-	"cli\n" \
 	"push r0\n" \
 	"push r1\n" \
 	"push r2\n" \
@@ -151,8 +150,6 @@ typedef struct csd uip_tcp_appstate_t;
 	"st %a0+, __tmp_reg__\n" \
 	"in __tmp_reg__, __SP_H__\n" \
 	"st %a0, __tmp_reg__\n" \
-	\
-	"sei\n" \
 	\
 	"rjmp MAINRET\n" \
 	: \
@@ -183,7 +180,6 @@ typedef struct csd uip_tcp_appstate_t;
 ( \
 	"push r0\n" \
 	"in r0, __SREG__\n" \
-	"cli\n" \
 	"push r0\n" \
 	"push r1\n" \
 	"push r2\n" \
@@ -221,8 +217,6 @@ typedef struct csd uip_tcp_appstate_t;
 	"st %a0+, __tmp_reg__\n" \
 	"in __tmp_reg__, __SP_H__\n" \
 	"st %a0, __tmp_reg__\n" \
-	\
-	"sei\n" \
 	\
 	: \
 	:"e"(buf) \

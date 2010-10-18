@@ -8,12 +8,16 @@ int indexPage(struct argData *args, coStData *regs)
 
 	light ^= 1;
 
-	fib_send("<h1>Atmega 644 webserver</h1>", regs);
-	fib_send("<b>Stats:</b><br/>", regs);
-	fib_send("\tCHIP: Atmel Atmega 644 20Mhz 4Kb RAM.<br/>", regs);
-	fib_send("\tNIC: Microchip ENC28J60.<br/>", regs);
-	fib_send("\tTCP/IP stack: uIP<br/>", regs);
-	fib_send("\tIP: 192.168.0.40<br/>", regs);
+	fib_send
+	(
+		"<h1>Atmega 644 webserver</h1>"
+		"<b>Stats:</b><br/>"
+		"\tCHIP: Atmel Atmega 644 20Mhz 4Kb RAM.<br/>"
+		"\tNIC: Microchip ENC28J60.<br/>"
+		"\tTCP/IP stack: uIP<br/>"
+		"\tIP: 192.168.0.17<br/>",
+		regs
+	);
 	if(light)
 	{
 		fib_send("\tLIGHT: On<br/>", regs);
