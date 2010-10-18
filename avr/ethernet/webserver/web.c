@@ -1,4 +1,4 @@
-#include "web3.h"
+#include "web.h"
 #include "uip.h"
 #include <string.h>
 
@@ -19,7 +19,7 @@ char stacks[UIP_CONNS][400] = { 0 };
 #endif
 
 hshObj fls;
-coStData *currentFibre = NULL;
+coStData * volatile currentFibre = NULL;
 
 void webAppFunc()
 {

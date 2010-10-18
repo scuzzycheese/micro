@@ -2,7 +2,8 @@ CC = avr-gcc
 CCX86 = gcc
 CHIP = -mmcu=atmega644
 #DEBUG= -DDEBUGSOCK
-OPT = -g3 -O0 -mcall-prologues -std=c99
+OPT = -Os -mcall-prologues -std=c99
+SEMIOPT = -O0 -mcall-prologues -std=c99
 #OPT = -g -O0 -std=c99
 #OPT = -mcall-prologues
 OPTX86 = -O0 -g3 -DX86
@@ -25,8 +26,9 @@ AVRLIBINCLUDES = -I/usr/lib/avr/include/
 UIPLIBPATH = -I./uip/
 AVRLIBPATH = -I../avrlib/
 UARTLIBPATH = -I./libuart/
+WEBSERVERPATH = -I./webserver
 MYPATH = -I. ${GENPATH} ${FIBINC}
-LIBPATH = ${AVRLIBINCLUDES} ${UIPLIBPATH} ${AVRLIBPATH} ${UARTLIBPATH} ${MYPATH}
+LIBPATH = ${AVRLIBINCLUDES} ${UIPLIBPATH} ${AVRLIBPATH} ${UARTLIBPATH} ${WEBSERVERPATH} ${MYPATH}
 
 #===MODULES===
 INDEX = webserver/pages/index.o
@@ -35,8 +37,8 @@ ERROR404 = webserver/pages/404.o
 MODULES = ${INDEX} ${IMAGE} ${ERROR404}
 
 
-all:uip.o webserver enc28j60 uart ethernet.o hash ${MODULES}
-	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf ethernet.o uip.o enc28j60.o webserver/webserver.o libuart/libuart.o libhash/libhash.o ${MODULES} -lm ${LIBPATH}
+all:uip.o websrv enc28j60 uart ethernet.o hash
+	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf ethernet.o uip.o enc28j60.o webserver/webserver.o libuart/libuart.o libhash/libhash.o -lm ${LIBPATH}
 	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
 
 ethernet.o: ethernet.c
@@ -45,8 +47,9 @@ ethernet.o: ethernet.c
 uip.o: ${UIPSTUFF} 
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${UIPSTUFF} -o uip.o ${LIBPATH}
 
-webserver: webserver/web.c webserver/web.h
-	${CC} ${DEBUG} ${OPT} ${CHIP}	-c -combine webserver/web.c -o webserver/webserver.o ${LIBPATH}
+websrv: webserver/web.c webserver/web.h ${MODULES}
+	${CC} ${DEBUG} ${SEMIOPT} ${CHIP}	-c -combine webserver/web.c -o webserver/web.o ${LIBPATH}
+	avr-ld -r webserver/web.o ${MODULES} -o webserver/webserver.o
 
 enc28j60:
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine enc28j60.c -o enc28j60.o ${LIBPATH}
@@ -60,7 +63,7 @@ hash: libhash/libhash.c libhash/libhash.h
 
 #build all our web pages
 ${MODULES}: ${@:.o=.c} ${@:.o=.h}
-	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${@:.o=.c} -o $@ ${LIBPATH} -I./webserver/
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${@:.o=.c} -o $@ ${LIBPATH}
 
 
 
@@ -107,4 +110,4 @@ reset:
 	avrdude -p m644 -c dragon_isp -P usb -n
 
 clean:
-	rm -Rf uip.o ${SERVICE} avrlib.o uart/uart.o ethernet.o ethernet ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}
+	rm -Rf uip.o webserver/web.o webserver/webserver.o avrlib.o uart/uart.o ethernet.o ethernet ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}

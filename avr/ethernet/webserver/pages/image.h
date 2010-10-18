@@ -1,7 +1,7 @@
 #include <string.h>
 #include "uipopt.h"
 #include "uip.h"
-#include "web3.h"
+#include "web.h"
 
 #ifndef IMAGE_H
 #define IMAGE_H
