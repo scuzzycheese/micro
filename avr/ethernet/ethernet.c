@@ -182,6 +182,27 @@ void mainUIPLoop()
 	delay_ms(10);
 	PORTD |= (1 << 5);
 	delay_ms(10);
+
+	struct uip_eth_addr eaddr;
+#ifdef X86
+	eaddr.addr[0] = ETHADDR0;
+	eaddr.addr[1] = ETHADDR1;
+	eaddr.addr[2] = ETHADDR2;
+	eaddr.addr[3] = ETHADDR3;
+	eaddr.addr[4] = ETHADDR4;
+	eaddr.addr[5] = ETHADDR5;
+#else
+	eaddr.addr[0] = '0';
+	eaddr.addr[1] = 'F';
+	eaddr.addr[2] = 'F';
+	eaddr.addr[3] = 'I';
+	eaddr.addr[4] = 'C';
+	eaddr.addr[5] = 'E';
+#endif
+
+	uip_setethaddr(eaddr);
+
+
 	#endif
 
 	writeLn("Done!\r\n");
@@ -200,24 +221,6 @@ void mainUIPLoop()
 	timer_set(&periodic_timer, CLOCK_SECOND / 2);
 	timer_set(&arp_timer, CLOCK_SECOND * 10);
 
-	struct uip_eth_addr eaddr;	
-#ifdef X86
-	eaddr.addr[0] = ETHADDR0;
-	eaddr.addr[1] = ETHADDR1;
-	eaddr.addr[2] = ETHADDR2;
-	eaddr.addr[3] = ETHADDR3;
-	eaddr.addr[4] = ETHADDR4;
-	eaddr.addr[5] = ETHADDR5;
-#else
-	eaddr.addr[0] = '0';
-	eaddr.addr[1] = 'F';
-	eaddr.addr[2] = 'F';
-	eaddr.addr[3] = 'I';
-	eaddr.addr[4] = 'C';
-	eaddr.addr[5] = 'E';
-#endif
-
-	uip_setethaddr(eaddr);
 
 #ifdef X86
 	uip_ipaddr_t ipaddr;

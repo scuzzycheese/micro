@@ -207,6 +207,9 @@ char read_CP2200(int adr)
 }
 
 
+/*
+ * NOTE: This needs to change, so the mac address can be set outside this function
+ */
 // ---------------------------------------------
 void nicInit(void)
 {
@@ -231,19 +234,6 @@ void nicInit(void)
 	writeLn("\n\r");
 	// set mac address of this modules 
 	uip_setethaddr(eaddr);
-	
-	// set netmask
-	uip_ipaddr(ipaddr, 255,255,255,0);
-	uip_setnetmask(ipaddr);
-	
-	// set ip address of this module
-	uip_ipaddr(ipaddr, 192,168,178,14);
-	uip_sethostaddr(ipaddr);
-	
-	// set gateway address (default router address)
-	uip_ipaddr(ipaddr, 192,168,178,1);
-	uip_setdraddr(ipaddr);
-	
 }
 
 // ---------------------------------------------
