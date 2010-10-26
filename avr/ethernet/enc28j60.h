@@ -280,12 +280,14 @@ void enc28j60PhyWrite(u08 address, u16 data);
 
 //! initialize the ethernet interface for transmit/receive
 void enc28j60Init(void);
+void nicInit(void);
 
 //! Packet transmit function.
 /// Sends a packet on the network.  It is assumed that the packet is headed by a valid ethernet header.
 /// \param len		Length of packet in bytes.
 /// \param packet	Pointer to packet data.
 void enc28j60PacketSend(unsigned int len, unsigned char* packet);
+void nicSend(unsigned int len, unsigned char* packet);
 
 //! Packet receive function.
 /// Gets a packet from the network receive buffer, if one is available.
@@ -294,6 +296,7 @@ void enc28j60PacketSend(unsigned int len, unsigned char* packet);
 /// \param	packet	Pointer where packet data should be stored.
 /// \return Packet length in bytes if a packet was retrieved, zero otherwise.
 unsigned int enc28j60PacketReceive(unsigned int maxlen, unsigned char* packet);
+unsigned int nicPoll(unsigned int maxlen, unsigned char* packet);
 
 //! execute procedure for recovering from a receive overflow
 /// this should be done when the receive memory fills up with packets

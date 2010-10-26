@@ -16,11 +16,7 @@ PSOCK = ./uip/psock.c
 CLOCK = clock-arch.c
 TIMER = ./uip/timer.c
 
-
-ENC28J60 = enc28j60.c
-
 UIPSTUFF = ${UIPF} ${UIPARP} ${PSOCK} ${CLOCK} ${TIMER}
-AVRLIBSTUFF = ${ENC28J60}
 
 AVRLIBINCLUDES = -I/usr/lib/avr/include/
 UIPLIBPATH = -I./uip/
@@ -37,22 +33,31 @@ ERROR404 = webserver/pages/404.o
 MODULES = ${INDEX} ${IMAGE} ${ERROR404}
 
 
-all:uip.o websrv enc28j60 uart ethernet.o hash
-	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf ethernet.o uip.o enc28j60.o webserver/webserver.o libuart/libuart.o libhash/libhash.o -lm ${LIBPATH}
+all: enc
+
+
+silabs:uip.o websrv cp2200 uart hash
+	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf -combine ethernet.c uip.o cp2200.o webserver/webserver.o libuart/libuart.o libhash/libhash.o -lm ${LIBPATH} -DCP2200
 	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
 
-ethernet.o: ethernet.c
-	${CC} ${DEBUG} ${OPT} ${CHIP} -c ethernet.c -o ethernet.o ${LIBPATH}
+enc:uip.o websrv enc28j60 uart hash
+	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf -combine ethernet.c uip.o enc28j60.o webserver/webserver.o libuart/libuart.o libhash/libhash.o -lm ${LIBPATH} -DENC28J60
+	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
+
+
 
 uip.o: ${UIPSTUFF} 
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${UIPSTUFF} -o uip.o ${LIBPATH}
 
 websrv: webserver/web.c webserver/web.h ${MODULES}
-	${CC} ${DEBUG} ${SEMIOPT} ${CHIP}	-c -combine webserver/web.c -o webserver/web.o ${LIBPATH}
+	${CC} ${DEBUG} ${SEMIOPT} ${CHIP} -c -combine webserver/web.c -o webserver/web.o ${LIBPATH}
 	avr-ld -r webserver/web.o ${MODULES} -o webserver/webserver.o
 
 enc28j60:
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine enc28j60.c -o enc28j60.o ${LIBPATH}
+
+cp2200:
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine CP2200.c -o cp2200.o ${LIBPATH}
 
 uart: libuart/uart.c libuart/uart.h
 	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine libuart/uart.c -o libuart/libuart.o ${LIBPATH}
@@ -110,4 +115,4 @@ reset:
 	avrdude -p m644 -c dragon_isp -P usb -n
 
 clean:
-	rm -Rf uip.o webserver/web.o webserver/webserver.o avrlib.o uart/uart.o ethernet.o ethernet ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}
+	rm -Rf enc28j60.o cp2200.o uip.o webserver/web.o webserver/webserver.o avrlib.o uart/uart.o ethernet.o ethernet ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}

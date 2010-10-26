@@ -36,6 +36,7 @@
 #include <avr/io.h>
 #include <avr/wdt.h>
 #include "enc28j60.h"
+#include "CP2200.h"
 
 #include <avr/eeprom.h>
 #include <stdio.h>
@@ -103,8 +104,8 @@ char macAddr[] = {ETHADDR0, ETHADDR1, ETHADDR2, ETHADDR3, ETHADDR4, ETHADDR5};
 struct sockaddr_ll device;
 
 int linSock;
-#define enc28j60PacketReceive(BFSZ, buffr) read(linSock, buffr, BFSZ)
-#define enc28j60PacketSend(BFSZ, buffr) 	if(sendto(linSock, buffr, BFSZ, 0, (const struct sockaddr *)&device, sizeof(device)) == -1) \
+#define nicPoll(BFSZ, buffr) read(linSock, buffr, BFSZ)
+#define nicSend(BFSZ, buffr) 	if(sendto(linSock, buffr, BFSZ, 0, (const struct sockaddr *)&device, sizeof(device)) == -1) \
 														{ \
 															perror("ERROR: "); \
 														}
@@ -140,6 +141,8 @@ void socketInit()
 void mainUIPLoop()
 {
 
+
+
 	usart_init();
 
 
@@ -149,6 +152,28 @@ void mainUIPLoop()
 
  
 	#ifndef X86
+
+	#ifdef CP2200
+	DDRA = 0x00;
+	DDRB = 0xFF;
+	DDRC = 0xFF;
+	PORTA = 0x00;
+	PORTB = 0x00;
+	PORTC = 0xF7;
+	PORTC |= (1 << nRD); // set RD#
+	PORTC |= (1 << nWR); // set WR#
+	PORTC &= ~(1 << ALE); // clear ALE
+	PORTC &= ~(1 << nCS); // clear CS
+	PORTC |= (1 << nLRST); // reset CP2200
+
+	//Init_CP2000();
+	cli(); // disable inerrupts
+	EICRA = 0x08; // INT1 fallede Flanke
+	EIMSK = 0x02; // enable external int1
+	sei();  // enable interrupts
+	#endif
+
+	#ifdef ENC28J60
 	/*reset our ethernet chip*/
 	writeLn("Resetting the ENC28J60...");
 	DDRD = (1 << 5);
@@ -157,10 +182,12 @@ void mainUIPLoop()
 	delay_ms(10);
 	PORTD |= (1 << 5);
 	delay_ms(10);
+	#endif
+
 	writeLn("Done!\r\n");
 
 	clock_init();
-	enc28j60Init();
+	nicInit();
 	#else
 	socketInit();
 	#endif
@@ -213,14 +240,14 @@ void mainUIPLoop()
 	uip_ipaddr(ipaddr, 255, 255, 255, 0);
 	uip_setnetmask(ipaddr);
 
-	enc28j60RegDump();
+	//enc28j60RegDump();
 #endif
 
 
 	web_init();
 	while(1)
 	{
-		uip_len = enc28j60PacketReceive(UIP_BUFSIZE, uip_buf);
+		uip_len = nicPoll(UIP_BUFSIZE, uip_buf);
 		if(uip_len > 0)
 		{
 			//ledDebug(1);
@@ -235,7 +262,7 @@ void mainUIPLoop()
 				if(uip_len > 0)
 				{
 					uip_arp_out();
-					enc28j60PacketSend(uip_len, uip_buf);
+					nicSend(uip_len, uip_buf);
 				}
 			}
 			else if(BUF->type == htons(UIP_ETHTYPE_ARP))
@@ -247,7 +274,7 @@ void mainUIPLoop()
 				//	uip_len is set to a value > 0.
 				if(uip_len > 0)
 				{
-					enc28j60PacketSend(uip_len, uip_buf);
+					nicSend(uip_len, uip_buf);
 				}
 			}
 		}
@@ -263,7 +290,7 @@ void mainUIPLoop()
 				if(uip_len > 0)
 				{
 					uip_arp_out();
-					enc28j60PacketSend(uip_len, uip_buf);
+					nicSend(uip_len, uip_buf);
 				}
 			}
 
@@ -277,7 +304,7 @@ void mainUIPLoop()
 				if(uip_len > 0)
 				{
 					uip_arp_out();
-					enc28j60PacketSend(uip_len, uip_buf);
+					nicSend(uip_len, uip_buf);
 				}
 			}
 #endif // UIP_UDP
