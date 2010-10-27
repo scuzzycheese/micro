@@ -4,10 +4,6 @@
 //This function will soon take an char ** of input vars
 int indexPage(struct argData *args, coStData *regs)
 {
-	static int light = 0;
-
-	light ^= 1;
-
 	fib_send
 	(
 		"<h1>Atmega 644 webserver</h1>"
@@ -16,16 +12,16 @@ int indexPage(struct argData *args, coStData *regs)
 		"\tNIC: Microchip ENC28J60.<br/>"
 		"\tTCP/IP stack: uIP<br/>"
 		"\tIP: 192.168.0.17<br/>",
+	 	regs
+	);
+	fib_send
+	(
+		"<a href=\"?redlight=on\">turn on red light</a><br/>"
+		"<a href=\"?redlight=off\">turn off red light</a><br/>"
+		"<a href=\"?greenlight=on\">turn on green light</a><br/>"
+		"<a href=\"?greenlight=off\">turn off green light</a><br/>",
 		regs
 	);
-	if(light)
-	{
-		fib_send("\tLIGHT: On<br/>", regs);
-	}
-	else
-	{
-		fib_send("\tLIGHT: Off<br/>", regs);
-	}
 
 	fib_send("\tARGS: <br/>", regs);
 	int i;
@@ -33,6 +29,28 @@ int indexPage(struct argData *args, coStData *regs)
 	{
 		if(args[i].argName)
 		{
+			if(strcmp(args[i].argName, "greenlight") == 0)
+			{
+				if(strcmp(args[i].argValue, "off") == 0)
+				{
+					PORTC |= 1;
+				}
+				else
+				{
+					PORTC &= ~1;
+				}
+			}
+			if(strcmp(args[i].argName, "redlight") == 0)
+			{
+				if(strcmp(args[i].argValue, "off") == 0)
+				{
+					PORTC |= 2;
+				}
+				else
+				{
+					PORTC &= ~2;
+				}
+			}
 			fib_send("\t\t", regs);
 			fib_send(args[i].argName, regs);
 			fib_send(": ", regs);

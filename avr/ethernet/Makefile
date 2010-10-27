@@ -103,6 +103,8 @@ install: ethernet.elf
 
 install-dragon: ethernet.elf
 	avrdude -B9 -p m644 -c dragon_isp -P usb -e -U flash:w:ethernet.hex
+install-dragon644p: ethernet.elf
+	avrdude -B9 -p m644p -c dragon_isp -P usb -e -U flash:w:ethernet.hex
 
 install-dragon-jtag: ethernet.elf
 	avrdude -B9 -p m644 -c dragon_jtag -P usb -e -U flash:w:ethernet.hex
