@@ -17,9 +17,19 @@ int indexPage(struct argData *args, coStData *regs)
 	fib_send
 	(
 		"<a href=\"?redlight=on\">turn on red light</a><br/>"
-		"<a href=\"?redlight=off\">turn off red light</a><br/>"
+		"<a href=\"?redlight=off\">turn off red light</a><br/>",
+		regs
+	);
+	fib_send
+	(
 		"<a href=\"?greenlight=on\">turn on green light</a><br/>"
 		"<a href=\"?greenlight=off\">turn off green light</a><br/>",
+		regs
+	);
+	fib_send
+	(
+		"<a href=\"?testlight=on\">turn on test light</a><br/>"
+		"<a href=\"?testlight=off\">turn off test light</a><br/>",
 		regs
 	);
 
@@ -49,6 +59,17 @@ int indexPage(struct argData *args, coStData *regs)
 				else
 				{
 					PORTC &= ~2;
+				}
+			}
+			if(strcmp(args[i].argName, "testlight") == 0)
+			{
+				if(strcmp(args[i].argValue, "on") == 0)
+				{
+					PORTB |= 1;
+				}
+				else
+				{
+					PORTB &= ~1;
 				}
 			}
 			fib_send("\t\t", regs);

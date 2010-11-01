@@ -174,6 +174,8 @@ void mainUIPLoop()
 	#endif
 
 	#ifdef ENC28J60
+	//This is just to enable the test light
+	DDRB = 1;
 	/*reset our ethernet chip*/
 	writeLn("Resetting the ENC28J60...");
 	DDRD = (1 << 5);
