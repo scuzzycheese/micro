@@ -9,6 +9,7 @@
 #include "pages/index-x86.h"
 #else
 #include "pages/index.h"
+#include "pages/404.h"
 #include "uart.h"
 #endif
 
@@ -102,6 +103,7 @@ void webAppFunc()
 			else
 			{
 				fib_send("HTTP/1.0 404 Not Found\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", currentFibre);
+				error404(args, currentFibre);
 			}
 
 

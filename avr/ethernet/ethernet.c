@@ -236,10 +236,10 @@ void mainUIPLoop()
 	uip_setnetmask(ipaddr);
 #else
 	uip_ipaddr_t ipaddr;
-	uip_ipaddr(ipaddr, 192, 168, 0, 17);
+	uip_ipaddr(ipaddr, 192, 168, 1, 17);
 	uip_sethostaddr(ipaddr);
 
-	uip_ipaddr(ipaddr, 192, 168, 0, 1);
+	uip_ipaddr(ipaddr, 192, 168, 1, 1);
 	uip_setdraddr(ipaddr);
 
 	uip_ipaddr(ipaddr, 255, 255, 255, 0);

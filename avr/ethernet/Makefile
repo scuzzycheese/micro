@@ -2,8 +2,8 @@ CC = avr-gcc
 CCX86 = gcc
 CHIP = -mmcu=atmega644
 #DEBUG= -DDEBUGSOCK
-OPT = -Os -mcall-prologues -std=c99
-SEMIOPT = -O0 -mcall-prologues -std=c99
+OPT = -g3 -O0 -mcall-prologues -std=c99
+SEMIOPT = -g3 -O0 -mcall-prologues -std=c99
 #OPT = -g -O0 -std=c99
 #OPT = -mcall-prologues
 OPTX86 = -O0 -g3 -DX86
@@ -118,3 +118,6 @@ reset:
 
 clean:
 	rm -Rf enc28j60.o cp2200.o uip.o webserver/web.o webserver/webserver.o avrlib.o uart/uart.o ethernet.o ethernet ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}
+
+debug:
+	avarice -B5000 -f ethernet.hex -j usb -g -e -p :1234
