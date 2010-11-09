@@ -120,7 +120,7 @@ reset-jtag:
 	avrdude -p m644 -c dragon_jtag -P usb -n
 
 clean:
-	rm -Rf enc28j60.o cp2200.o uip.o webserver/web.o webserver/webserver.o avrlib.o uart/uart.o ethernet.o ethernet ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}
+	rm -Rf enc28j60.o CP2200.o uip.o webserver/web.o webserver/webserver.o avrlib.o uart/uart.o ethernet.o ethernet ethernet.elf ethernet.hex libhash/libhash.o ${MODULES}
 
 debug:
 	avarice -f ethernet.hex -j usb -g -e -p :1234
