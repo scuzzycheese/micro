@@ -32,16 +32,23 @@ IMAGE = webserver/pages/image.o
 ERROR404 = webserver/pages/404.o
 MODULES = ${INDEX} ${IMAGE} ${ERROR404}
 
+#driver
+ifeq "$(MAKECMDGOALS)" "silabs"
+DRIVER = CP2200
+else
+DRIVER = ENC28J60
+endif
+
 
 all: enc
 
 
 silabs:uip.o websrv cp2200 uart hash
-	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf -combine ethernet.c uip.o cp2200.o webserver/webserver.o libuart/libuart.o libhash/libhash.o -lm ${LIBPATH} -DCP2200
+	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf -combine ethernet.c uip.o cp2200.o webserver/webserver.o libuart/libuart.o libhash/libhash.o -lm ${LIBPATH} -D${DRIVER}
 	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
 
 enc:uip.o websrv enc28j60 uart hash
-	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf -combine ethernet.c uip.o enc28j60.o webserver/webserver.o libuart/libuart.o libhash/libhash.o -lm ${LIBPATH} -DENC28J60
+	${CC} ${DEBUG} ${OPT} ${CHIP} -o ethernet.elf -combine ethernet.c uip.o enc28j60.o webserver/webserver.o libuart/libuart.o libhash/libhash.o -lm ${LIBPATH} -D${DRIVER}
 	avr-objcopy -j .text -j .data -O ihex ethernet.elf ethernet.hex
 
 
@@ -68,7 +75,7 @@ hash: libhash/libhash.c libhash/libhash.h
 
 #build all our web pages
 ${MODULES}: ${@:.o=.c} ${@:.o=.h}
-	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${@:.o=.c} -o $@ ${LIBPATH}
+	${CC} ${DEBUG} ${OPT} ${CHIP} -c -combine ${@:.o=.c} -o $@ ${LIBPATH} -D${DRIVER}
 
 
 

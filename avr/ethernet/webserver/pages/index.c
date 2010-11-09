@@ -1,21 +1,34 @@
 #include "index.h"
 #include <avr/io.h>
+#include <stdio.h>
 
 //This function will soon take an char ** of input vars
 int indexPage(struct argData *args)
 {
+	//Lets get our IP address for fun
+	uip_ipaddr_t ipaddr;
+	uip_gethostaddr(ipaddr);
+	char IPAdd[16];
+	sprintf(IPAdd, "%d.%d.%d.%d", (uint8_t)ipaddr[0], (uint8_t)(ipaddr[0] >> 8), (uint8_t)ipaddr[1], (uint8_t)(ipaddr[1] >> 8));
+
+
 	fib_send
 	(
 		"<h1>Atmega 644 webserver</h1>"
 		"<b>Stats:</b><br/>"
 		"\tCHIP: Atmel Atmega 644 20Mhz 4Kb RAM.<br/>"
+#ifdef ENC28J60
 		"\tNIC: Microchip ENC28J60.<br/>"
+#elif CP2200
+		"\tNIC: Silicon Labs CP2200.<br/>"
+#endif
 		"\tTCP/IP stack: uIP<br/>"
-		"\tIP: 192.168.0.17<br/>"
+		"\tIP: "
 	);
+	fib_send(IPAdd);
 	fib_send
 	(
-		"<a href=\"?redlight=on\">turn on red light</a><br/>"
+		"<br/><a href=\"?redlight=on\">turn on red light</a><br/>"
 		"<a href=\"?redlight=off\">turn off red light</a><br/>"
 	);
 	fib_send
