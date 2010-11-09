@@ -4,7 +4,8 @@
 #include <string.h>
 #include "uipopt.h"
 #include "uip.h"
+#include "pages.h"
 
-int error404(struct argData *args, coStData *regs);
+int error404(struct argData *args);
 
 #endif

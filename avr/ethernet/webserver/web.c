@@ -97,13 +97,13 @@ void webAppFunc()
 			comm = fls->findIndexString(fls, filename);
 			if(comm)
 			{
-				fib_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", currentFibre);
-				comm(args, currentFibre);
+				fib_send("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n");
+				comm(args);
 			}
 			else
 			{
-				fib_send("HTTP/1.0 404 Not Found\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", currentFibre);
-				error404(args, currentFibre);
+				fib_send("HTTP/1.0 404 Not Found\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n");
+				error404(args);
 			}
 
 

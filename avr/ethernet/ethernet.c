@@ -168,8 +168,8 @@ void mainUIPLoop()
 
 	//Init_CP2000();
 	cli(); // disable inerrupts
-	EICRA = 0x08; // INT1 fallede Flanke
-	EIMSK = 0x02; // enable external int1
+	EICRA = 0x08;
+	EIMSK = 0x02;
 	sei();  // enable interrupts
 	#endif
 

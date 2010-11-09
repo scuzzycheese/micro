@@ -2,7 +2,7 @@
 #include <avr/io.h>
 
 //This function will soon take an char ** of input vars
-int indexPage(struct argData *args, coStData *regs)
+int indexPage(struct argData *args)
 {
 	fib_send
 	(
@@ -11,29 +11,25 @@ int indexPage(struct argData *args, coStData *regs)
 		"\tCHIP: Atmel Atmega 644 20Mhz 4Kb RAM.<br/>"
 		"\tNIC: Microchip ENC28J60.<br/>"
 		"\tTCP/IP stack: uIP<br/>"
-		"\tIP: 192.168.0.17<br/>",
-	 	regs
+		"\tIP: 192.168.0.17<br/>"
 	);
 	fib_send
 	(
 		"<a href=\"?redlight=on\">turn on red light</a><br/>"
-		"<a href=\"?redlight=off\">turn off red light</a><br/>",
-		regs
+		"<a href=\"?redlight=off\">turn off red light</a><br/>"
 	);
 	fib_send
 	(
 		"<a href=\"?greenlight=on\">turn on green light</a><br/>"
-		"<a href=\"?greenlight=off\">turn off green light</a><br/>",
-		regs
+		"<a href=\"?greenlight=off\">turn off green light</a><br/>"
 	);
 	fib_send
 	(
 		"<a href=\"?testlight=on\">turn on test light</a><br/>"
-		"<a href=\"?testlight=off\">turn off test light</a><br/>",
-		regs
+		"<a href=\"?testlight=off\">turn off test light</a><br/>"
 	);
 
-	fib_send("\tARGS: <br/>", regs);
+	fib_send("\tARGS: <br/>");
 	int i;
 	for(i = 0; i < 5; i ++)
 	{
@@ -72,11 +68,11 @@ int indexPage(struct argData *args, coStData *regs)
 					PORTB &= ~1;
 				}
 			}
-			fib_send("\t\t", regs);
-			fib_send(args[i].argName, regs);
-			fib_send(": ", regs);
-			if(args[i].argValue) fib_send(args[i].argValue, regs);
-			fib_send("<br/>", regs);
+			fib_send("\t\t");
+			fib_send(args[i].argName);
+			fib_send(": ");
+			if(args[i].argValue) fib_send(args[i].argValue);
+			fib_send("<br/>");
 		}
 	}
 
