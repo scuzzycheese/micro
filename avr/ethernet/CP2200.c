@@ -17,7 +17,14 @@
 #include "libuart/uart.h"
 
 
- 
+
+/**
+ * TODO:
+ * 1.	Make this driver handle packets greather than the buffer length passed in
+ * 	(Maybe deferred buffer filling, second read and buffer fill?)
+ * 2. Clean up this driver, it's terrible and filled with lots of redundant code
+ * 3.
+ */
 void write_CP2200(int adr, char value);
 char read_CP2200(int adr);
 void Init_CP2000(void);

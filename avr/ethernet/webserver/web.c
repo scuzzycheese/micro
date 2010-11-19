@@ -22,6 +22,18 @@ char stacks[UIP_CONNS][400] = { 0 };
 hshObj fls;
 coStData * volatile currentFibre = NULL;
 
+
+/**
+ * TODO:
+ * 1.	The webserver assumes there is enough data in the buffer to examine
+ * 	parts of the request. ie: the page path and variables. I need to change
+ * 	this so that it can accept a request of any length, lets say it's
+ * 	a packet fragmented request.
+ * 2. Parse post data
+ * 3. Make the get data parsing better (use less memory)
+ * 4.
+ */
+
 void webAppFunc()
 {
 	//writeLn("webserver called\r\n");
