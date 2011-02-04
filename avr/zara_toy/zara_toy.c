@@ -9,6 +9,7 @@
 #define NOSTATE 0
 #define MODECYCLESTATE 1
 #define INTENSITYCYCLESTATE 2
+#define SLEEPSTATE 3
 
 uint8_t sinArray[256] = 
 {
@@ -28,12 +29,15 @@ uint8_t sinArray[256] =
 };
 
 
+volatile uint16_t defaultTimeout = 60;
 
 volatile struct
 {
 	volatile uint8_t state;
 	volatile uint8_t intensity;
-} treeState = { NOSTATE, 10 };
+	volatile uint16_t timeout;
+} treeState = { SLEEPSTATE, 10, 0};
+
 
 
 
@@ -60,9 +64,11 @@ ISR(INT0_vect)
 	if(!(PIND & 1))
 	{
 		treeState.state = MODECYCLESTATE;
+		treeState.timeout = defaultTimeout;
 	}
 	if(!(PIND & 2))
 	{
+		treeState.timeout = defaultTimeout;
 		//treeState.intensity -= 1;
 	}
 
@@ -82,7 +88,14 @@ ISR(INT0_vect)
 	sei();
 }
 
-/* new style */
+ISR(TIMER1_COMPA_vect)
+{
+	cli();
+	//de-increment the timer every second
+	if(treeState.timeout > 0) treeState.timeout --;
+	sei();
+}
+
 int main(void)
 {
 
@@ -99,6 +112,13 @@ int main(void)
 	//power down the ADC conversion
 	ACSR |= (1 << ACD);
 
+	//set up an interrupt to fire every second
+	TIMSK = 1 << OCIE1A;
+	TCCR1B = 1 << CS12 | 1 << WGM12;      // CTC mode, TOP = OCR1A
+	OCR1A = 62500;
+
+	treeState.timeout = defaultTimeout;
+
 	sei();
 
 	
@@ -114,71 +134,92 @@ int main(void)
 	while(1)
 	{
 
-		while(1)
+		switch(treeState.state)
 		{
-			PORTC = 0;
+			case SLEEPSTATE:
+			{
+				while(1)
+				{
+					PORTC = 0;
 
-			if(treeState.state == MODECYCLESTATE)
+					if(treeState.state == MODECYCLESTATE) break;
+				}
+			}
+			break;
+
+
+			case MODECYCLESTATE:
 			{
 				treeState.state = NOSTATE;
-				break;
-			}
-		}
-
-
-		while(1)
-		{
-			PORTC |= 14;
-
-			if(treeState.state == MODECYCLESTATE)
-			{
-				treeState.state = NOSTATE;
-				break;
-			}
-		}
-
-
-		for(uint8_t i = 0; i < 5; i ++)
-		{
-			if(i == 0) slowDown = 100;
-			if(i == 1) slowDown = 80;
-			if(i == 2) slowDown = 50;
-			if(i == 3) slowDown = 20;
-			if(i == 4) slowDown = 10;
-
-			while(1)
-			{
-				slowDownCounter ++;
-				if(slowDownCounter >= slowDown)
+				while(1)
 				{
-					for(int8_t i = 0; i < dutyNumber; i ++)
-					{
-						dutyCycle[i] += dutyInc[i];
-					}
-					slowDownCounter = 0;
+					PORTC |= 14;
+					if(treeState.state == MODECYCLESTATE) break;
+					if(treeState.timeout <= 0) break;
 				}
-				for(int i = 0; i < 256; i ++)
-				{
-					if(i < sinArray[dutyCycle[0]]) PORTC |= 8;
-					else PORTC &= ~(8);
 
-					if(i < sinArray[dutyCycle[1]]) PORTC |= 4;
-					else PORTC &= ~(4);
-
-					if(i < sinArray[dutyCycle[2]]) PORTC |= 2;
-					else PORTC &= ~(2);
-				}
-				for(int8_t i = 0; i < dutyNumber; i ++)
-				{
-					if(dutyCycle[i] >= 255) dutyCycle[i] = 0;
-				}
 
 				if(treeState.state == MODECYCLESTATE)
 				{
+					for(uint8_t i = 0; i < 5; i ++)
+					{
+						treeState.state = NOSTATE;
+
+						if(i == 0) slowDown = 100;
+						if(i == 1) slowDown = 80;
+						if(i == 2) slowDown = 50;
+						if(i == 3) slowDown = 20;
+						if(i == 4) slowDown = 10;
+
+						while(1)
+						{
+							slowDownCounter ++;
+							if(slowDownCounter >= slowDown)
+							{
+								for(int8_t i = 0; i < dutyNumber; i ++)
+								{
+									dutyCycle[i] += dutyInc[i];
+								}
+								slowDownCounter = 0;
+							}
+							for(int i = 0; i < 256; i ++)
+							{
+								if(i < sinArray[dutyCycle[0]]) PORTC |= 8;
+								else PORTC &= ~(8);
+
+								if(i < sinArray[dutyCycle[1]]) PORTC |= 4;
+								else PORTC &= ~(4);
+
+								if(i < sinArray[dutyCycle[2]]) PORTC |= 2;
+								else PORTC &= ~(2);
+							}
+							for(int8_t i = 0; i < dutyNumber; i ++)
+							{
+								if(dutyCycle[i] >= 255) dutyCycle[i] = 0;
+							}
+
+							if(treeState.state == MODECYCLESTATE) break;
+							if(treeState.timeout <= 0) break;
+						}
+						if(treeState.timeout <= 0) break;
+					}
 					treeState.state = NOSTATE;
-					break;
 				}
 			}
+			break;
+
+			case NOSTATE:
+			{
+				if(treeState.timeout > 0)
+				{
+					_delay_ms(1);
+				}
+				else
+				{
+					treeState.state = SLEEPSTATE;
+				}
+			}
+			break;
 		}
 
 	}
