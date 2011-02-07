@@ -29,23 +29,27 @@ uint8_t sinArray[256] =
 };
 
 
-volatile uint16_t defaultTimeout = 60;
+volatile uint16_t defaultTimeout = 10;
 
 volatile struct
 {
 	volatile uint8_t state;
 	volatile uint8_t intensity;
 	volatile uint16_t timeout;
-} treeState = { SLEEPSTATE, 10, 0};
+	volatile uint8_t timeoutActive;
+} treeState = { SLEEPSTATE, 10, 0, 0};
 
 
-
+int dutyCycle[4] = {0, 0, 0, 0};
+int dutyInc[4] = {1, 2, 3, 0};
+int dutyNumber = 4;
+int8_t slowDown = 0;
 
 ISR(INT0_vect)
 {
 	cli();
 
-	PORTC = 0;
+	//PORTC = 0;
 
 	//This is for the buttons. When we are in the interrupt,
 	//we change the configureation, where all the pins
@@ -59,7 +63,7 @@ ISR(INT0_vect)
 	PORTD |= (1 << PORTD0) | (1 << PORTD1);
 
 
-	_delay_ms(50);
+	_delay_ms(2);
 
 	if(!(PIND & 1))
 	{
@@ -68,6 +72,13 @@ ISR(INT0_vect)
 	}
 	if(!(PIND & 2))
 	{
+		if(treeState.timeoutActive == 0) treeState.timeoutActive = 1;
+		if(defaultTimeout <= 100) defaultTimeout += 10;
+		else
+		{
+			defaultTimeout = 10;
+			treeState.timeoutActive = 0;
+		}
 		treeState.timeout = defaultTimeout;
 		//treeState.intensity -= 1;
 	}
@@ -92,8 +103,93 @@ ISR(TIMER1_COMPA_vect)
 {
 	cli();
 	//de-increment the timer every second
-	if(treeState.timeout > 0) treeState.timeout --;
+	if(treeState.timeout > 0 && treeState.timeoutActive) treeState.timeout --;
 	sei();
+}
+
+
+void turnOnSlow()
+{
+	int8_t slowDownCounter = 0;
+
+	slowDown = 60;
+	uint8_t bitCounterOn = 0;
+	for(int8_t i = 0; i < dutyNumber; i ++)
+	{
+		bitCounterOn |= (1 << i);
+	}
+
+	while(1)
+	{
+		slowDownCounter ++;
+		if(slowDownCounter >= slowDown)
+		{
+			for(int8_t i = 0; i < dutyNumber; i ++)
+			{
+				if(dutyCycle[i] < 136) dutyCycle[i] += 1;
+				else bitCounterOn &= ~(1 << i);
+			}
+			slowDownCounter = 0;
+		}
+		for(int i = 0; i < 256; i ++)
+		{
+			if(i < sinArray[dutyCycle[0]]) PORTC |= 8;
+			else PORTC &= ~(8);
+
+			if(i < sinArray[dutyCycle[1]]) PORTC |= 4;
+			else PORTC &= ~(4);
+
+			if(i < sinArray[dutyCycle[2]]) PORTC |= 2;
+			else PORTC &= ~(2);
+
+			if(i < sinArray[dutyCycle[3]]) PORTC |= 1;
+			else PORTC &= ~(1);
+		}
+		if(!bitCounterOn) break;
+	}
+	PORTC |= 15;
+}
+
+void turnOffSlow()
+{
+	int8_t slowDownCounter = 0;
+
+	slowDown = 60;
+	uint8_t bitCounterOff = 0;
+	for(int8_t i = 0; i < dutyNumber; i ++)
+	{
+		bitCounterOff |= (1 << i);
+	}
+
+	while(1)
+	{
+		slowDownCounter ++;
+		if(slowDownCounter >= slowDown)
+		{
+			for(int8_t i = 0; i < dutyNumber; i ++)
+			{
+				if(dutyCycle[i] > 0) dutyCycle[i] -= 1;
+				else bitCounterOff &= ~(1 << i);
+			}
+			slowDownCounter = 0;
+		}
+		for(int i = 0; i < 256; i ++)
+		{
+			if(i < sinArray[dutyCycle[0]]) PORTC |= 8;
+			else PORTC &= ~(8);
+
+			if(i < sinArray[dutyCycle[1]]) PORTC |= 4;
+			else PORTC &= ~(4);
+
+			if(i < sinArray[dutyCycle[2]]) PORTC |= 2;
+			else PORTC &= ~(2);
+
+			if(i < sinArray[dutyCycle[3]]) PORTC |= 1;
+			else PORTC &= ~(1);
+		}
+		if(!bitCounterOff) break;
+	}
+	PORTC &= ~(15);
 }
 
 int main(void)
@@ -122,13 +218,6 @@ int main(void)
 	sei();
 
 	
-	int dutyCycle[3] = {0, 66, 200};
-	int dutyInc[3] = {1, 2, 3};
-	int dutyNumber = 3;
-	int8_t slowDown = 0;
-	int8_t slowDownCounter = 0;
-
-
 
 
 	while(1)
@@ -138,10 +227,9 @@ int main(void)
 		{
 			case SLEEPSTATE:
 			{
+				turnOffSlow();
 				while(1)
 				{
-					PORTC = 0;
-
 					if(treeState.state == MODECYCLESTATE) break;
 				}
 			}
@@ -150,17 +238,25 @@ int main(void)
 
 			case MODECYCLESTATE:
 			{
+				//turn on the tree nice and slow
+				turnOnSlow();
+
 				treeState.state = NOSTATE;
 				while(1)
 				{
-					PORTC |= 14;
+					PORTC |= 15;
 					if(treeState.state == MODECYCLESTATE) break;
-					if(treeState.timeout <= 0) break;
+					if(treeState.timeout <= 0)
+					{
+						treeState.state = SLEEPSTATE;
+						break;
+					}
 				}
 
 
 				if(treeState.state == MODECYCLESTATE)
 				{
+					int8_t slowDownCounter = 0;
 					for(uint8_t i = 0; i < 5; i ++)
 					{
 						treeState.state = NOSTATE;
@@ -203,11 +299,12 @@ int main(void)
 						}
 						if(treeState.timeout <= 0) break;
 					}
-					treeState.state = NOSTATE;
+					treeState.state = SLEEPSTATE;
 				}
 			}
 			break;
 
+			/*
 			case NOSTATE:
 			{
 				if(treeState.timeout > 0)
@@ -220,6 +317,7 @@ int main(void)
 				}
 			}
 			break;
+			 */
 		}
 
 	}
