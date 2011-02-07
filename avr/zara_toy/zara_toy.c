@@ -29,7 +29,7 @@ uint8_t sinArray[256] =
 };
 
 
-volatile uint16_t defaultTimeout = 10;
+volatile uint16_t defaultTimeout = 1200;
 
 volatile struct
 {
@@ -72,15 +72,30 @@ ISR(INT0_vect)
 	}
 	if(!(PIND & 2))
 	{
-		if(treeState.timeoutActive == 0) treeState.timeoutActive = 1;
-		if(defaultTimeout <= 100) defaultTimeout += 10;
+		if(treeState.timeoutActive)
+		{
+			//shutdown the timeout
+			treeState.timeoutActive = 0;
+			PORTC = 15;
+			_delay_ms(750);
+			PORTC = 0;
+			_delay_ms(750);
+		}
 		else
 		{
-			defaultTimeout = 10;
-			treeState.timeoutActive = 0;
+			PORTC = 15;
+			_delay_ms(750);
+			PORTC = 0;
+			_delay_ms(750);
+			PORTC = 15;
+			_delay_ms(750);
+			PORTC = 0;
+			_delay_ms(750);
+			//activate the timeout
+			treeState.timeoutActive = 1;
+			treeState.timeout = defaultTimeout;
 		}
-		treeState.timeout = defaultTimeout;
-		//treeState.intensity -= 1;
+
 	}
 
 	//return to the normal configuration where the interrupt pin
