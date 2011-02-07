@@ -63,7 +63,7 @@ ISR(INT0_vect)
 	PORTD |= (1 << PORTD0) | (1 << PORTD1);
 
 
-	_delay_ms(2);
+	_delay_ms(10);
 
 	if(!(PIND & 1))
 	{
@@ -74,15 +74,18 @@ ISR(INT0_vect)
 	{
 		if(treeState.timeoutActive)
 		{
+			uint8_t tmp = PORTC;
 			//shutdown the timeout
 			treeState.timeoutActive = 0;
 			PORTC = 15;
 			_delay_ms(750);
 			PORTC = 0;
 			_delay_ms(750);
+			PORTC = tmp;
 		}
 		else
 		{
+			uint8_t tmp = PORTC;
 			PORTC = 15;
 			_delay_ms(750);
 			PORTC = 0;
@@ -91,6 +94,7 @@ ISR(INT0_vect)
 			_delay_ms(750);
 			PORTC = 0;
 			_delay_ms(750);
+			PORTC = tmp;
 			//activate the timeout
 			treeState.timeoutActive = 1;
 			treeState.timeout = defaultTimeout;
@@ -306,7 +310,7 @@ int main(void)
 							}
 							for(int8_t i = 0; i < dutyNumber; i ++)
 							{
-								if(dutyCycle[i] >= 255) dutyCycle[i] = 0;
+								if(dutyCycle[i] >= 254) dutyCycle[i] = 0;
 							}
 
 							if(treeState.state == MODECYCLESTATE) break;
