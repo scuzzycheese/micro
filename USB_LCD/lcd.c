@@ -36,9 +36,9 @@ int main(void)
 	TCCR1A |= (1 << WGM10);
 	TCCR1A |= (1 << COM1A1);
 
-	TCCR1B |= (1 << CS10) | (1 << CS11) | (1 << WGM12);
+	TCCR1B |= (1 << CS10) | (1 << WGM12);
 
-	volatile uint16_t ocTmp = 49999;
+	volatile uint8_t ocTmp = 0x7F;
 	OCR1A = ocTmp;
 
 
@@ -58,7 +58,7 @@ int main(void)
 			//FIND out why OCR1A is not updating...
 			if((uint8_t)ReceivedByte == 'u')
 			{
-				ocTmp += 256;
+				ocTmp += 1;
 				OCR1A = ocTmp;
 				char string[20];
 				sprintf(string, "OCR1A: %u\r\n", ocTmp);
@@ -70,7 +70,7 @@ int main(void)
 
 			if((uint8_t)ReceivedByte == 'd')
 			{
-				ocTmp -= 256;
+				ocTmp -= 1;
 				OCR1A = ocTmp;
 				char string[20];
 				sprintf(string, "OCR1A: %u\r\n", ocTmp);
