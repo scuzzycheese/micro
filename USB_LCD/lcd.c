@@ -1,5 +1,6 @@
 #include "lcd.h"
 #include <stdio.h>
+#include "D22_5003.h"
 
 /** LUFA CDC Class driver interface configuration and state information. This structure is
  *  passed to all CDC Class driver functions, so that multiple instances of the same class
@@ -30,22 +31,13 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
  */
 int main(void)
 {
-	DDRB |= (1 << PORTB5);
-
-	//Fast PWM, 8-bit
-	TCCR1A |= (1 << WGM10);
-	TCCR1A |= (1 << COM1A1);
-
-	TCCR1B |= (1 << CS10) | (1 << WGM12);
-
-	volatile uint8_t ocTmp = 0x7F;
-	OCR1A = ocTmp;
-
-
 
 	SetupHardware();
 
 	sei();
+
+
+	D22Init();
 
 	for (;;)
 	{
@@ -54,34 +46,19 @@ int main(void)
 		/* Read bytes from the USB OUT endpoint into the USART transmit buffer */
 		if (!(ReceivedByte < 0))
 		{
-
-			//FIND out why OCR1A is not updating...
-			if((uint8_t)ReceivedByte == 'u')
+			CDC_Device_SendByte(&VirtualSerial_CDC_Interface, ReceivedByte);
+			if(ReceivedByte == 'o')
 			{
-				ocTmp += 1;
-				OCR1A = ocTmp;
-				char string[20];
-				sprintf(string, "OCR1A: %u\r\n", ocTmp);
-				for(char *p = string; *p; p++)
-				{
-					CDC_Device_SendByte(&VirtualSerial_CDC_Interface, *p);
-				}
+				//turn on the display
+				D22WriteByte(0xAF);
+				D22WriteByte(0xA5);
 			}
-
-			if((uint8_t)ReceivedByte == 'd')
+			if(ReceivedByte == 'f')
 			{
-				ocTmp -= 1;
-				OCR1A = ocTmp;
-				char string[20];
-				sprintf(string, "OCR1A: %u\r\n", ocTmp);
-				for(char *p = string; *p; p++)
-				{
-					CDC_Device_SendByte(&VirtualSerial_CDC_Interface, *p);
-				}
+				//turn off the display
+				D22WriteByte(0xA4);
+				D22WriteByte(0xAE);
 			}
-
-
-			//CDC_Device_SendByte(&VirtualSerial_CDC_Interface, ReceivedByte);
 
 			PORTE |= (1 << PORTE6);
 			_delay_ms(10);
