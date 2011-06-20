@@ -1,6 +1,6 @@
 #include "lcd.h"
 #include <stdio.h>
-#include "D22_5003.h"
+#include "LM6800.h"
 
 /** LUFA CDC Class driver interface configuration and state information. This structure is
  *  passed to all CDC Class driver functions, so that multiple instances of the same class
@@ -37,7 +37,7 @@ int main(void)
 	sei();
 
 
-	D22Init();
+	LM6800Init();
 
 	for (;;)
 	{
@@ -49,15 +49,20 @@ int main(void)
 			CDC_Device_SendByte(&VirtualSerial_CDC_Interface, ReceivedByte);
 			if(ReceivedByte == 'o')
 			{
-				//turn on the display
-				D22WriteByte(0xAF);
-				D22WriteByte(0xA5);
+				LM6800DrawTest();
+
+				/*
+				char blah[10];
+				sprintf(blah, "0x%X\r\n", );
+				for(char *tmp = blah; *tmp; tmp ++)
+				{
+					CDC_Device_SendByte(&VirtualSerial_CDC_Interface, *tmp);
+				}
+				 */
+
 			}
 			if(ReceivedByte == 'f')
 			{
-				//turn off the display
-				D22WriteByte(0xA4);
-				D22WriteByte(0xAE);
 			}
 
 			PORTE |= (1 << PORTE6);
