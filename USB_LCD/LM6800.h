@@ -10,9 +10,17 @@ extern "C"
 {
 #endif
 
+	enum LM6800_WRITE_MODE
+	{
+		LM6800_COMMAND,
+		LM6800_RAM
+	};
+
 	void LM6800Init(void);
-	void LM6800WriteCommand(uint8_t chip, uint8_t data);
-	void LM6800WriteRAM(uint8_t chip, uint8_t data);
+	void LM6800Write(uint8_t chip, uint8_t data, enum LM6800_WRITE_MODE writeMode);
+	uint8_t LM6800Read(uint8_t chip);
+	uint8_t LM6800ReadStatus(uint8_t chip);
+	void LM6800SelectChip(uint8_t chip) __attribute__((always_inline));
 	void LM6800DrawTest();
 
 

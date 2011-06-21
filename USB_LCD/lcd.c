@@ -37,8 +37,6 @@ int main(void)
 	sei();
 
 
-	LM6800Init();
-
 	for (;;)
 	{
 		int16_t ReceivedByte = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
@@ -47,22 +45,39 @@ int main(void)
 		if (!(ReceivedByte < 0))
 		{
 			CDC_Device_SendByte(&VirtualSerial_CDC_Interface, ReceivedByte);
-			if(ReceivedByte == 'o')
+			if(ReceivedByte == 'd')
 			{
 				LM6800DrawTest();
+			}
+			if(ReceivedByte == 'r')
+			{
 
-				/*
-				char blah[10];
-				sprintf(blah, "0x%X\r\n", );
+				//uint8_t one = LM6800Read(1);
+				//uint8_t two = LM6800Read(2);
+				//uint8_t three = LM6800Read(3);
+				//uint8_t four = LM6800Read(4);
+				uint8_t status = LM6800ReadStatus(1);
+
+				char blah[30];
+				//sprintf(blah, "0x%X - 0x%X - 0x%X - 0x%X\r\n", one, two, three, four);
+				sprintf(blah, "STATUS: 0x%X\r\n", status);
 				for(char *tmp = blah; *tmp; tmp ++)
 				{
 					CDC_Device_SendByte(&VirtualSerial_CDC_Interface, *tmp);
 				}
-				 */
 
+			}
+			if(ReceivedByte == 'i')
+			{
+				LM6800Init();
+			}
+			if(ReceivedByte == 'o')
+			{
+				LM6800Write(1,0x3F, LM6800_COMMAND);
 			}
 			if(ReceivedByte == 'f')
 			{
+				LM6800Write(1,0x3E, LM6800_COMMAND);
 			}
 
 			PORTE |= (1 << PORTE6);
