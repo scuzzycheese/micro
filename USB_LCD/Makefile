@@ -150,7 +150,7 @@ include $(LUFA_PATH)/LUFA/makefile
 # List C source files here. (C dependencies are automatically generated.)
 SRC = $(TARGET).c                                                 \
 	  Descriptors.c                                               \
-		LM6800.c																	\
+		lcdDrivers/LM6800/LM6800.c																	\
 	  $(LUFA_SRC_USB)                                             \
 	  $(LUFA_SRC_USBCLASS)
 
@@ -187,6 +187,7 @@ DEBUG = dwarf-2
 #     Use forward slashes for directory separators.
 #     For a directory that has spaces, enclose it in quotes.
 EXTRAINCDIRS = $(LUFA_PATH)/
+EXTRAINCDIRS += "lcdDrivers/"
 
 
 # Compiler flag to set the C Standard level.

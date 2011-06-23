@@ -1,6 +1,6 @@
 #include "lcd.h"
 #include <stdio.h>
-#include "LM6800.h"
+#include "LM6800/LM6800.h"
 
 /** LUFA CDC Class driver interface configuration and state information. This structure is
  *  passed to all CDC Class driver functions, so that multiple instances of the same class
