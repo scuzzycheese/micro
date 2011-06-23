@@ -28,18 +28,63 @@ void LM6800Init(void)
 	_delay_ms(1);
 
 	//Turn on the display for all chips
+	LM6800Write(0,0x3f, LM6800_COMMAND);
 	LM6800Write(1,0x3f, LM6800_COMMAND);
 	LM6800Write(2,0x3f, LM6800_COMMAND);
 	LM6800Write(3,0x3f, LM6800_COMMAND);
-	LM6800Write(4,0x3f, LM6800_COMMAND);
 	
 
 	//set start line = 0 for all chips
+	LM6800Write(0,0xc0, LM6800_COMMAND);
 	LM6800Write(1,0xc0, LM6800_COMMAND);
 	LM6800Write(2,0xc0, LM6800_COMMAND);
 	LM6800Write(3,0xc0, LM6800_COMMAND);
-	LM6800Write(4,0xc0, LM6800_COMMAND);
 
+}
+
+void LM6800SetPixel(uint8_t x, uint8_t y)
+{
+   //figure out which page and chip we want
+   uint8_t page = (y >> 3);
+   uint8_t chip = (x >> 6);
+
+
+   //figure out the pixel on each page/chip
+   uint8_t column = (x & 63);
+   uint8_t pixely = (y & 7);
+
+	//Set the colum of the chip we want
+	LM6800Write(chip, (1 << 6) | column, LM6800_COMMAND);
+	//set the page we want for that chip
+	LM6800Write(chip, (23 << 3) | page, LM6800_COMMAND);
+
+	uint8_t columnVal = LM6800Read(chip);
+
+	//set the pixel on the column
+	columnVal |= (1 << pixely);
+
+	//write the column back
+	LM6800Write(chip, columnVal, LM6800_RAM);
+}
+
+
+uint8_t LM6800GetColumn(uint8_t x, uint8_t y)
+{
+   //figure out which page and chip we want
+   uint8_t page = (y >> 3);
+   uint8_t chip = (x >> 6);
+
+   //figure out the pixel on each page/chip
+   uint8_t column = (x & 63);
+   //uint8_t pixely = (y & 7);
+
+	//Set the colum of the chip we want
+	LM6800Write(chip, (1 << 6) | column, LM6800_COMMAND);
+	//set the page we want for that chip
+	LM6800Write(chip, (23 << 3) | page, LM6800_COMMAND);
+
+	uint8_t columnVal = LM6800Read(chip);
+	return columnVal;
 }
 
 
@@ -62,8 +107,10 @@ uint8_t LM6800Read(uint8_t chip)
 	//NOTE: not sure if I need this or not
 	//Raise the control select pin (sometimes called E)
 	//apparently first access is to copy display data to display output register
-	//LM6800_CONTROL_PORT |= (1 << LM6800_CS);
-	//LM6800_CONTROL_PORT &= ~(1 << LM6800_CS);
+	LM6800_CONTROL_PORT |= (1 << LM6800_CS);
+	__asm("nop;");
+	LM6800_CONTROL_PORT &= ~(1 << LM6800_CS);
+	__asm("nop");
 
 	LM6800_CONTROL_PORT |= (1 << LM6800_CS);
 	__asm("nop;");
@@ -92,6 +139,7 @@ uint8_t LM6800ReadStatus(uint8_t chip)
 	LM6800SelectChip(chip);
 
 	LM6800_CONTROL_PORT |= (1 << LM6800_CS);
+	//we may need another nop here
 	__asm("nop;");
 	data = LM6800_DIN;
 	LM6800_CONTROL_PORT &= ~(1 << LM6800_CS);
@@ -144,20 +192,20 @@ void LM6800Write(uint8_t chip, uint8_t data, enum LM6800_WRITE_MODE writeMode)
 
 void LM6800DrawTest()
 {
-    	LM6800Write(1, 0xb8, LM6800_COMMAND);	// select page no to all driver
+    	LM6800Write(0, 0xb8, LM6800_COMMAND);	// select page no to all driver
+    	LM6800Write(1, 0xb8, LM6800_COMMAND);
     	LM6800Write(2, 0xb8, LM6800_COMMAND);
     	LM6800Write(3, 0xb8, LM6800_COMMAND);
-    	LM6800Write(4, 0xb8, LM6800_COMMAND);
 
-    	LM6800Write(1, 0x40, LM6800_COMMAND);	    // set column 00h to all driver
+    	LM6800Write(0, 0x40, LM6800_COMMAND);	    // set column 00h to all driver
+    	LM6800Write(1, 0x40, LM6800_COMMAND);
     	LM6800Write(2, 0x40, LM6800_COMMAND);
     	LM6800Write(3, 0x40, LM6800_COMMAND);
-    	LM6800Write(4, 0x40, LM6800_COMMAND);
 
-		LM6800Write(1, 0xDE, LM6800_RAM);
-		LM6800Write(2, 0xAD, LM6800_RAM);
-		LM6800Write(3, 0xBE, LM6800_RAM);
-		LM6800Write(4, 0xEF, LM6800_RAM);
+		LM6800Write(0, 0xDE, LM6800_RAM);
+		LM6800Write(1, 0xAD, LM6800_RAM);
+		LM6800Write(2, 0xBE, LM6800_RAM);
+		LM6800Write(3, 0xEF, LM6800_RAM);
 
 
 }
@@ -166,18 +214,18 @@ void LM6800SelectChip(uint8_t chip)
 {
 	switch(chip)
 	{
-		case 1:
+		case 0:
 			LM6800_CONTROL_PORT &= ~((1 << LM6800_CSA) | (1 << LM6800_CSB) | (1 << LM6800_CSC));
 			break;
-		case 2:
+		case 1:
 			LM6800_CONTROL_PORT &= ~((1 << LM6800_CSA) | (1 << LM6800_CSB) | (1 << LM6800_CSC));
 			LM6800_CONTROL_PORT |= (1 << LM6800_CSA);
 			break;
-		case 3:
+		case 2:
 			LM6800_CONTROL_PORT &= ~((1 << LM6800_CSA) | (1 << LM6800_CSB) | (1 << LM6800_CSC));
 			LM6800_CONTROL_PORT |= (1 << LM6800_CSB);
 			break;
-		case 4:
+		case 3:
 			LM6800_CONTROL_PORT &= ~((1 << LM6800_CSA) | (1 << LM6800_CSB) | (1 << LM6800_CSC));
 			LM6800_CONTROL_PORT |= ((1 << LM6800_CSA) | (1 << LM6800_CSB));
 			break;

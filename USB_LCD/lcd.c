@@ -44,7 +44,22 @@ int main(void)
 		/* Read bytes from the USB OUT endpoint into the USART transmit buffer */
 		if (!(ReceivedByte < 0))
 		{
-			CDC_Device_SendByte(&VirtualSerial_CDC_Interface, ReceivedByte);
+			//CDC_Device_SendByte(&VirtualSerial_CDC_Interface, ReceivedByte);
+			if(ReceivedByte == 's')
+			{
+				uint8_t colVal;
+				for(uint8_t x = 0; x < 63; x ++)
+				{
+					colVal = LM6800GetColumn(x, 0);
+					char blah[30];
+					sprintf(blah, "COLVAL: 0x%X\r\n", colVal);
+					for(char *tmp = blah; *tmp; tmp ++)
+					{
+						CDC_Device_SendByte(&VirtualSerial_CDC_Interface, *tmp);
+					}
+					_delay_ms(1000);
+				}
+			}
 			if(ReceivedByte == 'd')
 			{
 				LM6800DrawTest();

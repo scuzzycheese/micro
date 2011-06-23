@@ -22,6 +22,7 @@ extern "C"
 	uint8_t LM6800ReadStatus(uint8_t chip);
 	void LM6800SelectChip(uint8_t chip) __attribute__((always_inline));
 	void LM6800DrawTest();
+	void LM6800SetPixel(uint8_t x, uint8_t y);
 
 
 	#define LM6800_DOUT PORTD
