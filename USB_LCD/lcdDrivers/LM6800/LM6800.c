@@ -42,29 +42,54 @@ void LM6800Init(void)
 
 }
 
-void LM6800SetPixel(uint8_t x, uint8_t y)
+static void LM6800ComputePixelConfigData(uint8_t x, uint8_t y, struct LM6800PixelConfigData *data)
 {
    //figure out which page and chip we want
-   uint8_t page = (y >> 3);
-   uint8_t chip = (x >> 6);
-
+   data->page = (y >> 3);
+   data->chip = (x >> 6);
 
    //figure out the pixel on each page/chip
-   uint8_t column = (x & 63);
-   uint8_t pixely = (y & 7);
+   data->column = (x & 63);
+   data->pixely = (y & 7);
+}
+
+
+void LM6800ClearPixel(uint8_t x, uint8_t y)
+{
+	struct LM6800PixelConfigData piConData;
+	LM6800ComputePixelConfigData(x, y, &piConData);
 
 	//Set the colum of the chip we want
-	LM6800Write(chip, (1 << 6) | column, LM6800_COMMAND);
+	LM6800Write(piConData.chip, (1 << 6) | piConData.column, LM6800_COMMAND);
 	//set the page we want for that chip
-	LM6800Write(chip, (23 << 3) | page, LM6800_COMMAND);
+	LM6800Write(piConData.chip, (23 << 3) | piConData.page, LM6800_COMMAND);
 
-	uint8_t columnVal = LM6800Read(chip);
+	uint8_t columnVal = LM6800Read(piConData.chip);
 
 	//set the pixel on the column
-	columnVal |= (1 << pixely);
+	columnVal &= ~(1 << piConData.pixely);
 
 	//write the column back
-	LM6800Write(chip, columnVal, LM6800_RAM);
+	LM6800Write(piConData.chip, columnVal, LM6800_RAM);
+}
+
+void LM6800SetPixel(uint8_t x, uint8_t y)
+{
+	struct LM6800PixelConfigData piConData;
+	LM6800ComputePixelConfigData(x, y, &piConData);
+
+	//Set the colum of the chip we want
+	LM6800Write(piConData.chip, (1 << 6) | piConData.column, LM6800_COMMAND);
+	//set the page we want for that chip
+	LM6800Write(piConData.chip, (23 << 3) | piConData.page, LM6800_COMMAND);
+
+	uint8_t columnVal = LM6800Read(piConData.chip);
+
+	//set the pixel on the column
+	columnVal |= (1 << piConData.pixely);
+
+	//write the column back
+	LM6800Write(piConData.chip, columnVal, LM6800_RAM);
 }
 
 
@@ -109,12 +134,19 @@ uint8_t LM6800Read(uint8_t chip)
 	//apparently first access is to copy display data to display output register
 	LM6800_CONTROL_PORT |= (1 << LM6800_CS);
 	__asm("nop;");
+	__asm("nop;");
+	__asm("nop;");
 	LM6800_CONTROL_PORT &= ~(1 << LM6800_CS);
-	__asm("nop");
+	__asm("nop;");
+	__asm("nop;");
+	__asm("nop;");
 
 	LM6800_CONTROL_PORT |= (1 << LM6800_CS);
 	__asm("nop;");
+	__asm("nop;");
+	__asm("nop;");
 	data = LM6800_DIN;
+	__asm("nop;");
 	LM6800_CONTROL_PORT &= ~(1 << LM6800_CS);
 
 	//disable access to LCD
@@ -140,6 +172,8 @@ uint8_t LM6800ReadStatus(uint8_t chip)
 
 	LM6800_CONTROL_PORT |= (1 << LM6800_CS);
 	//we may need another nop here
+	__asm("nop;");
+	__asm("nop;");
 	__asm("nop;");
 	data = LM6800_DIN;
 	LM6800_CONTROL_PORT &= ~(1 << LM6800_CS);
@@ -181,6 +215,10 @@ void LM6800Write(uint8_t chip, uint8_t data, enum LM6800_WRITE_MODE writeMode)
 
 	//Raise the control select pin (sometimes called E)
 	LM6800_CONTROL_PORT |= (1 << LM6800_CS);
+	__asm("nop;");
+	__asm("nop;");
+	__asm("nop;");
+	__asm("nop;");
 	__asm("nop;");
 	LM6800_CONTROL_PORT &= ~(1 << LM6800_CS);
 

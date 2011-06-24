@@ -36,6 +36,8 @@ int main(void)
 
 	sei();
 
+	LM6800Init();
+
 
 	for (;;)
 	{
@@ -47,17 +49,52 @@ int main(void)
 			//CDC_Device_SendByte(&VirtualSerial_CDC_Interface, ReceivedByte);
 			if(ReceivedByte == 's')
 			{
-				uint8_t colVal;
-				for(uint8_t x = 0; x < 63; x ++)
+				for(uint8_t y = 0; y < 64; y ++)
 				{
-					colVal = LM6800GetColumn(x, 0);
-					char blah[30];
-					sprintf(blah, "COLVAL: 0x%X\r\n", colVal);
-					for(char *tmp = blah; *tmp; tmp ++)
+					for(uint8_t x = 0; x < 255; x ++)
 					{
-						CDC_Device_SendByte(&VirtualSerial_CDC_Interface, *tmp);
+						LM6800SetPixel(x, y);
 					}
-					_delay_ms(1000);
+					LM6800SetPixel(255, y);
+				}
+			}
+			if(ReceivedByte == 'g')
+			{
+				for(uint8_t y = 0; y < 64; y += 8)
+				{
+					for(uint8_t x = 0; x < 254; x ++)
+					{
+						uint8_t colVal = LM6800GetColumn(x, 0);
+						char blah[30];
+						sprintf(blah, "X: %d PAGE: %d COLVAL: 0x%X\r\n", x, y >> 3, colVal);
+						for(char *tmp = blah; *tmp; tmp ++)
+						{
+							CDC_Device_SendByte(&VirtualSerial_CDC_Interface, *tmp);
+						}
+					}
+				}
+			}
+			if(ReceivedByte == 'x')
+			{
+				for(uint8_t y = 0; y < 64; y ++)
+				{
+					for(uint8_t x = 0; x < 255; x ++)
+					{
+						if(x & 1) LM6800ClearPixel(x, y);
+						else LM6800SetPixel(x, y);
+					}
+					LM6800ClearPixel(255, y);
+				}
+			}
+			if(ReceivedByte == 'c')
+			{
+				for(uint8_t y = 0; y < 64; y ++)
+				{
+					for(uint8_t x = 0; x < 255; x ++)
+					{
+						LM6800ClearPixel(x, y);
+					}
+					LM6800ClearPixel(255, y);
 				}
 			}
 			if(ReceivedByte == 'd')
@@ -81,10 +118,6 @@ int main(void)
 					CDC_Device_SendByte(&VirtualSerial_CDC_Interface, *tmp);
 				}
 
-			}
-			if(ReceivedByte == 'i')
-			{
-				LM6800Init();
 			}
 			if(ReceivedByte == 'o')
 			{
