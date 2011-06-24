@@ -60,9 +60,9 @@ int main(void)
 			}
 			if(ReceivedByte == 'g')
 			{
-				for(uint8_t y = 0; y < 64; y += 8)
+				for(uint8_t y = 0; y < 1; y += 8)
 				{
-					for(uint8_t x = 0; x < 254; x ++)
+					for(uint8_t x = 192; x < 240; x ++)
 					{
 						uint8_t colVal = LM6800GetColumn(x, 0);
 						char blah[30];
