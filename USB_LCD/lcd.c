@@ -49,9 +49,9 @@ int main(void)
 			//CDC_Device_SendByte(&VirtualSerial_CDC_Interface, ReceivedByte);
 			if(ReceivedByte == 's')
 			{
-				for(uint8_t y = 0; y < 64; y ++)
+				for(uint8_t y = 0; y < 8; y ++)
 				{
-					for(uint8_t x = 0; x < 255; x ++)
+					for(uint8_t x = 192; x < 255; x ++)
 					{
 						LM6800SetPixel(x, y);
 					}
@@ -62,7 +62,7 @@ int main(void)
 			{
 				for(uint8_t y = 0; y < 1; y += 8)
 				{
-					for(uint8_t x = 192; x < 240; x ++)
+					for(uint8_t x = 192; x < 255; x ++)
 					{
 						uint8_t colVal = LM6800GetColumn(x, 0);
 						char blah[30];
@@ -76,25 +76,25 @@ int main(void)
 			}
 			if(ReceivedByte == 'x')
 			{
-				for(uint8_t y = 0; y < 64; y ++)
+				for(uint8_t y = 0; y < 8; y ++)
 				{
-					for(uint8_t x = 0; x < 255; x ++)
+					for(uint8_t x = 192; x < 255; x ++)
 					{
 						if(x & 1) LM6800ClearPixel(x, y);
 						else LM6800SetPixel(x, y);
 					}
-					LM6800ClearPixel(255, y);
+					//LM6800ClearPixel(255, y);
 				}
 			}
 			if(ReceivedByte == 'c')
 			{
-				for(uint8_t y = 0; y < 64; y ++)
+				for(uint8_t y = 0; y < 8; y ++)
 				{
-					for(uint8_t x = 0; x < 255; x ++)
+					for(uint8_t x = 192; x < 255; x ++)
 					{
 						LM6800ClearPixel(x, y);
 					}
-					LM6800ClearPixel(255, y);
+					//LM6800ClearPixel(255, y);
 				}
 			}
 			if(ReceivedByte == 'd')

@@ -1,5 +1,6 @@
 #include "LM6800.h"
 
+static void LM6800ComputePixelConfigData(uint8_t x, uint8_t y, struct LM6800PixelConfigData *data);
 
 void LM6800Init(void)
 {
@@ -125,35 +126,24 @@ uint8_t LM6800Read(uint8_t chip)
 
 	while(LM6800ReadStatus(chip) && 0x80);
 
-	//set the data port to input
-	LM6800_DDR = 0x00;
 	//set the port to 0
 	LM6800_DOUT = 0x00;
+	//set the data port to input
+	LM6800_DDR = 0x00;
 
 	LM6800_CONTROL_PORT |= (1 << LM6800_RS) | (1 << LM6800_RW);
 
 	LM6800SelectChip(chip);
-	__asm("nop;");
-	__asm("nop;");
-	__asm("nop;");
-	__asm("nop;");
+	LM6800_CONFIG_DELAY;
 
 	LM6800_CONTROL_PORT |= (1 << LM6800_CS);
-	__asm("nop;");
-	__asm("nop;");
-	__asm("nop;");
-	__asm("nop;");
+	LM6800_DATA_DELAY;
 	data = LM6800_DIN;
 	LM6800_CONTROL_PORT &= ~(1 << LM6800_CS);
 
 	//disable access to LCD
-	//LM6800_CONTROL_PORT &= ~((1 << LM6800_CSA) | (1 << LM6800_CSB));
-	//LM6800_CONTROL_PORT |= (1 << LM6800_CSC);
-	__asm("nop;");
-	__asm("nop;");
-	__asm("nop;");
-	__asm("nop;");
-
+	LM6800_CONTROL_PORT &= ~((1 << LM6800_CSA) | (1 << LM6800_CSB));
+	LM6800_CONTROL_PORT |= (1 << LM6800_CSC);
 	return data;
 }
 
@@ -161,31 +151,26 @@ uint8_t LM6800ReadStatus(uint8_t chip)
 {
 	uint8_t data;
 
-	//set the data port to input
-	LM6800_DDR = 0x00;
 	//set the port to 0
 	LM6800_DOUT = 0x00;
+	//set the data port to input
+	LM6800_DDR = 0x00;
 
 	LM6800_CONTROL_PORT |= (1 << LM6800_RW);
 	LM6800_CONTROL_PORT &= ~(1 << LM6800_RS);
 
 	LM6800SelectChip(chip);
-	__asm("nop;");
-	__asm("nop;");
-	__asm("nop;");
+	LM6800_CONFIG_DELAY;
 
 	LM6800_CONTROL_PORT |= (1 << LM6800_CS);
+	LM6800_DATA_DELAY;
 	//we may need another nop here
-	__asm("nop;");
-	__asm("nop;");
-	__asm("nop;");
 	data = LM6800_DIN;
 	LM6800_CONTROL_PORT &= ~(1 << LM6800_CS);
 
 	//disable access to LCD
-	//LM6800_CONTROL_PORT &= ~((1 << LM6800_CSA) | (1 << LM6800_CSB));
-	//LM6800_CONTROL_PORT |= (1 << LM6800_CSC);
-
+	LM6800_CONTROL_PORT &= ~((1 << LM6800_CSA) | (1 << LM6800_CSB));
+	LM6800_CONTROL_PORT |= (1 << LM6800_CSC);
 	return data;
 }
 
@@ -216,24 +201,20 @@ void LM6800Write(uint8_t chip, uint8_t data, enum LM6800_WRITE_MODE writeMode)
 	LM6800_CONTROL_PORT &= ~(1 << LM6800_RW);
 
 	LM6800SelectChip(chip);
-	__asm("nop;");
-	__asm("nop;");
-	__asm("nop;");
+	LM6800_CONFIG_DELAY;
 
 	//Raise the control select pin (sometimes called E)
 	LM6800_CONTROL_PORT |= (1 << LM6800_CS);
-	__asm("nop;");
-	__asm("nop;");
-	__asm("nop;");
+	LM6800_DATA_DELAY;
 	LM6800_CONTROL_PORT &= ~(1 << LM6800_CS);
 
 	//disable access to LCD
-	//LM6800_CONTROL_PORT &= ~((1 << LM6800_CSA) | (1 << LM6800_CSB));
-	//LM6800_CONTROL_PORT |= (1 << LM6800_CSC);
+	LM6800_CONTROL_PORT &= ~((1 << LM6800_CSA) | (1 << LM6800_CSB));
+	LM6800_CONTROL_PORT |= (1 << LM6800_CSC);
 }
 
 
-void LM6800DrawTest()
+void LM6800DrawTest(void)
 {
     	LM6800Write(0, 0xb8, LM6800_COMMAND);	// select page no to all driver
     	LM6800Write(1, 0xb8, LM6800_COMMAND);
