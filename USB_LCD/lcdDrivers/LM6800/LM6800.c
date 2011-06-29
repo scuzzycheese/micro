@@ -131,10 +131,10 @@ uint8_t LM6800Read(uint8_t chip)
 
 	while(LM6800ReadStatus(chip) && 0x80);
 
-	//set the port to 0
-	LM6800_DOUT = 0x00;
 	//set the data port to input
 	LM6800_DDR = 0x00;
+	//set the port to 0
+	LM6800_DOUT = 0x00;
 
 	//set read mode
 	LM6800_CONTROL_PORT |= (1 << LM6800_RS) | (1 << LM6800_RW);
@@ -146,9 +146,6 @@ uint8_t LM6800Read(uint8_t chip)
 	data = LM6800_DIN;
 	LM6800_CONTROL_PORT &= ~(1 << LM6800_CS);
 
-	//Pull the control lindes down
-	//LM6800_CONTROL_PORT &= ~((1 << LM6800_RS) | (1 << LM6800_RW));
-
 	return data;
 }
 
@@ -157,10 +154,10 @@ uint8_t LM6800ReadStatus(uint8_t chip)
 	uint8_t data;
 	LM6800SelectChip(chip);
 
-	//set the port to 0
-	LM6800_DOUT = 0x00;
 	//set the data port to input
 	LM6800_DDR = 0x00;
+	//set the port to 0
+	LM6800_DOUT = 0x00;
 
 	//enter mode to read status
 	LM6800_CONTROL_PORT |= (1 << LM6800_RW);
@@ -174,9 +171,6 @@ uint8_t LM6800ReadStatus(uint8_t chip)
 	data = LM6800_DIN;
 	LM6800_CONTROL_PORT &= ~(1 << LM6800_CS);
 
-	//Pull the control lindes down
-	//LM6800_CONTROL_PORT &= ~((1 << LM6800_RS) | (1 << LM6800_RW));
-
 	return data;
 }
 
@@ -184,14 +178,14 @@ uint8_t LM6800ReadStatus(uint8_t chip)
 void LM6800Write(uint8_t chip, uint8_t data, enum LM6800_WRITE_MODE writeMode)
 {
 	LM6800SelectChip(chip);
+
 	//Wait for the status
 	while(LM6800ReadStatus(chip) & 0x80);
 
-	//set the data on the port
-	LM6800_DOUT = data;
-
 	//set data port to output
 	LM6800_DDR = 0xFF;
+	//set the data on the port
+	LM6800_DOUT = data;
 
 	if(writeMode == LM6800_RAM)
 	{
@@ -213,9 +207,6 @@ void LM6800Write(uint8_t chip, uint8_t data, enum LM6800_WRITE_MODE writeMode)
 	LM6800_CONTROL_PORT |= (1 << LM6800_CS);
 	LM6800_DATA_DELAY;
 	LM6800_CONTROL_PORT &= ~(1 << LM6800_CS);
-
-	//Pull the control lindes down
-	//LM6800_CONTROL_PORT &= ~((1 << LM6800_RS) | (1 << LM6800_RW));
 }
 
 

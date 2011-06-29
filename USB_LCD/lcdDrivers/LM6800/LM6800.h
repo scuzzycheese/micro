@@ -28,14 +28,9 @@ extern "C"
 												__asm("nop;");\
 												__asm("nop;");\
 												__asm("nop;");\
-												__asm("nop;");\
 												__asm("nop;")
 
 	#define LM6800_CONFIG_DELAY		__asm("nop;");\
-												__asm("nop;");\
-												__asm("nop;")
-
-	#define LM6800_DUMMYREAD_DELAY	__asm("nop;");\
 												__asm("nop;");\
 												__asm("nop;")
 
@@ -60,11 +55,13 @@ extern "C"
 	#define LM6800_RW PORTB1
 	#define LM6800_CS PORTB2
 
-	#define LM6800_CSA PORTB3
+	#define LM6800_CSA PORTB7
 	#define LM6800_CSB PORTB4
 	#define LM6800_CSC PORTB5
 
 	#define LM6800_RESET PORTB6
+
+	#define LM6800_DISABLE_CONTROLLERS 10
 
 
 #ifdef	__cplusplus
