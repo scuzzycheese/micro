@@ -1,6 +1,6 @@
 #include "LM6800.h"
 
-static void LM6800ComputePixelConfigData(uint8_t x, uint8_t y, struct LM6800PixelConfigData *data);
+static void LM6800ComputePixelConfigData(uint8_t x, uint8_t y, struct LM6800PixelConfigData *data) __attribute__((always_inline));
 
 void LM6800Init(void)
 {
@@ -78,6 +78,8 @@ void LM6800ClearPixel(uint8_t x, uint8_t y)
 	LM6800Write(piConData.chip, columnVal, LM6800_RAM);
 }
 
+
+
 void LM6800SetPixel(uint8_t x, uint8_t y)
 {
 	struct LM6800PixelConfigData piConData;
@@ -104,21 +106,16 @@ void LM6800SetPixel(uint8_t x, uint8_t y)
 
 uint8_t LM6800GetColumn(uint8_t x, uint8_t y)
 {
-   //figure out which page and chip we want
-   uint8_t page = (y >> 3);
-   uint8_t chip = (x >> 6);
-
-   //figure out the pixel on each page/chip
-   uint8_t column = (x & 63);
-   //uint8_t pixely = (y & 7);
+	struct LM6800PixelConfigData piConData;
+	LM6800ComputePixelConfigData(x, y, &piConData);
 
 	//Set the colum of the chip we want
-	LM6800Write(chip, (1 << 6) | column, LM6800_COMMAND);
+	LM6800Write(piConData.chip, (1 << 6) | piConData.column, LM6800_COMMAND);
 	//set the page we want for that chip
-	LM6800Write(chip, (23 << 3) | page, LM6800_COMMAND);
+	LM6800Write(piConData.chip, (23 << 3) | piConData.page, LM6800_COMMAND);
 
-	LM6800Read(chip);
-	uint8_t columnVal = LM6800Read(chip);
+	LM6800Read(piConData.chip);
+	uint8_t columnVal = LM6800Read(piConData.chip);
 	return columnVal;
 }
 
@@ -210,24 +207,18 @@ void LM6800Write(uint8_t chip, uint8_t data, enum LM6800_WRITE_MODE writeMode)
 }
 
 
-void LM6800DrawTest(void)
+void LM6800WriteBlock(uint8_t chip, uint8_t page, char *data)
 {
-    	LM6800Write(0, 0xb8, LM6800_COMMAND);	// select page no to all driver
-    	LM6800Write(1, 0xb8, LM6800_COMMAND);
-    	LM6800Write(2, 0xb8, LM6800_COMMAND);
-    	LM6800Write(3, 0xb8, LM6800_COMMAND);
+	//Set our column to the beginning
+	LM6800Write(chip, (1 << 6), LM6800_COMMAND);
+	//set the page we want for that chip
+	LM6800Write(chip, (23 << 3) | page, LM6800_COMMAND);
 
-    	LM6800Write(0, 0x40, LM6800_COMMAND);	    // set column 00h to all driver
-    	LM6800Write(1, 0x40, LM6800_COMMAND);
-    	LM6800Write(2, 0x40, LM6800_COMMAND);
-    	LM6800Write(3, 0x40, LM6800_COMMAND);
-
-		LM6800Write(0, 0xDE, LM6800_RAM);
-		LM6800Write(1, 0xAD, LM6800_RAM);
-		LM6800Write(2, 0xBE, LM6800_RAM);
-		LM6800Write(3, 0xEF, LM6800_RAM);
-
-
+	//Dump a block of data to the page
+	for(uint8_t col = 0; col < LM6800_COLUMNS_PER_PAGE; col ++)
+	{
+		LM6800Write(chip, data[col], LM6800_RAM);
+	}
 }
 
 void LM6800SelectChip(uint8_t chip)

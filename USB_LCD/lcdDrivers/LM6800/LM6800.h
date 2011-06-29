@@ -38,12 +38,22 @@ extern "C"
 	void LM6800Write(uint8_t chip, uint8_t data, enum LM6800_WRITE_MODE writeMode);
 	uint8_t LM6800Read(uint8_t chip);
 	uint8_t LM6800ReadStatus(uint8_t chip);
-	void LM6800DrawTest(void);
 	void LM6800SetPixel(uint8_t x, uint8_t y);
 	void LM6800ClearPixel(uint8_t x, uint8_t y);
 	void LM6800SelectChip(uint8_t chip) __attribute__((always_inline));
+	void LM6800WriteBlock(uint8_t chip, uint8_t page, char *data);
 
+	#define LM6800_NUM_CONTROLLERS 4
 
+	#define LM6800_NUM_PAGES_PER_CONROLLER 8
+	#define LM6800_RES_PAGE_X 64
+	#define LM6800_RES_PAGE_Y 64
+	#define LM6800_COLUMNS_PER_PAGE 64
+
+	#define LM6800_RES_X 256
+	#define LM6800_RES_Y 64
+
+	//This is configuration data for the LCD lines
 	#define LM6800_DOUT PORTD
 	#define LM6800_DIN PIND
 	#define LM6800_DDR DDRD
@@ -60,9 +70,6 @@ extern "C"
 	#define LM6800_CSC PORTB5
 
 	#define LM6800_RESET PORTB6
-
-	#define LM6800_DISABLE_CONTROLLERS 10
-
 
 #ifdef	__cplusplus
 }

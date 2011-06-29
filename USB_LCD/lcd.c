@@ -58,22 +58,6 @@ int main(void)
 					LM6800SetPixel(255, y);
 				}
 			}
-			if(ReceivedByte == 'g')
-			{
-				for(uint8_t y = 0; y < 1; y += 8)
-				{
-					for(uint8_t x = 192; x < 255; x ++)
-					{
-						uint8_t colVal = LM6800GetColumn(x, 0);
-						char blah[30];
-						sprintf(blah, "X: %d PAGE: %d COLVAL: 0x%X\r\n", x, y >> 3, colVal);
-						for(char *tmp = blah; *tmp; tmp ++)
-						{
-							CDC_Device_SendByte(&VirtualSerial_CDC_Interface, *tmp);
-						}
-					}
-				}
-			}
 			if(ReceivedByte == 'x')
 			{
 				for(uint8_t y = 0; y < 64; y ++)
@@ -86,6 +70,27 @@ int main(void)
 					LM6800ClearPixel(255, y);
 				}
 			}
+			if(ReceivedByte == 'b')
+			{
+				char data[64] =
+				{
+					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
+					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
+					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
+					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
+					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
+					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
+					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
+					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
+				};
+				for(uint8_t chip = 0; chip < 4; chip ++)
+				{
+					for(uint8_t page = 0; page < 8; page ++)
+					{
+						LM6800WriteBlock(chip, page, data);
+					}
+				}
+			}
 			if(ReceivedByte == 'c')
 			{
 				for(uint8_t y = 0; y < 64; y ++)
@@ -96,10 +101,6 @@ int main(void)
 					}
 					LM6800ClearPixel(255, y);
 				}
-			}
-			if(ReceivedByte == 'd')
-			{
-				LM6800DrawTest();
 			}
 			if(ReceivedByte == 'r')
 			{
