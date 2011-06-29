@@ -1,4 +1,5 @@
 #include "LM6800.h"
+#include <stdio.h>
 
 static void LM6800ComputePixelConfigData(uint8_t x, uint8_t y, struct LM6800PixelConfigData *data) __attribute__((always_inline));
 
@@ -41,6 +42,29 @@ void LM6800Init(void)
 	LM6800Write(2,0xc0, LM6800_COMMAND);
 	LM6800Write(3,0xc0, LM6800_COMMAND);
 
+}
+
+void LM6800Reset(void)
+{
+	//reset LCD
+	LM6800_CONTROL_PORT |= (1 << LM6800_RESET);
+	_delay_ms(1);
+	LM6800_CONTROL_PORT &= ~(1 << LM6800_RESET);
+	_delay_ms(1);
+	LM6800_CONTROL_PORT |= (1 << LM6800_RESET);
+	_delay_ms(1);
+}
+
+struct lcdData LM6800GetLCDData(void)
+{
+	struct lcdData lcdStats;
+	lcdStats.backlight = 1;
+	lcdStats.bitDepth = 1;
+	lcdStats.colour = 0;
+	lcdStats.height = 64;
+	lcdStats.width = 256;
+
+	return lcdStats;
 }
 
 static void LM6800ComputePixelConfigData(uint8_t x, uint8_t y, struct LM6800PixelConfigData *data)
@@ -117,6 +141,24 @@ uint8_t LM6800GetColumn(uint8_t x, uint8_t y)
 	LM6800Read(piConData.chip);
 	uint8_t columnVal = LM6800Read(piConData.chip);
 	return columnVal;
+}
+
+/**
+ * NOTE: This function has not been tested yet
+ */
+void LM6800GetPixel(uint8_t x, uint8_t y, union pixelColour *colour)
+{
+	struct LM6800PixelConfigData piConData;
+	LM6800ComputePixelConfigData(x, y, &piConData);
+
+	//Set the colum of the chip we want
+	LM6800Write(piConData.chip, (1 << 6) | piConData.column, LM6800_COMMAND);
+	//set the page we want for that chip
+	LM6800Write(piConData.chip, (23 << 3) | piConData.page, LM6800_COMMAND);
+
+	LM6800Read(piConData.chip);
+	uint8_t columnVal = LM6800Read(piConData.chip);
+	colour->MONO.M = (columnVal & (1 << piConData.pixely)) >> piConData.pixely;
 }
 
 
@@ -219,6 +261,38 @@ void LM6800WriteBlock(uint8_t chip, uint8_t page, char *data)
 	{
 		LM6800Write(chip, data[col], LM6800_RAM);
 	}
+}
+
+void LM6800ClearScreen(void)
+{
+	for(uint8_t chip = 0; chip < LM6800_NUM_CONTROLLERS; chip ++)
+	{
+		for(uint8_t page = 0; page < LM6800_NUM_PAGES_PER_CONROLLER; page ++)
+		{
+			//Set our column to the beginning
+			LM6800Write(chip, (1 << 6), LM6800_COMMAND);
+			//set the page we want for that chip
+			LM6800Write(chip, (23 << 3) | page, LM6800_COMMAND);
+
+			//Dump a block of data to the page
+			for(uint8_t col = 0; col < LM6800_COLUMNS_PER_PAGE; col ++)
+			{
+				LM6800Write(chip, 0x00, LM6800_RAM);
+			}
+		}
+	}
+}
+
+void LM6800Register(struct lcdDriver *driver)
+{
+	driver->clearPixel = LM6800ClearPixel;
+	driver->clearScreen = LM6800ClearScreen;
+	driver->getLcdData = LM6800GetLCDData;
+	driver->getPixel = LM6800GetPixel;
+	driver->init = LM6800Init;
+	driver->reset = LM6800Reset;
+	driver->setPixel = LM6800SetPixel;
+	driver->writeBlock = LM6800WriteBlock;
 }
 
 void LM6800SelectChip(uint8_t chip)

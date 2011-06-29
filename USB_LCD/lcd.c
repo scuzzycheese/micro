@@ -1,6 +1,7 @@
 #include "lcd.h"
 #include <stdio.h>
 #include "LM6800/LM6800.h"
+#include "lcdClass.h"
 
 /** LUFA CDC Class driver interface configuration and state information. This structure is
  *  passed to all CDC Class driver functions, so that multiple instances of the same class
@@ -36,7 +37,10 @@ int main(void)
 
 	sei();
 
-	LM6800Init();
+	struct lcdDriver lcdDriver;
+	registerDriver(&lcdDriver, LM6800Register);
+
+	lcdDriver.init();
 
 
 	for (;;)
@@ -53,9 +57,9 @@ int main(void)
 				{
 					for(uint8_t x = 0; x < 255; x ++)
 					{
-						LM6800SetPixel(x, y);
+						lcdDriver.setPixel(x, y);
 					}
-					LM6800SetPixel(255, y);
+					lcdDriver.setPixel(255, y);
 				}
 			}
 			if(ReceivedByte == 'x')
@@ -64,10 +68,10 @@ int main(void)
 				{
 					for(uint8_t x = 0; x < 255; x ++)
 					{
-						if(x & 1) LM6800ClearPixel(x, y);
-						else LM6800SetPixel(x, y);
+						if(x & 1) lcdDriver.clearPixel(x, y);
+						else lcdDriver.setPixel(x, y);
 					}
-					LM6800ClearPixel(255, y);
+					lcdDriver.clearPixel(255, y);
 				}
 			}
 			if(ReceivedByte == 'b')
@@ -87,20 +91,13 @@ int main(void)
 				{
 					for(uint8_t page = 0; page < 8; page ++)
 					{
-						LM6800WriteBlock(chip, page, data);
+						lcdDriver.writeBlock(chip, page, data);
 					}
 				}
 			}
 			if(ReceivedByte == 'c')
 			{
-				for(uint8_t y = 0; y < 64; y ++)
-				{
-					for(uint8_t x = 0; x < 255; x ++)
-					{
-						LM6800ClearPixel(x, y);
-					}
-					LM6800ClearPixel(255, y);
-				}
+				lcdDriver.clearScreen();
 			}
 			if(ReceivedByte == 'r')
 			{

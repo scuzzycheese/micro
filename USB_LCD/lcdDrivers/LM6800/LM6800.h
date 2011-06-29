@@ -1,6 +1,11 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
+//this needs to be defined, as it's used to define things about the lcdClass object
+#define BITDEPTH 1
+
+#include "lcdClass.h"
+
 
 #ifndef _LM6800_H
 #define	_LM6800_H
@@ -9,6 +14,7 @@
 extern "C"
 {
 #endif
+
 
 	enum LM6800_WRITE_MODE
 	{
@@ -42,6 +48,10 @@ extern "C"
 	void LM6800ClearPixel(uint8_t x, uint8_t y);
 	void LM6800SelectChip(uint8_t chip) __attribute__((always_inline));
 	void LM6800WriteBlock(uint8_t chip, uint8_t page, char *data);
+	void LM6800Register(struct lcdDriver *driver);
+	void LM6800GetPixel(uint8_t x, uint8_t y, union pixelColour *colour);
+	struct lcdData LM6800GetLCDData(void);
+	void LM6800Reset(void);
 
 	#define LM6800_NUM_CONTROLLERS 4
 
