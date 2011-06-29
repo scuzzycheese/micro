@@ -24,16 +24,20 @@ extern "C"
 		uint8_t pixely;
 	};
 
-	#define LM6800_DATA_DELAY		__asm("nop;");\
-											__asm("nop;");\
-											__asm("nop;");\
-											__asm("nop;");\
-											__asm("nop;");\
-											__asm("nop;")
+	#define LM6800_DATA_DELAY			__asm("nop;");\
+												__asm("nop;");\
+												__asm("nop;");\
+												__asm("nop;");\
+												__asm("nop;");\
+												__asm("nop;")
 
-	#define LM6800_CONFIG_DELAY	__asm("nop;");\
-											__asm("nop;");\
-											__asm("nop;")
+	#define LM6800_CONFIG_DELAY		__asm("nop;");\
+												__asm("nop;");\
+												__asm("nop;")
+
+	#define LM6800_DUMMYREAD_DELAY	__asm("nop;");\
+												__asm("nop;");\
+												__asm("nop;")
 
 	void LM6800Init(void);
 	void LM6800Write(uint8_t chip, uint8_t data, enum LM6800_WRITE_MODE writeMode);
