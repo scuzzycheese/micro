@@ -107,6 +107,33 @@ void portHandler(portHandlerObj *this)
 			}
 			case 2:
 			{
+				switch(ReceivedByte & 0b00111111)
+				{
+					case 0:
+					{
+						uint8_t x = CDC_Device_ReceiveByte_blocking(this->VirtualSerial_CDC_Interface);
+						uint8_t y = CDC_Device_ReceiveByte_blocking(this->VirtualSerial_CDC_Interface);
+						union pixelColour pxColour;
+						this->lcdDriver->getPixel(x, y, &pxColour);
+						char *tmpPxData = &pxColour;
+						for(uint8_t i = 0; i < sizeof(union pixelColour); i ++)
+						{
+							CDC_Device_SendByte(this->VirtualSerial_CDC_Interface, tmpPxData[i]);
+						}
+						break;
+					}
+					case 1:
+					{
+						struct lcdData lcdData = this->lcdDriver->getLcdData();
+						char *tmpLcdData = &lcdData;
+						for(uint8_t i = 0; i < sizeof(struct lcdData); i ++)
+						{
+							CDC_Device_SendByte(this->VirtualSerial_CDC_Interface, tmpLcdData[i]);
+						}
+						break;
+					}
+
+				}
 				break;
 			}
 		}
