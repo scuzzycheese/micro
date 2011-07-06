@@ -24,6 +24,10 @@ extern "C"
 	} portHandlerObj;
 
 
+void portHandlerConstruct(portHandlerObj *this, USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface, struct lcdDriver *driver);
+void portHandler(portHandlerObj *this);
+int16_t CDC_Device_ReceiveByte_blocking(USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface);
+void ledBlink(void);
 
 
 #ifdef	__cplusplus

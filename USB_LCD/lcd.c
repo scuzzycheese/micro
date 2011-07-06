@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "LM6800/LM6800.h"
 #include "lcdClass.h"
+#include "protocolHandler.h"
 
 /** LUFA CDC Class driver interface configuration and state information. This structure is
  *  passed to all CDC Class driver functions, so that multiple instances of the same class
@@ -38,15 +39,19 @@ int main(void)
 	sei();
 
 	struct lcdDriver lcdDriver;
+	//register the LCD driver with this driver interface
 	registerDriver(&lcdDriver, LM6800Register);
 	lcdDriver.init();
 
+	portHandlerObj lcdPort;
+	portHandlerConstruct(&lcdPort, &VirtualSerial_CDC_Interface, &lcdDriver);
+	portHandler(&lcdPort);
 
+	/*
 	for (;;)
 	{
 		int16_t ReceivedByte = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
 
-		/* Read bytes from the USB OUT endpoint into the USART transmit buffer */
 		if (!(ReceivedByte < 0))
 		{
 			//CDC_Device_SendByte(&VirtualSerial_CDC_Interface, ReceivedByte);
@@ -133,6 +138,8 @@ int main(void)
 		CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
 		USB_USBTask();
 	}
+	*/
+
 }
 
 /** Configures the board hardware and chip peripherals for the demo's functionality. */
