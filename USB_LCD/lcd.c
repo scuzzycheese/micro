@@ -39,7 +39,6 @@ int main(void)
 
 	struct lcdDriver lcdDriver;
 	registerDriver(&lcdDriver, LM6800Register);
-
 	lcdDriver.init();
 
 

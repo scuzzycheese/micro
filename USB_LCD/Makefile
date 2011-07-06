@@ -152,6 +152,7 @@ SRC = $(TARGET).c                                                 \
 	  Descriptors.c                                               \
 		lcdDrivers/LM6800/LM6800.c																	\
 		lcdFramework/lcdClass.c																\
+		lcdFramework/protocolHandler.c																\
 	  $(LUFA_SRC_USB)                                             \
 	  $(LUFA_SRC_USBCLASS)
 
