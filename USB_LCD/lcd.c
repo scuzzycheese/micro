@@ -33,7 +33,6 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
  */
 int main(void)
 {
-
 	SetupHardware();
 
 	sei();
@@ -46,100 +45,6 @@ int main(void)
 	portHandlerObj lcdPort;
 	portHandlerConstruct(&lcdPort, &VirtualSerial_CDC_Interface, &lcdDriver);
 	portHandler(&lcdPort);
-
-	/*
-	for (;;)
-	{
-		int16_t ReceivedByte = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
-
-		if (!(ReceivedByte < 0))
-		{
-			//CDC_Device_SendByte(&VirtualSerial_CDC_Interface, ReceivedByte);
-			if(ReceivedByte == 's')
-			{
-				for(uint8_t y = 0; y < 64; y ++)
-				{
-					for(uint8_t x = 0; x < 255; x ++)
-					{
-						lcdDriver.setPixel(x, y);
-					}
-					lcdDriver.setPixel(255, y);
-				}
-			}
-			if(ReceivedByte == 'x')
-			{
-				for(uint8_t y = 0; y < 64; y ++)
-				{
-					for(uint8_t x = 0; x < 255; x ++)
-					{
-						if(x & 1) lcdDriver.clearPixel(x, y);
-						else lcdDriver.setPixel(x, y);
-					}
-					lcdDriver.clearPixel(255, y);
-				}
-			}
-			if(ReceivedByte == 'b')
-			{
-				char data[64] =
-				{
-					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
-					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
-					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
-					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
-					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
-					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
-					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
-					0b00011000, 0b00100100, 0b01000010, 0b10000001, 0b01000010, 0b00100100, 0b00011000, 0b00000000,
-				};
-				for(uint8_t chip = 0; chip < 4; chip ++)
-				{
-					for(uint8_t page = 0; page < 8; page ++)
-					{
-						lcdDriver.writeBlock(chip, page, data);
-					}
-				}
-			}
-			if(ReceivedByte == 'c')
-			{
-				lcdDriver.clearScreen();
-			}
-			if(ReceivedByte == 'r')
-			{
-
-				//uint8_t one = LM6800Read(1);
-				//uint8_t two = LM6800Read(2);
-				//uint8_t three = LM6800Read(3);
-				//uint8_t four = LM6800Read(4);
-				uint8_t status = LM6800ReadStatus(1);
-
-				char blah[30];
-				//sprintf(blah, "0x%X - 0x%X - 0x%X - 0x%X\r\n", one, two, three, four);
-				sprintf(blah, "STATUS: 0x%X\r\n", status);
-				for(char *tmp = blah; *tmp; tmp ++)
-				{
-					CDC_Device_SendByte(&VirtualSerial_CDC_Interface, *tmp);
-				}
-
-			}
-			if(ReceivedByte == 'o')
-			{
-				LM6800Write(1,0x3F, LM6800_COMMAND);
-			}
-			if(ReceivedByte == 'f')
-			{
-				LM6800Write(1,0x3E, LM6800_COMMAND);
-			}
-
-			PORTE |= (1 << PORTE6);
-			_delay_ms(10);
-			PORTE &= ~(1 << PORTE6);
-		}
-
-		CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
-		USB_USBTask();
-	}
-	*/
-
 }
 
 /** Configures the board hardware and chip peripherals for the demo's functionality. */

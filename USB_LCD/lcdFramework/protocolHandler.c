@@ -98,11 +98,13 @@ void portHandler(portHandlerObj *this)
 						break;
 					}
 					//writeBlock
+					//TODO: turn this into a streaming function, where each byte of the block
+					//is written as it comes off the USB port
 					case 2:
 					{
 						lcdXYType x = fetchXYFromSerial(this->VirtualSerial_CDC_Interface);
 						lcdXYType y = fetchXYFromSerial(this->VirtualSerial_CDC_Interface);
-						char blockData[64];
+						char blockData[LCD_BYTES_PER_BLOCK];
 						for(int i = 0; i < 64; i ++)
 						{
 							blockData[i] = CDC_Device_ReceiveByte_blocking(this->VirtualSerial_CDC_Interface);

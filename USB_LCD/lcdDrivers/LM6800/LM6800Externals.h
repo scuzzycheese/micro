@@ -15,6 +15,7 @@ extern "C"
 
 	//This is required by all LCD driver
 	typedef uint8_t lcdXYType;
+	#define LCD_BYTES_PER_BLOCK 64
 
 #ifdef	__cplusplus
 }
