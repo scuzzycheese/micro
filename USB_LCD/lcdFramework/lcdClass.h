@@ -44,11 +44,11 @@ extern "C"
 
 	struct lcdDriver
 	{
-		void (*getPixel)(uint8_t x, uint8_t y, union pixelColour *colour);
-		void (*setPixel)(uint8_t x, uint8_t y);
-		void (*clearPixel)(uint8_t x, uint8_t y);
+		void (*getPixel)(lcdXYType x, lcdXYType y, union pixelColour *colour);
+		void (*setPixel)(lcdXYType x, lcdXYType y);
+		void (*clearPixel)(lcdXYType x, lcdXYType y);
 
-		void (*writeBlock)(uint8_t x, uint8_t y, char *data);
+		void (*writeBlock)(lcdXYType x, lcdXYType y, char *data);
 
 		struct lcdData (*getLcdData)(void);
 		void (*init)(void);
