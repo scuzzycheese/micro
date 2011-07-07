@@ -1,5 +1,5 @@
 #include "protocolHandler.h"
-
+#include <inttypes.h>
 
 void portHandlerConstruct(portHandlerObj *this, USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface, struct lcdDriver *driver)
 {
@@ -18,15 +18,20 @@ int16_t CDC_Device_ReceiveByte_blocking(USB_ClassInfo_CDC_Device_t *VirtualSeria
 	}
 }
 
-void ledBlink(void)
+//NOTE: LEAST SIGNIFICANT BYTE FIRST!!!!
+lcdXYType fetchXYFromSerial(USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface)
 {
-	PORTE |= (1 << PORTE6);
-	_delay_ms(10);
-	PORTE &= ~(1 << PORTE6);
+	lcdXYType xyVal = 0;
+	for(uint8_t i = 0; i < sizeof(lcdXYType); i ++)
+	{
+		 xyVal |= (CDC_Device_ReceiveByte_blocking(VirtualSerial_CDC_Interface) << (8 * i));
+	}
+	return xyVal;
 }
 
 void portHandler(portHandlerObj *this)
 {
+
 
 	this->lcdDriver->clearScreen();
 	while(1)
@@ -51,16 +56,19 @@ void portHandler(portHandlerObj *this)
 			{
 				switch(ReceivedByte & 0b00111111)
 				{
+					//init
 					case 0:
 					{
 						this->lcdDriver->init();
 						break;
 					}
+					//reset
 					case 1:
 					{
 						this->lcdDriver->reset();
 						break;
 					}
+					//clearScreen
 					case 2:
 					{
 						this->lcdDriver->clearScreen();
@@ -76,24 +84,24 @@ void portHandler(portHandlerObj *this)
 					//setPixel
 					case 0:
 					{
-						uint8_t x = CDC_Device_ReceiveByte_blocking(this->VirtualSerial_CDC_Interface);
-						uint8_t y = CDC_Device_ReceiveByte_blocking(this->VirtualSerial_CDC_Interface);
+						lcdXYType x = fetchXYFromSerial(this->VirtualSerial_CDC_Interface);
+						lcdXYType y = fetchXYFromSerial(this->VirtualSerial_CDC_Interface);
 						this->lcdDriver->setPixel(x, y);
 						break;
 					}
 					//clearPixel
 					case 1:
 					{
-						uint8_t x = CDC_Device_ReceiveByte_blocking(this->VirtualSerial_CDC_Interface);
-						uint8_t y = CDC_Device_ReceiveByte_blocking(this->VirtualSerial_CDC_Interface);
+						lcdXYType x = fetchXYFromSerial(this->VirtualSerial_CDC_Interface);
+						lcdXYType y = fetchXYFromSerial(this->VirtualSerial_CDC_Interface);
 						this->lcdDriver->clearPixel(x, y);
 						break;
 					}
 					//writeBlock
 					case 2:
 					{
-						uint8_t x = CDC_Device_ReceiveByte_blocking(this->VirtualSerial_CDC_Interface);
-						uint8_t y = CDC_Device_ReceiveByte_blocking(this->VirtualSerial_CDC_Interface);
+						lcdXYType x = fetchXYFromSerial(this->VirtualSerial_CDC_Interface);
+						lcdXYType y = fetchXYFromSerial(this->VirtualSerial_CDC_Interface);
 						char blockData[64];
 						for(int i = 0; i < 64; i ++)
 						{
@@ -109,23 +117,27 @@ void portHandler(portHandlerObj *this)
 			{
 				switch(ReceivedByte & 0b00111111)
 				{
+					//getPixel
 					case 0:
 					{
-						uint8_t x = CDC_Device_ReceiveByte_blocking(this->VirtualSerial_CDC_Interface);
-						uint8_t y = CDC_Device_ReceiveByte_blocking(this->VirtualSerial_CDC_Interface);
+						lcdXYType x = fetchXYFromSerial(this->VirtualSerial_CDC_Interface);
+						lcdXYType y = fetchXYFromSerial(this->VirtualSerial_CDC_Interface);
 						union pixelColour pxColour;
 						this->lcdDriver->getPixel(x, y, &pxColour);
-						char *tmpPxData = &pxColour;
+						//TODO: maybe change the char * to some fancy casting instead
+						char *tmpPxData = (char *)&pxColour;
 						for(uint8_t i = 0; i < sizeof(union pixelColour); i ++)
 						{
 							CDC_Device_SendByte(this->VirtualSerial_CDC_Interface, tmpPxData[i]);
 						}
 						break;
 					}
+					//getLcdData
 					case 1:
 					{
 						struct lcdData lcdData = this->lcdDriver->getLcdData();
-						char *tmpLcdData = &lcdData;
+						//TODO: maybe change the char * to some fancy casting instead
+						char *tmpLcdData = (char *)&lcdData;
 						for(uint8_t i = 0; i < sizeof(struct lcdData); i ++)
 						{
 							CDC_Device_SendByte(this->VirtualSerial_CDC_Interface, tmpLcdData[i]);

@@ -5,7 +5,7 @@
 #define BITDEPTH 1
 
 #include "lcdClass.h"
-
+#include "LM6800Externals.h"
 
 #ifndef _LM6800_H
 #define	_LM6800_H
@@ -57,7 +57,7 @@ extern "C"
 
 	#define LM6800_NUM_PAGES_PER_CONROLLER 8
 	#define LM6800_RES_PAGE_X 64
-	#define LM6800_RES_PAGE_Y 64
+	#define LM6800_RES_PAGE_Y 8
 	#define LM6800_COLUMNS_PER_PAGE 64
 
 	#define LM6800_RES_X 256
@@ -80,6 +80,9 @@ extern "C"
 	#define LM6800_CSC PORTB5
 
 	#define LM6800_RESET PORTB6
+
+
+
 
 #ifdef	__cplusplus
 }

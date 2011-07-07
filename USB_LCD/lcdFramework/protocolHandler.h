@@ -6,7 +6,6 @@
  */
 
 #include <LUFA/Drivers/USB/USB.h>
-#include "LM6800/LM6800.h"
 #include "lcdClass.h"
 
 #ifndef _PROTOCOLHANDLER_H
@@ -27,7 +26,7 @@ extern "C"
 void portHandlerConstruct(portHandlerObj *this, USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface, struct lcdDriver *driver);
 void portHandler(portHandlerObj *this);
 int16_t CDC_Device_ReceiveByte_blocking(USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface);
-void ledBlink(void);
+uint8_t fetchXYFromSerial(USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface) __attribute__((always_inline));
 
 
 #ifdef	__cplusplus

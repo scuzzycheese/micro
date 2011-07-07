@@ -1,10 +1,5 @@
-/* 
- * File:   lcdClass.h
- * Author: scuzzy
- *
- * Created on 29 June 2011, 9:33 PM
- */
 #include <inttypes.h>
+#include "LM6800/LM6800Externals.h"
 
 #ifndef _LCDCLASS_H
 #define	_LCDCLASS_H
@@ -13,7 +8,6 @@
 extern "C"
 {
 #endif
-
 
 	struct lcdData
 	{
@@ -28,6 +22,11 @@ extern "C"
 	#define BITDEPTH 8
 	#endif
 
+	/**
+	 * Still not 100% sure what to do here, the struct
+	 * could go over size if it's monochrome, but 8 bit
+	 * say... Hmmmmm
+	 */
 	union pixelColour
 	{
 		struct
