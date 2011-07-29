@@ -2,12 +2,12 @@ EAGLE AutoRouter Statistics:
 
 Job           : /home/scuzzy/devel/micro/pcb/USB_LCD_V0.1/USB_LCD.brd
 
-Start at      : 23:33:03 (2011/07/26)
-End at        : 23:33:03 (2011/07/26)
+Start at      : 21:45:50 (2011/07/28)
+End at        : 21:45:50 (2011/07/28)
 Elapsed time  : 00:00:00
 
-Signals       :    17   RoutingGrid: 50 mil  Layers: 2
-Connections   :    15   predefined:  0 ( 0 Vias )
+Signals       :    25   RoutingGrid: 50 mil  Layers: 2
+Connections   :    46   predefined:  0 ( 0 Vias )
 
 Router memory :   24992
 
@@ -18,8 +18,8 @@ Number of Ripups  :         0         0         0         0         0         0
 max. Level        :         0         1         0         0         0         0
 max. Total        :         0         0         0         0         0         0
 
-Routed            :         0         4         4         4         4         4
-Vias              :         0         4         1         0         0         0
-Resolution        :     0.0 %    26.7 %    26.7 %    26.7 %    26.7 %    26.7 %
+Routed            :         3        21        21        21        21        21
+Vias              :         0        18         1         0         0         0
+Resolution        :     6.5 %    45.7 %    45.7 %    45.7 %    45.7 %    45.7 %
 
-Final             : 26.7% finished
+Final             : 45.7% finished
