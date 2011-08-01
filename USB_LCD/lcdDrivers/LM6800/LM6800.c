@@ -10,9 +10,10 @@ void LM6800Init(void)
 		(1 << LM6800_CSA) |
 		(1 << LM6800_CSB) |
 		(1 << LM6800_CSC) |
-		(1 << LM6800_RESET) |
 		(1 << LM6800_RS) |
 		(1 << LM6800_RW);
+
+	LM6800_RESET_DDR |= (1 << LM6800_RESET);
 
 	//set the default state of the ports
 	LM6800_CONTROL_PORT = 0x00;
@@ -22,12 +23,7 @@ void LM6800Init(void)
 	LM6800_CONTROL_PORT |= (1 << LM6800_CSC);
 
 	//reset LCD
-	LM6800_CONTROL_PORT |= (1 << LM6800_RESET);
-	_delay_ms(1);
-	LM6800_CONTROL_PORT &= ~(1 << LM6800_RESET);
-	_delay_ms(1);
-	LM6800_CONTROL_PORT |= (1 << LM6800_RESET);
-	_delay_ms(1);
+	LM6800Reset();
 
 	//Turn on the display for all chips
 	LM6800Write(0,0x3f, LM6800_COMMAND);
@@ -47,11 +43,11 @@ void LM6800Init(void)
 void LM6800Reset(void)
 {
 	//reset LCD
-	LM6800_CONTROL_PORT |= (1 << LM6800_RESET);
+	LM6800_RESET_PORT |= (1 << LM6800_RESET);
 	_delay_ms(1);
-	LM6800_CONTROL_PORT &= ~(1 << LM6800_RESET);
+	LM6800_RESET_PORT &= ~(1 << LM6800_RESET);
 	_delay_ms(1);
-	LM6800_CONTROL_PORT |= (1 << LM6800_RESET);
+	LM6800_RESET_PORT |= (1 << LM6800_RESET);
 	_delay_ms(1);
 }
 
