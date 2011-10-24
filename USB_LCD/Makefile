@@ -8,7 +8,8 @@
 #	avrdude -p m32u4 -P usb -c dragon_isp -e -U flash:w:lcd.hex
 #
 #fuse:
-#	avrdude -p m32u4 -P usb -c dragon_isp -U lfuse:w:0xde:m -U hfuse:w:0x9f:m -U efuse:w:0xff:m
+#	avrdude -p m32u4 -P usb -c dragon_isp -U lfuse:w:0xFF:m -U hfuse:w:0xd8:m -U efuse:w:0xcf:m
+#	avrdude -p m32u4 -P usb -c dragon_isp -U lfuse:w:0xFF:m -U hfuse:w:0xd9:m -U efuse:w:0xcf:m
 #
 #clean:
 #	rm -Rf lcd.hex lcd.o lcd.elf

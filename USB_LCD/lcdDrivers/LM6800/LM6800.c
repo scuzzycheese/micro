@@ -5,6 +5,8 @@ static void LM6800ComputePixelConfigData(uint8_t x, uint8_t y, struct LM6800Pixe
 
 void LM6800Init(void)
 {
+	currentContrast = 0;
+
 	LM6800_CONTROL_DDR |=
 		(1 << LM6800_CS) |
 		(1 << LM6800_CSA) |
@@ -21,6 +23,12 @@ void LM6800Init(void)
 
 	//Apparently setting CSC high disables access to the LCD
 	LM6800_CONTROL_PORT |= (1 << LM6800_CSC);
+
+	//set up the port that controls contrast
+	LM6800_CONT_DDR |= (1 << LM6800_CONT_UD);
+
+	//set contrast
+	LM6800SetBacklight(1);
 
 	//reset LCD
 	LM6800Reset();
@@ -50,6 +58,7 @@ void LM6800Reset(void)
 	LM6800_RESET_PORT |= (1 << LM6800_RESET);
 	_delay_ms(1);
 }
+
 
 struct lcdData LM6800GetLCDData(void)
 {
@@ -314,4 +323,10 @@ void LM6800SelectChip(uint8_t chip)
 			LM6800_CONTROL_PORT &= ~((1 << LM6800_CSA) | (1 << LM6800_CSB) | (1 << LM6800_CSC));
 			break;
 	}
+}
+
+void LM6800SetBacklight(uint8_t state)
+{
+	if(state) LM6800_CONT_PORT &= ~(1 << LM6800_CONT_UD);
+	else LM6800_CONT_PORT |= (1 << LM6800_CONT_UD);
 }

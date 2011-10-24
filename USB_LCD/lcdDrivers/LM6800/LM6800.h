@@ -30,6 +30,8 @@ extern "C"
 		uint8_t pixely;
 	};
 
+	uint8_t currentContrast;
+
 	#define LM6800_DATA_DELAY			__asm("nop;");\
 												__asm("nop;");\
 												__asm("nop;");\
@@ -52,6 +54,7 @@ extern "C"
 	void LM6800GetPixel(uint8_t x, uint8_t y, union pixelColour *colour);
 	struct lcdData LM6800GetLCDData(void);
 	void LM6800Reset(void);
+	void LM6800SetBacklight(uint8_t state);
 
 	#define LM6800_NUM_CONTROLLERS 4
 
@@ -80,6 +83,10 @@ extern "C"
 	#define LM6800_RESET_PORT PORTE
 	#define LM6800_RESET_DDR DDRE
 	#define LM6800_RESET PORTE6
+
+	#define LM6800_CONT_PORT PORTB
+	#define LM6800_CONT_DDR DDRB
+	#define LM6800_CONT_UD PORTB7
 
 
 
