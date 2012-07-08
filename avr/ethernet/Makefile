@@ -33,14 +33,14 @@ ERROR404 = webserver/pages/404.o
 MODULES = ${INDEX} ${IMAGE} ${ERROR404}
 
 #driver
-ifeq "$(MAKECMDGOALS)" "silabs"
-DRIVER = CP2200
-else
+ifeq "$(MAKECMDGOALS)" "enc"
 DRIVER = ENC28J60
+else
+DRIVER = CP2200
 endif
 
 
-all: enc
+all: silabs
 
 
 silabs:uip.o websrv cp2200 uart hash
@@ -106,12 +106,7 @@ modules-x86:
 
 
 install: ethernet.elf
-	avrdude -p m644 -c stk200 -e -E noreset -U flash:w:ethernet.hex
-
-install-dragon: ethernet.elf
-	avrdude -B9 -p m644 -c dragon_isp -P usb -e -U flash:w:ethernet.hex
-install-dragon644p: ethernet.elf
-	avrdude -B9 -p m644p -c dragon_isp -P usb -e -U flash:w:ethernet.hex
+	avrdude -p m644p -c dragon_isp -P usb -e -U flash:w:ethernet.hex
 
 install-dragon-jtag: ethernet.elf
 	avrdude -B9 -p m644 -c dragon_jtag -P usb -e -U flash:w:ethernet.hex
@@ -121,7 +116,7 @@ fuse:
 	#avrdude -p m644 -c dragon_isp -P usb -e -U lfuse:w:0xff:m -U hfuse:w:0x99:m -U efuse:w:0xff:m
 
 reset:
-	avrdude -p m644 -c dragon_isp -P usb -n
+	avrdude -p m644p -c dragon_isp -P usb -n
 
 reset-jtag:
 	avrdude -p m644 -c dragon_jtag -P usb -n

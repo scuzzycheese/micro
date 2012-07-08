@@ -28,7 +28,7 @@
 void write_CP2200(int adr, char value);
 char read_CP2200(int adr);
 void Init_CP2000(void);
-static void cpWriteMac(char adr,int value);
+static void cpWriteMac(char adr, int value);
 //void PrintTXBuffer(unsigned int start, unsigned char len);
 void nicInit(void);
 u16_t nicPoll(unsigned int maxlen, unsigned char *buffer);
@@ -38,44 +38,49 @@ void network_device_send(void);
 extern void itohex(char *hexstr, int dez, char length);
 
 // globale Variablen
-static char CP2200_status=0;
+static char CP2200_status = 0;
 
 // ---------------------------------------------
+
 unsigned char CP2200_ReadTXBuffer(unsigned int addr)
 {
-	write_CP2200(RAMADDRL,addr & 0xFF); 
-	write_CP2200(RAMADDRH,addr >> 8); 
-	return (read_CP2200(RAMTXDATA));
+	write_CP2200(RAMADDRL, addr & 0xFF);
+	write_CP2200(RAMADDRH, addr >> 8);
+	return(read_CP2200(RAMTXDATA));
 }
 
 // ---------------------------------------------
+
 void CP2200_WriteTXBuffer(unsigned int addr, unsigned char value)
 {
-	write_CP2200(RAMADDRL,addr & 0xFF); 
-	write_CP2200(RAMADDRH,addr >> 8); 
-	write_CP2200(RAMTXDATA,value); 
+	write_CP2200(RAMADDRL, addr & 0xFF);
+	write_CP2200(RAMADDRH, addr >> 8);
+	write_CP2200(RAMTXDATA, value);
 }
 
 // ---------------------------------------------
+
 unsigned char CP2200_ReadRXBuffer(unsigned int addr)
 {
-	write_CP2200(RAMADDRL, (char) (addr & 0xFF)); 
-	write_CP2200(RAMADDRH,(char) (addr >> 8)); 
-	return (read_CP2200(RAMRXDATA));
+	write_CP2200(RAMADDRL, (char) (addr & 0xFF));
+	write_CP2200(RAMADDRH, (char) (addr >> 8));
+	return(read_CP2200(RAMRXDATA));
 }
 
 // ---------------------------------------------
+
 void CP2200_WriteRXBuffer(unsigned int addr, unsigned char value)
 {
-	write_CP2200(RAMADDRL,addr & 0xFF); 
-	write_CP2200(RAMADDRH,addr >> 8); 
-	write_CP2200(RAMRXDATA,value); 
+	write_CP2200(RAMADDRL, addr & 0xFF);
+	write_CP2200(RAMADDRH, addr >> 8);
+	write_CP2200(RAMRXDATA, value);
 }
 
 /*
  * NOTE: These two functions below might need work
  */
 // ---------------------------------------------
+
 u16_t CP2200_ReadPacket(unsigned int maxlen, unsigned char *buffer)
 {
 	// uip_buf
@@ -85,115 +90,137 @@ u16_t CP2200_ReadPacket(unsigned int maxlen, unsigned char *buffer)
 	packetlen = read_CP2200(CPLENH);
 	packetlen = packetlen << 8;
 	packetlen |= read_CP2200(CPLENL);
-	for(i = 0; i < packetlen && i < maxlen; i++)
+
+	char tmp[8];
+	sprintf(tmp, "%u", packetlen);
+	writeLn("packet length: ");
+	writeLn(tmp);
+	writeLn("\r\n");
+
+	for(i = 0; i < packetlen && i < maxlen; i ++)
 	{
 		*(buffer + i) = read_CP2200(RXAUTORD);
 	}
-	return(packetlen);
+	return packetlen;
 }
 
 // ---------------------------------------------
+
 u16_t nicPoll(unsigned int maxlen, unsigned char *buffer)
 {
-	u16_t  packetlen=0;
+	u16_t packetlen = 0;
 	int cp_bufptr;
 	CP2200_status = read_CP2200(CP2200_INT0);
-	if ((CP2200_status & 0x02) == 0x02)
+	if((CP2200_status & 0x02) == 0x02)
 	{
 		writeLn("CP2200 buffer full\r\n");
-		write_CP2200(RXCN,0x01);
-		write_CP2200(RXCN,0x00);
+		write_CP2200(RXCN, 0x01);
+		write_CP2200(RXCN, 0x00);
 	}
-	CP2200_status=0;
-	if (((read_CP2200(CPINFOH) &0x80) != 0) && (read_CP2200(CPINFOL) &0x80) != 0)
+	CP2200_status = 0;
+	if(((read_CP2200(CPINFOH) &0x80) != 0) && (read_CP2200(CPINFOL) &0x80) != 0)
 	{
-		PORTB |= (1<<PB0); // set PB0 = LED OFF
-		
+		PORTB |= (1 << PB0); // set PB0 = LED OFF
+
+		/*
 		cp_bufptr = read_CP2200(RXFIFOHEADH);
 		cp_bufptr = cp_bufptr << 8;
 		cp_bufptr |= read_CP2200(RXFIFOHEADL);
-	
+		*/
+
 		packetlen = CP2200_ReadPacket(maxlen, buffer);
-		write_CP2200(RXCN,0x06); // discharge package
+		write_CP2200(RXCN, 0x06); // discharge package
+		/*
+		if(packetlen <= maxlen)
+		{
+			write_CP2200(RXCN, 0x06); // discharge package
+			writeLn("Discarding packet\r\n");
+		}
+		else
+		{
+			packetlen = maxlen;
+			writeLn("Not Discarding packet!!!\r\n");
+		}
+		 */
 	}
 	return(packetlen);
 }
 
 // ---------------------------------------------
+
 void CP2200_WritePacket(unsigned int len, unsigned char *buffer)
 {
 	//unsigned int len;
 	unsigned int addr;
 	unsigned int t;
 	// wait for previous packet complete
-	while (read_CP2200(TXBUSY) != 0x00);
+	while(read_CP2200(TXBUSY) != 0x00);
 	// set transmit buffer pointer
-	write_CP2200(TXSTARTH,0x00);
-	write_CP2200(TXSTARTL,0x00);
-	
-	addr=0;
-	for (t=0;t < UIP_LLH_LEN;t++)
+	write_CP2200(TXSTARTH, 0x00);
+	write_CP2200(TXSTARTL, 0x00);
+
+	addr = 0;
+	for(t = 0; t < UIP_LLH_LEN; t ++)
 	{
-		CP2200_WriteTXBuffer(addr++, *(buffer + t));
+		CP2200_WriteTXBuffer(addr ++, *(buffer + t));
 	}
-	
-	if(len <= UIP_LLH_LEN + UIP_TCPIP_HLEN) 
+
+	if(len <= UIP_LLH_LEN + UIP_TCPIP_HLEN)
 	{
-		
-		for (t=UIP_LLH_LEN;t < len;t++)
+
+		for(t = UIP_LLH_LEN; t < len; t ++)
 		{
-			CP2200_WriteTXBuffer(addr++, *(buffer + t));
+			CP2200_WriteTXBuffer(addr ++, *(buffer + t));
 		}
-	} 
-	else 
+	}
+	else
 	{
-		for (t=UIP_LLH_LEN;t < UIP_TCPIP_HLEN+UIP_LLH_LEN;t++)
+		for(t = UIP_LLH_LEN; t < UIP_TCPIP_HLEN + UIP_LLH_LEN; t ++)
 		{
-			CP2200_WriteTXBuffer(addr++, *(buffer + t));
+			CP2200_WriteTXBuffer(addr ++, *(buffer + t));
 		}
 
-		for (t=0;t < len - UIP_TCPIP_HLEN - UIP_LLH_LEN;t++)
+		for(t = 0; t < len - UIP_TCPIP_HLEN - UIP_LLH_LEN; t ++)
 		{
-			CP2200_WriteTXBuffer(addr++, *(((unsigned char *)uip_appdata) + t));
+			CP2200_WriteTXBuffer(addr ++, *(((unsigned char *) uip_appdata) + t));
 		}
 	}
-  //for (addr=0;addr<uip_len;addr++)
+	//for (addr=0;addr<uip_len;addr++)
 	//{
 	//	CP2200_WriteTXBuffer(addr, *(uip_buf + addr));
 	//}
-	
+
 	// set packet end
 	//write_CP2200(TXENDH,(char) (uip_len >> 8));
 	//write_CP2200(TXENDL,(char) (uip_len & 0xFF));
-	write_CP2200(TXENDH,(char) (addr >> 8));
-	write_CP2200(TXENDL,(char) (addr & 0xFF));
+	write_CP2200(TXENDH, (char) (addr >> 8));
+	write_CP2200(TXENDL, (char) (addr & 0xFF));
 	// set packet start
-	write_CP2200(TXSTARTH,0x00);
-	write_CP2200(TXSTARTL,0x00);
-	write_CP2200(TXCN,0x01); // send packet
+	write_CP2200(TXSTARTH, 0x00);
+	write_CP2200(TXSTARTL, 0x00);
+	write_CP2200(TXCN, 0x01); // send packet
 	//uart_puts_P(PSTR("[sp] "));	
 }
 
 // ---------------------------------------------
+
 void nicSend(unsigned int len, unsigned char *buffer)
 {
 	CP2200_WritePacket(len, buffer);
 }
-
 
 void write_CP2200(int adr, char value)
 {
 	PORTC |= (1 << ALE); // set ALE 
 	DDRA = 0xFF; // AD0..7 output
 	PORTA = adr; // output address
-	PORTC &= ~(1 << ALE); // clear ALE
-	PORTC &= ~(1 << nWR); // clear WR#
+	PORTC &= ~ (1 << ALE); // clear ALE
+	PORTC &= ~ (1 << nWR); // clear WR#
 	PORTA = value; // D0..7 output 
 	PORTC |= (1 << nWR); // set WR#
 	PORTA = value;
 	DDRA = 0x00; // AD0..7 Tri-state
 }
-
 
 char read_CP2200(int adr)
 {
@@ -201,9 +228,9 @@ char read_CP2200(int adr)
 	PORTC |= (1 << ALE); // set ALE
 	DDRA = 0xFF; // AD0..7 output
 	PORTA = adr; // output address
-	PORTC &= ~(1 << 3); // clear ALE
+	PORTC &= ~ (1 << 3); // clear ALE
 	DDRA = 0x00; // AD0..7 input
-	PORTC &= ~(1 << 5); // clear RD#
+	PORTC &= ~ (1 << 5); // clear RD#
 	value = PINA; // Waitstate
 	value = PINA; // Waitstate
 	value = PINA; // Waitstate
@@ -218,25 +245,26 @@ char read_CP2200(int adr)
  * NOTE: This needs to change, so the mac address can be set outside this function
  */
 // ---------------------------------------------
+
 void nicInit(void)
 {
 	char hexstr[10];
 	uip_ipaddr_t ipaddr;
 	struct uip_eth_addr eaddr;
 	unsigned int i;
-	
+
 	Init_CP2000();
-	
+
 	// own mac address (get from CP2200 flash memory)
-	write_CP2200(FLASHADDRL,0xFA);
-	write_CP2200(FLASHADDRH,0x1F);
+	write_CP2200(FLASHADDRL, 0xFA);
+	write_CP2200(FLASHADDRH, 0x1F);
 	writeLn("\n\rMAC:");
-	for (i=0;i<6;i++)
+	for(i = 0; i < 6; i ++)
 	{
-		eaddr.addr[i]=read_CP2200(FLASHAUTORD); // mac address from CP2200 
+		eaddr.addr[i] = read_CP2200(FLASHAUTORD); // mac address from CP2200
 		sprintf(hexstr, "%X", eaddr.addr[i]);
 		writeLn(hexstr);
-		
+
 	}
 	writeLn("\n\r");
 	// set mac address of this modules 
@@ -244,79 +272,81 @@ void nicInit(void)
 }
 
 // ---------------------------------------------
+
 void Init_CP2000(void)
 {
 	unsigned char tmp;
 	unsigned int tmp16;
 	unsigned int timeout;
-  //reset CP220x
-  read_CP2200(CP2200_INT0); //clear CP2200 INT0
-  write_CP2200(SWRST,4);
-  while (!(read_CP2200(CP2200_INT0)& 0x20)); //wait for reset complete
+	//reset CP220x
+	read_CP2200(CP2200_INT0); //clear CP2200 INT0
+	write_CP2200(SWRST, 4);
+	while(! (read_CP2200(CP2200_INT0)& 0x20)); //wait for reset complete
 
-  
-//PHY INIT
-  write_CP2200(PHYCF,0xFE);
-  write_CP2200(PHYCN,0x00);
-  _delay_ms(1);
-  read_CP2200(CP2200_INT1); 
-  write_CP2200(PHYCN,0x80);
-  _delay_ms(1);
-  write_CP2200(PHYCN,0xE0);
-  _delay_ms(75);
-	timeout=3000;
-  while ((!(read_CP2200(CP2200_INT1)& 0x01)) && (timeout > 0))
+
+	//PHY INIT
+	write_CP2200(PHYCF, 0xFE);
+	write_CP2200(PHYCN, 0x00);
+	_delay_ms(1);
+	read_CP2200(CP2200_INT1);
+	write_CP2200(PHYCN, 0x80);
+	_delay_ms(1);
+	write_CP2200(PHYCN, 0xE0);
+	_delay_ms(75);
+	timeout = 3000;
+	while((! (read_CP2200(CP2200_INT1)& 0x01)) && (timeout > 0))
 	{
 		_delay_ms(1);
-		timeout--;
+		timeout --;
 	}
-	if (timeout < 1)
+	if(timeout < 1)
 	{
 		writeLn("timeout\r\n");
 	}
-	timeout=3000;
-  while ((!(read_CP2200(PHYCN)& 0x01)) && (timeout > 0))
+	timeout = 3000;
+	while((! (read_CP2200(PHYCN)& 0x01)) && (timeout > 0))
 	{
 		_delay_ms(1);
-		timeout--;
+		timeout --;
 	}
-	if (timeout < 1)
+	if(timeout < 1)
 	{
 		writeLn("timeout\r\n");
 	}
 	//MAC INIT
-  cpWriteMac(MACCF,0x40B3);
-  cpWriteMac(IPGT,0x0015);
-  cpWriteMac(IPGR,0x0C12);
-  cpWriteMac(MAXLEN,0x05EE);
-  write_CP2200(FLASHADDRL,0xFA);
-  write_CP2200(FLASHADDRH,0x1F);
-  tmp16 = 0x0000;
-	tmp16 = read_CP2200(FLASHAUTORD);
-  tmp16 |=read_CP2200(FLASHAUTORD)<<8;
-  cpWriteMac(MACAD2,tmp16);
+	cpWriteMac(MACCF, 0x40B3);
+	cpWriteMac(IPGT, 0x0015);
+	cpWriteMac(IPGR, 0x0C12);
+	cpWriteMac(MAXLEN, 0x05EE);
+	write_CP2200(FLASHADDRL, 0xFA);
+	write_CP2200(FLASHADDRH, 0x1F);
 	tmp16 = 0x0000;
-  tmp16 = read_CP2200(FLASHAUTORD);
-  tmp16 |= read_CP2200(FLASHAUTORD)<<8;
-  cpWriteMac(MACAD1,tmp16);
-  tmp = 0x0000;
 	tmp16 = read_CP2200(FLASHAUTORD);
-  tmp16 |= read_CP2200(FLASHAUTORD)<<8;
-  cpWriteMac(MACAD0,tmp16);
-	write_CP2200(IOPWR,0x0C);
-  cpWriteMac(MACCN,0x01);
-	write_CP2200(INT0EN,0x03);
-	write_CP2200(INT1EN,0x00);
-	read_CP2200(CP2200_INT0); 
-	read_CP2200(CP2200_INT1); 
+	tmp16 |= read_CP2200(FLASHAUTORD) << 8;
+	cpWriteMac(MACAD2, tmp16);
+	tmp16 = 0x0000;
+	tmp16 = read_CP2200(FLASHAUTORD);
+	tmp16 |= read_CP2200(FLASHAUTORD) << 8;
+	cpWriteMac(MACAD1, tmp16);
+	tmp = 0x0000;
+	tmp16 = read_CP2200(FLASHAUTORD);
+	tmp16 |= read_CP2200(FLASHAUTORD) << 8;
+	cpWriteMac(MACAD0, tmp16);
+	write_CP2200(IOPWR, 0x0C);
+	cpWriteMac(MACCN, 0x01);
+	write_CP2200(INT0EN, 0x03);
+	write_CP2200(INT1EN, 0x00);
+	read_CP2200(CP2200_INT0);
+	read_CP2200(CP2200_INT1);
 }
 
 
 // ---------------------------------------------
-static void cpWriteMac(char adr,int value)
+
+static void cpWriteMac(char adr, int value)
 {
-  write_CP2200(MACADDR,adr);
-  write_CP2200(MACDATAH,value>>8);
-  write_CP2200(MACDATAL,value);
-  write_CP2200(MACRW,1);
+	write_CP2200(MACADDR, adr);
+	write_CP2200(MACDATAH, value >> 8);
+	write_CP2200(MACDATAL, value);
+	write_CP2200(MACRW, 1);
 }
