@@ -4,34 +4,93 @@
 #include <util/delay.h>
 #include <geyserwise.h>
 
-volatile enum
+
+volatile struct
 {
-   UNKNOWN,
-   STARTED,
-   STOPPED
-} TIMERSTATE;
+      uint8_t resetCondition : 1;
+      uint8_t startCondition : 1;
+      uint8_t dataBitCounter : 4;
+} conditionState = {0, 0, 0};
+
+volatile uint16_t timerValUp = 0;
+volatile uint16_t timerValDown = 0;
+volatile uint8_t dataBit = 0;
+
+#define INTVAL (PIND & (1 << PORTD2))
+#define START_TIMER TCCR1B = (1 << CS10) | (1 << CS12)
+#define STOP_TIMER TCCR1B = 0x00
 
 ISR(INT0_vect)
 {
    cli();
 
    //Also have to check the state of the pin
-   if(TIMERSTATE == STOPPED || TIMERSTATE == UNKNOWN)
+   if(INTVAL)
    {
+      STOP_TIMER;
+      timerValDown = TCNT1;
       TCNT1 = 0x00;
-      //start the timer
-      //prescaler of clk/1024, 16mil/1024 = 15625 increments per second
-      TCCR1B = (1 << CS10) | (1 << CS12);
-      TIMERSTATE = STARTED;
+      timerValUp = 0;
+
+      START_TIMER;
    }
 
    //Also have to check the state of the pin
-   if(TIMERSTATE == STARTED)
+   if(!INTVAL)
    {
-      //Stop the timer
-      TCCR1B = 0x00;
-      uint16_t timerVal = TCNT1;
-      TIMERSTATE = STOPPED;
+      STOP_TIMER;
+      timerValUp = TCNT1;
+      TCNT1 = 0x00;
+      timerValDown = 0;
+
+      START_TIMER;
+   }
+
+   //We have encountered a reset condition, now move to a normal flow
+   if(timerValUp > 50)
+   {
+      conditionState.resetCondition = 1;
+      conditionState.dataBitCounter = 0;
+      conditionState.startCondition = 0;
+   }
+
+   //We are currently in a start condition
+   if(timerValDown > 21 && conditionState.resetCondition == 1)
+   {
+      conditionState.startCondition = 1;
+      conditionState.resetCondition = 0;
+   }
+
+   //Communication finished
+   if(timerValUp > 21 && conditionState.resetCondition == 0)
+   {
+      conditionState.startCondition = 0;
+      conditionState.resetCondition = 0;
+   }
+
+   if(conditionState.startCondition && conditionState.resetCondition == 0)
+   {
+      if(timerValDown > 10)
+      {
+         dataBit |= (1 << conditionState.dataBitCounter);
+      }
+
+      if(conditionState.dataBitCounter >= 7)
+      {
+         //Probaly not nessesary
+         conditionState.dataBitCounter = 0;
+
+         if(dataBit > 68)
+         {
+            PORTC |= (1 << PORTC0);
+         }
+
+         dataBit = 0;
+      }
+      else
+      {
+         conditionState.dataBitCounter ++;
+      }
    }
 
 
@@ -40,38 +99,98 @@ ISR(INT0_vect)
    sei();
 }
 
-void
-delay_ms(unsigned int ms)
-/* delay for a minimum of <ms> */
+void sendStart(void)
 {
-   // we use a calibrated macro. This is more
-   // accurate and not so much compiler dependent
-   // as self made code.
-   while(ms)
-   {
-      _delay_ms(0.96);
-      ms--;
-   }
+   PORTD |= (1 << PORTD2);
+   _delay_ms(5);
+   PORTD &= ~(1 << PORTD2);
+   _delay_ms(1.5);
+   PORTD |= (1 << PORTD2);
+   _delay_ms(0.4);
+}
+void sendEnd(void)
+{
+   _delay_ms(1.1);
+   PORTD &= ~(1 << PORTD2);
 }
 
-int
-main(void)
+void send0(void)
+{
+   PORTD &= ~(1 << PORTD2);
+   _delay_ms(0.4);
+   PORTD |= (1 << PORTD2);
+   _delay_ms(0.4);
+}
+
+void send1(void)
+{
+   PORTD &= ~(1 << PORTD2);
+   _delay_ms(1.2);
+   PORTD |= (1 << PORTD2);
+   _delay_ms(0.4);
+}
+
+int main(void)
 {
 
    DDRC = (1 << PORTC0);
+   DDRD = (1 << PORTD2);
 
-   PORTC = 1;
+//   PORTC = 1;
 
    //power down the ADC conversion
    ACSR |= (1 << ACD);
 
-   MCUCR = (1 << ISC10);
+   GICR |= (1 << INT0);
+   MCUCR |= (1 << ISC00);
 
    sei();
 
    while(1)
    {
+      sendStart();
+
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+
+      send1();
+      send0();
+      send0();
+      send1();
+      send1();
+      send0();
+      send1();
+      send0();
+
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+
+      send0();
+      send0();
+      send0();
+      send1();
+      send1();
+      send0();
+      send0();
+      send0();
+
+
+      sendEnd();
+      _delay_ms(1000);
    }
 
    return 0;
 }
+
