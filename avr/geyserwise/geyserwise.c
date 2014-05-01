@@ -10,11 +10,12 @@ volatile struct
       uint8_t resetCondition : 1;
       uint8_t startCondition : 1;
       uint8_t dataBitCounter : 4;
-} conditionState = {0, 0, 0};
+		uint8_t dataByteCounter : 2;
+} conditionState = {0, 0, 0, 0};
 
 volatile uint16_t timerValUp = 0;
 volatile uint16_t timerValDown = 0;
-volatile uint8_t dataBit = 0;
+volatile uint8_t dataBit[4] = {0, 0, 0, 0};
 
 #define INTVAL (PIND & (1 << PORTD2))
 #define START_TIMER TCCR1B = (1 << CS10) | (1 << CS12)
@@ -52,6 +53,7 @@ ISR(INT0_vect)
       conditionState.resetCondition = 1;
       conditionState.dataBitCounter = 0;
       conditionState.startCondition = 0;
+		conditionState.dataByteCounter = 0;
    }
 
    //We are currently in a start condition
@@ -59,6 +61,7 @@ ISR(INT0_vect)
    {
       conditionState.startCondition = 1;
       conditionState.resetCondition = 0;
+		return;
    }
 
    //Communication finished
@@ -70,27 +73,44 @@ ISR(INT0_vect)
 
    if(conditionState.startCondition && conditionState.resetCondition == 0)
    {
-      if(timerValDown > 10)
-      {
-         dataBit |= (1 << conditionState.dataBitCounter);
-      }
+		if(INTVAL)
+		{
+    	  if(timerValDown > 10)
+  	    	{
+         	dataBit[conditionState.dataByteCounter] |= (1 << conditionState.dataBitCounter);
+      	}
 
-      if(conditionState.dataBitCounter >= 7)
-      {
-         //Probaly not nessesary
-         conditionState.dataBitCounter = 0;
+      	if(conditionState.dataBitCounter >= 7)
+      	{
+         	//Probaly not nessesary
+         	conditionState.dataBitCounter = 0;
+				if(conditionState.dataByteCounter >= 3)
+				{
+         		conditionState.dataByteCounter = 0;
+         		dataBit[0] = 0;
+         		dataBit[1] = 0;
+         		dataBit[2] = 0;
+         		dataBit[3] = 0;
+					PORTB = 0;
+				}
+				else
+				{
+         		conditionState.dataByteCounter ++;
+				}
 
-         if(dataBit > 68)
-         {
-            PORTC |= (1 << PORTC0);
-         }
+         	if(dataBit[1] > 88)
+         	{
+            	PORTC |= (1 << PORTC0);
+					PORTB = dataBit[1];
+         	}
 
-         dataBit = 0;
-      }
-      else
-      {
-         conditionState.dataBitCounter ++;
-      }
+			
+      	}
+      	else
+      	{
+				conditionState.dataBitCounter ++;
+      	}
+		}
    }
 
 
@@ -135,6 +155,8 @@ int main(void)
 
    DDRC = (1 << PORTC0);
    DDRD = (1 << PORTD2);
+	DDRB = 0xFF;
+	PORTB = 0;
 
 //   PORTC = 1;
 

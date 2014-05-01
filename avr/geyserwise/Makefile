@@ -7,3 +7,6 @@ all:
 
 install:
 	avrdude -p m8 -c dragon_isp -P usb -U flash:w:geyserwise.hex
+
+reset:
+	avrdude -p m8 -c dragon_isp -P usb -n 
