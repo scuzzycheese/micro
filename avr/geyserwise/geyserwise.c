@@ -10,16 +10,22 @@ volatile struct
       uint8_t resetCondition : 1;
       uint8_t startCondition : 1;
       uint8_t dataBitCounter : 4;
-		uint8_t dataByteCounter : 2;
+      uint8_t dataByteCounter : 2;
 } conditionState = {0, 0, 0, 0};
 
 volatile uint16_t timerValUp = 0;
 volatile uint16_t timerValDown = 0;
-volatile uint8_t dataBit[4] = {0, 0, 0, 0};
+volatile uint8_t packetByte[4] = {0, 0, 0, 0};
+volatile uint8_t tempValue = 0;
 
 #define INTVAL (PIND & (1 << PORTD2))
 #define START_TIMER TCCR1B = (1 << CS10) | (1 << CS12)
 #define STOP_TIMER TCCR1B = 0x00
+
+#define RESET_LENGTH 50
+#define START_CONDITION_LENGTH 21
+#define END_CONDITION_LENGTH 21
+#define LONG_PULSE_LENGTH 10
 
 ISR(INT0_vect)
 {
@@ -48,24 +54,29 @@ ISR(INT0_vect)
    }
 
    //We have encountered a reset condition, now move to a normal flow
-   if(timerValUp > 50)
+   if(timerValUp > RESET_LENGTH)
    {
       conditionState.resetCondition = 1;
       conditionState.dataBitCounter = 0;
       conditionState.startCondition = 0;
-		conditionState.dataByteCounter = 0;
+      conditionState.dataByteCounter = 0;
+
+      packetByte[0] = 0;
+      packetByte[1] = 0;
+      packetByte[2] = 0;
+      packetByte[3] = 0;
    }
 
    //We are currently in a start condition
-   if(timerValDown > 21 && conditionState.resetCondition == 1)
+   if(timerValDown > START_CONDITION_LENGTH && conditionState.resetCondition == 1)
    {
       conditionState.startCondition = 1;
       conditionState.resetCondition = 0;
-		return;
+      return;
    }
 
    //Communication finished
-   if(timerValUp > 21 && conditionState.resetCondition == 0)
+   if(timerValUp > END_CONDITION_LENGTH && conditionState.resetCondition == 0)
    {
       conditionState.startCondition = 0;
       conditionState.resetCondition = 0;
@@ -73,44 +84,38 @@ ISR(INT0_vect)
 
    if(conditionState.startCondition && conditionState.resetCondition == 0)
    {
-		if(INTVAL)
-		{
-    	  if(timerValDown > 10)
-  	    	{
-         	dataBit[conditionState.dataByteCounter] |= (1 << conditionState.dataBitCounter);
-      	}
+      if(INTVAL)
+      {
+         if(timerValDown > LONG_PULSE_LENGTH)
+         {
+            packetByte[conditionState.dataByteCounter] |= (1 << conditionState.dataBitCounter);
+         }
 
-      	if(conditionState.dataBitCounter >= 7)
-      	{
-         	//Probaly not nessesary
-         	conditionState.dataBitCounter = 0;
-				if(conditionState.dataByteCounter >= 3)
-				{
-         		conditionState.dataByteCounter = 0;
-         		dataBit[0] = 0;
-         		dataBit[1] = 0;
-         		dataBit[2] = 0;
-         		dataBit[3] = 0;
-					PORTB = 0;
-				}
-				else
-				{
-         		conditionState.dataByteCounter ++;
-				}
+         if(conditionState.dataBitCounter >= 7)
+         {
+            //Here we gleen the correct data from the packets
+             if(packetByte[0] == 0 && packetByte[2] == 0 && packetByte[3] == 24)
+             {
+                tempValue = packetByte[1] - 25;
+             }
 
-         	if(dataBit[1] > 88)
-         	{
-            	PORTC |= (1 << PORTC0);
-					PORTB = dataBit[1];
-         	}
-
-			
-      	}
-      	else
-      	{
-				conditionState.dataBitCounter ++;
-      	}
-		}
+            //Probaly not nessesary
+            conditionState.dataBitCounter = 0;
+            if(conditionState.dataByteCounter >= 3)
+            {
+               conditionState.dataByteCounter = 0;
+            }
+            else
+            {
+               conditionState.dataByteCounter ++;
+            }
+         
+         }
+         else
+         {
+            conditionState.dataBitCounter ++;
+         }
+      }
    }
 
 
@@ -155,8 +160,8 @@ int main(void)
 
    DDRC = (1 << PORTC0);
    DDRD = (1 << PORTD2);
-	DDRB = 0xFF;
-	PORTB = 0;
+   DDRB = 0xFF;
+   PORTB = 0;
 
 //   PORTC = 1;
 
@@ -208,9 +213,56 @@ int main(void)
       send0();
       send0();
 
+      sendEnd();
+
+      _delay_us(47);
+
+      sendStart();
+
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+
+      send1();
+      send0();
+      send0();
+      send1();
+      send1();
+      send0();
+      send1();
+      send0();
+
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+      send0();
+
+      send0();
+      send0();
+      send0();
+      send1();
+      send1();
+      send0();
+      send0();
+      send0();
 
       sendEnd();
+
       _delay_ms(1000);
+
+      if(tempValue > 63)
+      {
+         PORTC |= (1 << PORTC0);
+      }
    }
 
    return 0;
