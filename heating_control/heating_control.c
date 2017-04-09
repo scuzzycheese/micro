@@ -40,7 +40,6 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
  */
 static FILE USBSerialStream;
 
-
 /** Main program entry point. This routine contains the overall program flow, including initial
  *  setup of all components and the main program loop.
  */
@@ -59,8 +58,30 @@ int main(void)
 
 
    lcdDriver.clearScreen();
-   lcdDriver.setPixel(10, 10);
-   lcdDriver.setPixel(20, 10);
+   //lcdDriver.setPixel(10, 10);
+   //lcdDriver.setPixel(20, 10);
+
+   uint8_t char_counter = 0;
+   for(uint8_t i = 0; i < 64; i += 8)
+   {
+      for(uint8_t j = 0; j < 255; j += 5)
+      {
+         lcdDriver.printChar(j, i, char_counter ++);
+      }
+   }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
    portHandlerObj lcdPort;
@@ -95,6 +116,7 @@ int main(void)
 	}
 */
 }
+
 
 /** Configures the board hardware and chip peripherals for the demo's functionality. */
 void SetupHardware(void)

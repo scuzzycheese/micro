@@ -1,5 +1,6 @@
 #include "LM6800.h"
 #include <stdio.h>
+#include "../fonts/glcdfont.h"
 
 static void LM6800ComputePixelConfigData(uint8_t x, uint8_t y, struct LM6800PixelConfigData *data) __attribute__((always_inline));
 
@@ -108,6 +109,24 @@ void LM6800ClearPixel(uint8_t x, uint8_t y)
 }
 
 
+void LM6800PrintChar(uint8_t x, uint8_t y, unsigned char c)
+{
+
+   for(uint8_t i = 0; i < 5; i ++)
+   {
+      const char char_item = pgm_read_byte(&font[(c * 5) + i]);
+
+      for(uint8_t j = 0; j < 8; j ++) 
+      {
+         uint8_t pixel_set = char_item & (1 << j);
+         if(pixel_set)
+         {
+            LM6800SetPixel(i + x, j + y);
+         }
+      }
+
+   }
+}
 
 void LM6800SetPixel(uint8_t x, uint8_t y)
 {
@@ -298,6 +317,7 @@ void LM6800Register(struct lcdDriver *driver)
 	driver->reset = LM6800Reset;
 	driver->setPixel = LM6800SetPixel;
 	driver->writeBlock = LM6800WriteBlock;
+   driver->printChar = LM6800PrintChar;
 }
 
 void LM6800SelectChip(uint8_t chip)

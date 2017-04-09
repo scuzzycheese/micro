@@ -54,6 +54,7 @@ extern "C"
 		void (*init)(void);
 		void (*reset)(void);
 		void (*clearScreen)(void);
+      void (*printChar)(uint8_t x, uint8_t y, unsigned char c);
 	};
 
 

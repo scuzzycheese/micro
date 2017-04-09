@@ -55,6 +55,7 @@ extern "C"
 	struct lcdData LM6800GetLCDData(void);
 	void LM6800Reset(void);
 	void LM6800SetBacklight(uint8_t state);
+   void LM6800PrintChar(uint8_t x, uint8_t y, unsigned char c);
 
 	#define LM6800_NUM_CONTROLLERS 4
 

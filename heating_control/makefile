@@ -22,8 +22,8 @@ SRC          = $(TARGET).c Descriptors.c $(LUFA_SRC_USB) $(LUFA_SRC_USBCLASS) lc
 LUFA_PATH    = ../../LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -IConfig/ -IlcdDrivers/ -IlcdFramework/
 LD_FLAGS     =
-AVRDUDE_PROGRAMMER = avr109
-AVRDUDE_PORT = /dev/cu.usbmodem1411
+AVRDUDE_PROGRAMMER = dragon_isp
+#AVRDUDE_PORT = /dev/cu.usbmodem1411
 
 # Default target
 all:
