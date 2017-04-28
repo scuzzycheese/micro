@@ -66,10 +66,12 @@ int main(void)
    {
       for(uint8_t j = 0; j < 255; j += 5)
       {
-         lcdDriver.printChar(j, i, char_counter ++);
+         //lcdDriver.printChar(j, i, char_counter ++);
       }
    }
 
+   lcdDriver.printf(0, 0, "Hello World!");
+   lcdDriver.printf(0, 10, "Pipe temp: %d%c", 45, 9);
 
 
 

@@ -128,6 +128,34 @@ void LM6800PrintChar(uint8_t x, uint8_t y, unsigned char c)
    }
 }
 
+
+void LM6800VSPrintf(uint8_t x, uint8_t y, const char *fmt, va_list ap) 
+{
+
+   char testString[1000];
+   vsprintf(testString, fmt, ap);
+
+   char *progressionPointer = testString;
+   uint8_t x_val = x;
+   while(*progressionPointer != '\0') 
+   {
+      char charToPrint = *progressionPointer + 50;
+      LM6800PrintChar(x_val, y, *progressionPointer);
+      x_val += 6;
+      progressionPointer += sizeof(char);
+   }
+
+}
+
+void LM6800Printf(uint8_t x, uint8_t y, const char *fmt, ...) 
+{
+   va_list argp;
+   va_start(argp, fmt);
+   LM6800VSPrintf(x, y, fmt, argp);
+   va_end(argp);
+
+}
+
 void LM6800SetPixel(uint8_t x, uint8_t y)
 {
 	struct LM6800PixelConfigData piConData;
@@ -318,6 +346,7 @@ void LM6800Register(struct lcdDriver *driver)
 	driver->setPixel = LM6800SetPixel;
 	driver->writeBlock = LM6800WriteBlock;
    driver->printChar = LM6800PrintChar;
+   driver->printf = LM6800Printf;
 }
 
 void LM6800SelectChip(uint8_t chip)

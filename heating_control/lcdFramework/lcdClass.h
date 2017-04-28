@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include "LM6800/LM6800Externals.h"
+#include <stdarg.h>
 
 #ifndef _LCDCLASS_H
 #define	_LCDCLASS_H
@@ -55,6 +56,7 @@ extern "C"
 		void (*reset)(void);
 		void (*clearScreen)(void);
       void (*printChar)(uint8_t x, uint8_t y, unsigned char c);
+      void (*printf)(uint8_t x, uint8_t y, const char *fmt, ...);
 	};
 
 

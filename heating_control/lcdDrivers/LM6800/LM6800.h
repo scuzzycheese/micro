@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <util/delay.h>
+#include <stdarg.h>
 
 //this needs to be defined, as it's used to define things about the lcdClass object
 #define BITDEPTH 1
@@ -56,6 +57,8 @@ extern "C"
 	void LM6800Reset(void);
 	void LM6800SetBacklight(uint8_t state);
    void LM6800PrintChar(uint8_t x, uint8_t y, unsigned char c);
+   void LM6800VSPrintf(uint8_t x, uint8_t y, const char *fmt, va_list ap);
+   void LM6800Printf(uint8_t x, uint8_t y, const char *fmt, ...);
 
 	#define LM6800_NUM_CONTROLLERS 4
 
