@@ -1,6 +1,7 @@
 #include "LM6800.h"
 #include <stdio.h>
 #include "../fonts/glcdfont.h"
+#include <string.h>
 
 static void LM6800ComputePixelConfigData(uint8_t x, uint8_t y, struct LM6800PixelConfigData *data) __attribute__((always_inline));
 
@@ -132,14 +133,13 @@ void LM6800PrintChar(uint8_t x, uint8_t y, unsigned char c)
 void LM6800VSPrintf(uint8_t x, uint8_t y, const char *fmt, va_list ap) 
 {
 
-   char testString[1000];
+   char testString[strlen(fmt) + 50];
    vsprintf(testString, fmt, ap);
 
    char *progressionPointer = testString;
    uint8_t x_val = x;
    while(*progressionPointer != '\0') 
    {
-      char charToPrint = *progressionPointer + 50;
       LM6800PrintChar(x_val, y, *progressionPointer);
       x_val += 6;
       progressionPointer += sizeof(char);
