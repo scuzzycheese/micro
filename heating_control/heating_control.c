@@ -3,6 +3,7 @@
 #include "LM6800/LM6800.h"
 #include "lcdClass.h"
 #include "protocolHandler.h"
+#include <util/delay.h>
 
 
 /** LUFA CDC Class driver interface configuration and state information. This structure is
@@ -40,6 +41,10 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
  */
 static FILE USBSerialStream;
 
+uint16_t readVcc();
+void enableADC();
+void disableADC();
+
 /** Main program entry point. This routine contains the overall program flow, including initial
  *  setup of all components and the main program loop.
  */
@@ -70,8 +75,16 @@ int main(void)
       }
    }
 
-   lcdDriver.printf(0, 0, "Hello World!");
-   lcdDriver.printf(0, 10, "Pipe temp: %d%c", 45, 9);
+   //lcdDriver.printf(0, 0, "Hello World!");
+   //lcdDriver.printf(0, 10, "Pipe temp: %d%c", 45, 9);
+
+   enableADC();
+   while(true)
+   {
+      _delay_ms(2000);
+      lcdDriver.clearScreen();
+      lcdDriver.printf(0, 20, "VCC: %u", readVcc());
+   }
 
 
 
@@ -179,3 +192,34 @@ void EVENT_CDC_Device_ControLineStateChanged(USB_ClassInfo_CDC_Device_t *const C
 	*/
 	bool HostReady = (CDCInterfaceInfo->State.ControlLineStates.HostToDevice & CDC_CONTROL_LINE_OUT_DTR) != 0;
 }
+
+void enableADC() 
+{
+   //configure the ADC ports
+   //I think I have more work to do here
+   ADMUX = _BV(REFS0) | _BV(REFS1) | _BV(ADLAR) | _BV(MUX0) | _BV(MUX1);
+   //turn on ADC
+   ADCSRA |= _BV(ADEN);
+}
+
+void disableACD() 
+{
+   ADCSRA &= ~(_BV(ADEN));
+}
+
+
+uint16_t readVcc() {
+
+   ADCSRA |= _BV(ADSC); // Start conversion
+   while (bit_is_set(ADCSRA,ADSC)); // measuring
+
+   uint8_t low  = ADCL; // must read ADCL first - it then locks ADCH  
+   uint8_t high = ADCH; // unlocks both
+
+
+   uint16_t result = (low >> 6) | (high << 2);
+
+   //result = 1125300L / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000
+   return result; // Vcc in millivolts
+}
+
