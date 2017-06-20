@@ -21,7 +21,7 @@ TARGET       = heating_control
 SRC          = $(TARGET).c Descriptors.c $(LUFA_SRC_USB) $(LUFA_SRC_USBCLASS) lcdDrivers/LM6800/LM6800.c lcdFramework/lcdClass.c lcdFramework/protocolHandler.c
 LUFA_PATH    = ../../LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -IConfig/ -IlcdDrivers/ -IlcdFramework/
-LD_FLAGS     =
+LD_FLAGS     = -Wl,-u,vfprintf -lprintf_flt -lm
 AVRDUDE_PROGRAMMER = dragon_isp
 #AVRDUDE_PORT = /dev/cu.usbmodem1411
 
