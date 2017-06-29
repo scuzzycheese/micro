@@ -4,6 +4,7 @@
 #include "lcdClass.h"
 #include "protocolHandler.h"
 #include <util/delay.h>
+#include "adc/adc.h"
 
 
 /** LUFA CDC Class driver interface configuration and state information. This structure is
@@ -41,19 +42,10 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
  */
 static FILE USBSerialStream;
 
-uint16_t readADC();
-void enableADC();
-void disableADC();
 
 /** Main program entry point. This routine contains the overall program flow, including initial
  *  setup of all components and the main program loop.
  */
-
-
-#define SERIESRESISTOR 91800.0
-#define NOMINAL_RESISTANCE 100000.0
-#define NOMINAL_TEMPERATURE 25.0
-#define BCOEFFICIENT 3950.0
 
 int main(void)
 {
@@ -93,26 +85,16 @@ int main(void)
       lcdDriver.clearScreen();
 
 
+      enableADC11();
       uint16_t adcValue = readADC();
-      float resistance = (1023.0 / (float)adcValue) - 1;
-      //91.8k is the tested value of the resistor
-      resistance = 91800.0 / resistance;
+      float steinhart = steinhartValue(adcValue);
+      lcdDriver.printf(0, 0, "temp sensor a: %.2f", steinhart);
 
+      enableADC12();
+      adcValue = readADC();
+      steinhart = steinhartValue(adcValue);
+      lcdDriver.printf(0, 10, "temp sensor b: %.2f", steinhart);
 
-
-      lcdDriver.printf(0, 0, "ADC: %u", adcValue);
-      lcdDriver.printf(0, 10, "RNTC: %.2f", resistance);
-
-
-      float steinhart;
-      steinhart = resistance / NOMINAL_RESISTANCE; // (R/Ro)
-      steinhart = log(steinhart); // ln(R/Ro)
-      steinhart /= BCOEFFICIENT; // 1/B * ln(R/Ro)
-      steinhart += 1.0 / (NOMINAL_TEMPERATURE + 273.15); // + (1/To)
-      steinhart = 1.0 / steinhart; // Invert
-      steinhart -= 273.15; // convert to C
-
-      lcdDriver.printf(0, 20, "temp: %.2f", steinhart);
    }
 
 
@@ -222,36 +204,7 @@ void EVENT_CDC_Device_ControLineStateChanged(USB_ClassInfo_CDC_Device_t *const C
 	bool HostReady = (CDCInterfaceInfo->State.ControlLineStates.HostToDevice & CDC_CONTROL_LINE_OUT_DTR) != 0;
 }
 
-void enableADC() 
-{
-   //configure the ADC ports
-   //I think I have more work to do here
-   //ADMUX = _BV(REFS0) | _BV(REFS1) | _BV(ADLAR) | _BV(MUX0) | _BV(MUX1);
-   ADMUX = _BV(REFS0) | _BV(ADLAR) | _BV(MUX0) | _BV(MUX1);
-   ADCSRB |= _BV(MUX5);
-
-   //turn on ADC
-   ADCSRA |= _BV(ADEN) | _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);
-}
-
-void disableACD() 
-{
-   ADCSRA &= ~(_BV(ADEN));
-}
 
 
-uint16_t readADC() {
 
-   ADCSRA |= _BV(ADSC); // Start conversion
-   while (bit_is_set(ADCSRA,ADSC)); // measuring
-
-   uint8_t low  = ADCL; // must read ADCL first - it then locks ADCH  
-   uint8_t high = ADCH; // unlocks both
-
-
-   uint16_t result = (low >> 6) | (high << 2);
-
-   //result = 2250600L / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000
-   return result; // Vcc in millivolts
-}
 
