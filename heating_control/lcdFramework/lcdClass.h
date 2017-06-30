@@ -57,6 +57,7 @@ extern "C"
 		void (*clearScreen)(void);
       void (*printChar)(uint8_t x, uint8_t y, unsigned char c);
       void (*printf)(uint8_t x, uint8_t y, const char *fmt, ...);
+      void (*flushVM)(void);
 	};
 
 

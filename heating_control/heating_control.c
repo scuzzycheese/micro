@@ -60,25 +60,38 @@ int main(void)
    registerDriver(&lcdDriver, LM6800Register);
    lcdDriver.init();
 
-
    lcdDriver.clearScreen();
-   //lcdDriver.setPixel(10, 10);
-   //lcdDriver.setPixel(20, 10);
 
-   uint8_t char_counter = 0;
-   for(uint8_t i = 0; i < 64; i += 8)
-   {
-      for(uint8_t j = 0; j < 255; j += 5)
-      {
-         //lcdDriver.printChar(j, i, char_counter ++);
-      }
-   }
+   lcdDriver.setPixel(0, 0);
+   lcdDriver.setPixel(0, 7);
+   lcdDriver.setPixel(63, 0);
+   lcdDriver.setPixel(63, 7);
 
-   //lcdDriver.printf(0, 0, "Hello World!");
-   //lcdDriver.printf(0, 10, "Pipe temp: %d%c", 45, 9);
+   lcdDriver.setPixel(64, 0);
+   lcdDriver.setPixel(64, 7);
+   lcdDriver.setPixel(127, 0);
+   lcdDriver.setPixel(127, 7);
+
+
+   lcdDriver.setPixel(64, 8);
+   lcdDriver.setPixel(64, 15);
+   lcdDriver.setPixel(127, 8);
+   lcdDriver.setPixel(127, 15);
+
+   lcdDriver.setPixel(0, 8);
+   lcdDriver.setPixel(0, 15);
+   lcdDriver.setPixel(63, 8);
+   lcdDriver.setPixel(63, 15);
+
+   lcdDriver.flushVM();
+
 
    enableADC();
    _delay_ms(2000);
+//   while(true) 
+//   {
+//      _delay_ms(2000);
+//   }
    while(true)
    {
       _delay_ms(200);
@@ -88,39 +101,23 @@ int main(void)
       enableADC11();
       uint16_t adcValue = readADC();
       float steinhart = steinhartValue(adcValue);
-      lcdDriver.printf(0, 0, "temp sensor a: %.2f", steinhart);
+      lcdDriver.printf(0, 0, "temperature sensor a: %.2f", steinhart);
 
       enableADC12();
       adcValue = readADC();
       steinhart = steinhartValue(adcValue);
-      lcdDriver.printf(0, 10, "temp sensor b: %.2f", steinhart);
+      lcdDriver.printf(0, 8, "temp b: %.2f", steinhart);
+
+
+      lcdDriver.flushVM();
 
    }
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*
    portHandlerObj lcdPort;
    portHandlerConstruct(&lcdPort, &VirtualSerial_CDC_Interface, &lcdDriver);
    portHandler(&lcdPort);
 */
-
-
-
-
-
-
-
 
 
 /*

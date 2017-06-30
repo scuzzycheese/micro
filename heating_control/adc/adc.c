@@ -45,7 +45,7 @@ float steinhartValue(uint16_t adcValue)
 {
    float resistance = (1023.0 / (float)adcValue) - 1;
    //91.8k is the tested value of the resistor
-   resistance = 91800.0 / resistance;
+   resistance = SERIESRESISTOR / resistance;
 
    float steinhart;
    steinhart = resistance / NOMINAL_RESISTANCE; // (R/Ro)
