@@ -104,25 +104,53 @@ static void LM6800ComputePixelConfigData(uint8_t x, uint8_t y, struct LM6800Pixe
 
 void LM6800ClearPixel(uint8_t x, uint8_t y)
 {
+
 	struct LM6800PixelConfigData piConData;
 	LM6800ComputePixelConfigData(x, y, &piConData);
 
-	//Set the colum of the chip we want
-	LM6800Write(piConData.chip, (1 << 6) | piConData.column, LM6800_COMMAND);
-	//set the page we want for that chip
-	LM6800Write(piConData.chip, (23 << 3) | piConData.page, LM6800_COMMAND);
+   //Sort of like an auto flush thing
+   if(piConData.chip != lastChipWritten || piConData.page != lastPageWritten) 
+   {
+      LM6800FlushVM();
 
-	//dummy read
-	LM6800Read(piConData.chip);
-	uint8_t columnVal = LM6800Read(piConData.chip);
+      //Fetch the block and populate the video memory with it
+      //so that the drawing can happen on the new block
+      LM6800ReadBlock(piConData.chip, piConData.page, videoMemory);
+
+
+      lastChipWritten = piConData.chip;
+      lastPageWritten = piConData.page;
+   }
+
+   char *columnVal = &(videoMemory[piConData.column]);
+
+	//clear the pixel on the column
+	*columnVal &= ~(1 << piConData.pixely);
+}
+
+void LM6800SetPixel(uint8_t x, uint8_t y)
+{
+	struct LM6800PixelConfigData piConData;
+	LM6800ComputePixelConfigData(x, y, &piConData);
+
+   //Sort of like an auto flush thing
+   if(piConData.chip != lastChipWritten || piConData.page != lastPageWritten) 
+   {
+      LM6800FlushVM();
+
+      //Fetch the block and populate the video memory with it
+      //so that the drawing can happen on the new block
+      LM6800ReadBlock(piConData.chip, piConData.page, videoMemory);
+
+
+      lastChipWritten = piConData.chip;
+      lastPageWritten = piConData.page;
+   }
+
+   char *columnVal = &(videoMemory[piConData.column]);
 
 	//set the pixel on the column
-	columnVal &= ~(1 << piConData.pixely);
-
-	//Set the colum of the chip we want
-	LM6800Write(piConData.chip, (1 << 6) | piConData.column, LM6800_COMMAND);
-	//write the column back
-	LM6800Write(piConData.chip, columnVal, LM6800_RAM);
+	*columnVal |= (1 << piConData.pixely);
 }
 
 
@@ -172,30 +200,6 @@ void LM6800Printf(uint8_t x, uint8_t y, const char *fmt, ...)
 
 }
 
-void LM6800SetPixel(uint8_t x, uint8_t y)
-{
-	struct LM6800PixelConfigData piConData;
-	LM6800ComputePixelConfigData(x, y, &piConData);
-
-   //Sort of like an auto flush thing
-   if(piConData.chip != lastChipWritten || piConData.page != lastPageWritten) 
-   {
-      LM6800FlushVM();
-
-      //Fetch the block and populate the video memory with it
-      //so that the drawing can happen on the new block
-      LM6800ReadBlock(piConData.chip, piConData.page, videoMemory);
-
-
-      lastChipWritten = piConData.chip;
-      lastPageWritten = piConData.page;
-   }
-
-   uint8_t *columnVal = &(videoMemory[piConData.column]);
-
-	//set the pixel on the column
-	*columnVal |= (1 << piConData.pixely);
-}
 
 void LM6800FlushVM() 
 {
@@ -361,20 +365,40 @@ void LM6800ClearScreen(void)
 	{
 		for(uint8_t page = 0; page < LM6800_NUM_PAGES_PER_CONROLLER; page ++)
 		{
-			//Set our column to the beginning
-			LM6800Write(chip, (1 << 6), LM6800_COMMAND);
-			//set the page we want for that chip
-			LM6800Write(chip, (23 << 3) | page, LM6800_COMMAND);
-
-			//Dump a block of data to the page
-			for(uint8_t col = 0; col < LM6800_COLUMNS_PER_PAGE; col ++)
-			{
-				LM6800Write(chip, 0x00, LM6800_RAM);
-			}
+         LM6800ClearBlock(chip, page);
 		}
 	}
    //We also have to clear anything left in the video memory
    LM6800ClearVideoMemory();
+}
+
+void LM6800ClearController(uint8_t chip) 
+{
+	for(uint8_t page = 0; page < LM6800_NUM_PAGES_PER_CONROLLER; page ++)
+   {
+      LM6800ClearBlock(chip, page);
+   }
+}
+
+void LM6800ClearBlock(uint8_t chip, uint8_t page) 
+{
+	//Set our column to the beginning
+	LM6800Write(chip, (1 << 6), LM6800_COMMAND);
+	//set the page we want for that chip
+	LM6800Write(chip, (23 << 3) | page, LM6800_COMMAND);
+
+	//Dump a block of data to the page
+	for(uint8_t col = 0; col < LM6800_COLUMNS_PER_PAGE; col ++)
+	{
+		LM6800Write(chip, 0x00, LM6800_RAM);
+	}
+
+   if(chip == lastChipWritten && page == lastPageWritten) 
+   {
+      //We also have to clear anything left in the video memory
+      //if it's in the right place
+      LM6800ClearVideoMemory();
+   }
 }
 
 void LM6800Register(struct lcdDriver *driver)
@@ -390,6 +414,9 @@ void LM6800Register(struct lcdDriver *driver)
    driver->printChar = LM6800PrintChar;
    driver->printf = LM6800Printf;
    driver->flushVM = LM6800FlushVM;
+   driver->readBlock = LM6800ReadBlock;
+   driver->clearController = LM6800ClearController;
+   driver->clearBlock = LM6800ClearBlock;
 }
 
 void LM6800SelectChip(uint8_t chip)

@@ -60,6 +60,9 @@ extern "C"
    void LM6800VSPrintf(uint8_t x, uint8_t y, const char *fmt, va_list ap);
    void LM6800Printf(uint8_t x, uint8_t y, const char *fmt, ...);
    void LM6800FlushVM(void); 
+   void LM6800ClearController(uint8_t chip); 
+   void LM6800ClearBlock(uint8_t chip, uint8_t page); 
+
 
 	#define LM6800_NUM_CONTROLLERS 4
 

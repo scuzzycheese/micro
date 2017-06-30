@@ -88,25 +88,26 @@ int main(void)
 
    enableADC();
    _delay_ms(2000);
-//   while(true) 
-//   {
-//      _delay_ms(2000);
-//   }
+
+
+
    while(true)
    {
       _delay_ms(200);
-      lcdDriver.clearScreen();
+      lcdDriver.clearController(0);
 
+      lcdDriver.printf(0, 0, "Tank: ");
+      lcdDriver.printf(0, 8, "Pipe: ");
 
       enableADC11();
       uint16_t adcValue = readADC();
       float steinhart = steinhartValue(adcValue);
-      lcdDriver.printf(0, 0, "temperature sensor a: %.2f", steinhart);
+      lcdDriver.printf(34, 0, "%.2f", steinhart);
 
       enableADC12();
       adcValue = readADC();
       steinhart = steinhartValue(adcValue);
-      lcdDriver.printf(0, 8, "temp b: %.2f", steinhart);
+      lcdDriver.printf(34, 8, "%.2f", steinhart);
 
 
       lcdDriver.flushVM();

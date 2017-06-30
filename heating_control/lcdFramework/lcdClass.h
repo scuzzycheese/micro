@@ -50,6 +50,7 @@ extern "C"
 		void (*clearPixel)(lcdXYType x, lcdXYType y);
 
 		void (*writeBlock)(lcdXYType x, lcdXYType y, char *data);
+		void (*readBlock)(lcdXYType x, lcdXYType y, char *data);
 
 		struct lcdData (*getLcdData)(void);
 		void (*init)(void);
@@ -58,6 +59,8 @@ extern "C"
       void (*printChar)(uint8_t x, uint8_t y, unsigned char c);
       void (*printf)(uint8_t x, uint8_t y, const char *fmt, ...);
       void (*flushVM)(void);
+      void (*clearController)(uint8_t chip); 
+      void (*clearBlock)(uint8_t chip, uint8_t page); 
 	};
 
 

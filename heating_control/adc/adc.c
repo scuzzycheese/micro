@@ -20,12 +20,12 @@ void enableADC12()
    ADCSRB |= _BV(MUX5);
 }
 
-void disableACD() 
+void disableACD(void) 
 {
    ADCSRA &= ~(_BV(ADEN));
 }
 
-uint16_t readADC() 
+uint16_t readADC(void) 
 {
 
    ADCSRA |= _BV(ADSC); // Start conversion
