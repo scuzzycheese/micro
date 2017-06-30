@@ -5,6 +5,7 @@
 #include "protocolHandler.h"
 #include <util/delay.h>
 #include "adc/adc.h"
+#include "panels/temperature_panel.h"
 
 
 /** LUFA CDC Class driver interface configuration and state information. This structure is
@@ -49,8 +50,6 @@ static FILE USBSerialStream;
 
 int main(void)
 {
-
-
    SetupHardware();
 
    sei();
@@ -59,31 +58,11 @@ int main(void)
    //register the LCD driver with this driver interface
    registerDriver(&lcdDriver, LM6800Register);
    lcdDriver.init();
-
    lcdDriver.clearScreen();
 
-   lcdDriver.setPixel(0, 0);
-   lcdDriver.setPixel(0, 7);
-   lcdDriver.setPixel(63, 0);
-   lcdDriver.setPixel(63, 7);
-
-   lcdDriver.setPixel(64, 0);
-   lcdDriver.setPixel(64, 7);
-   lcdDriver.setPixel(127, 0);
-   lcdDriver.setPixel(127, 7);
-
-
-   lcdDriver.setPixel(64, 8);
-   lcdDriver.setPixel(64, 15);
-   lcdDriver.setPixel(127, 8);
-   lcdDriver.setPixel(127, 15);
-
-   lcdDriver.setPixel(0, 8);
-   lcdDriver.setPixel(0, 15);
-   lcdDriver.setPixel(63, 8);
-   lcdDriver.setPixel(63, 15);
-
-   lcdDriver.flushVM();
+   struct temperaturePanel temperaturePanel;
+   temperaturePanel.lcdDriver = &lcdDriver;
+   temperaturePanel.panelNumber = 0;
 
 
    enableADC();
@@ -94,24 +73,7 @@ int main(void)
    while(true)
    {
       _delay_ms(200);
-      lcdDriver.clearController(0);
-
-      lcdDriver.printf(0, 0, "Tank: ");
-      lcdDriver.printf(0, 8, "Pipe: ");
-
-      enableADC11();
-      uint16_t adcValue = readADC();
-      float steinhart = steinhartValue(adcValue);
-      lcdDriver.printf(34, 0, "%.2f", steinhart);
-
-      enableADC12();
-      adcValue = readADC();
-      steinhart = steinhartValue(adcValue);
-      lcdDriver.printf(34, 8, "%.2f", steinhart);
-
-
-      lcdDriver.flushVM();
-
+      drawTemperaturePanel(&temperaturePanel);
    }
 
 /*

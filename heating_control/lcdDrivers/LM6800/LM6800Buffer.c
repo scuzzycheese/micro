@@ -60,7 +60,7 @@ void LM6800Init(void)
 
 void LM6800ClearVideoMemory(void) 
 {
-   for(uint8_t i = 0; i <= 64; i ++)
+   for(uint8_t i = 0; i < 64; i ++)
    {
       videoMemory[i] = 0x00;
    }
