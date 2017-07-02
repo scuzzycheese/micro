@@ -6,6 +6,7 @@
 #include <util/delay.h>
 #include "adc/adc.h"
 #include "panels/temperature_panel.h"
+#include "DS1302/DS1302.h"
 
 
 /** LUFA CDC Class driver interface configuration and state information. This structure is
@@ -63,6 +64,9 @@ int main(void)
    struct temperaturePanel temperaturePanel;
    temperaturePanel.lcdDriver = &lcdDriver;
    temperaturePanel.panelNumber = 0;
+
+
+   DS1302Init();
 
 
    enableADC();
