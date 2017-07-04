@@ -14,11 +14,11 @@ void DS1302Init(void);
 void DS1302Reset(void);
 
 //Configure your ports
-#define DS1302_CLK PORTB1
+#define DS1302_CLK PORTB0
 #define DS1302_CLK_PORT PORTB
 #define DS1302_CLK_DDR DDRB
 
-#define DS1302_IO PORTB2
+#define DS1302_IO PORTB1
 #define DS1302_IO_PORT PORTB
 #define DS1302_IO_DDR DDRB
 #define DS1302_IO_PIN PINB 
@@ -29,7 +29,13 @@ void DS1302Reset(void);
 
 #define DS1302_CLK_DELAY 5
 
+#define DS1302_RAM 0x01
+#define DS1302_CK 0x00
+#define DS1302_RAM_CK_BIT 6
 
+
+void DS1302WriteByte(unsigned char commandByte, unsigned char byte);
+unsigned char DS1302ReadByte(unsigned char commandByte, uint8_t ramOrCk);
 
 
 #endif

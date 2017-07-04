@@ -18,7 +18,18 @@ F_CPU        = 16000000
 F_USB        = $(F_CPU)
 OPTIMIZATION = s
 TARGET       = heating_control
-SRC          = $(TARGET).c Descriptors.c $(LUFA_SRC_USB) $(LUFA_SRC_USBCLASS) lcdDrivers/LM6800/LM6800Buffer.c lcdFramework/lcdClass.c lcdFramework/protocolHandler.c adc/adc.c panels/temperature_panel.c timeDrivers/DS1302/DS1302.c
+SRC          = $(TARGET).c \
+               Descriptors.c \
+               $(LUFA_SRC_USB) \
+               $(LUFA_SRC_USBCLASS) \
+               lcdDrivers/LM6800/LM6800Buffer.c \
+               lcdFramework/lcdClass.c \
+               lcdFramework/protocolHandler.c \
+               adc/adc.c \
+               panels/temperature_panel.c \
+               panels/time_panel.c \
+               timeDrivers/DS1302/DS1302.c \
+
 LUFA_PATH    = ../../LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -IConfig/ -IlcdDrivers/ -IlcdFramework/ -ItimeDrivers/
 LD_FLAGS     = -Wl,-u,vfprintf -lprintf_flt -lm

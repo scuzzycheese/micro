@@ -6,6 +6,7 @@
 #include <util/delay.h>
 #include "adc/adc.h"
 #include "panels/temperature_panel.h"
+#include "panels/time_panel.h"
 #include "DS1302/DS1302.h"
 
 
@@ -65,8 +66,12 @@ int main(void)
    temperaturePanel.lcdDriver = &lcdDriver;
    temperaturePanel.panelNumber = 0;
 
-
    DS1302Init();
+
+   struct timePanel timePanel;
+   timePanel.lcdDriver = &lcdDriver;
+   timePanel.panelNumber = 1;
+
 
 
    enableADC();
@@ -78,6 +83,8 @@ int main(void)
    {
       _delay_ms(200);
       drawTemperaturePanel(&temperaturePanel);
+      drawTimePanel(&timePanel);
+
    }
 
 /*
