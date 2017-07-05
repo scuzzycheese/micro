@@ -36,6 +36,8 @@ void DS1302Reset(void);
 
 void DS1302WriteByte(unsigned char commandByte, unsigned char byte);
 unsigned char DS1302ReadByte(unsigned char commandByte, uint8_t ramOrCk);
+uint8_t DS1302ReadSeconds(void);
+uint8_t DS1302ReadMinutes(void);
 
 
 #endif

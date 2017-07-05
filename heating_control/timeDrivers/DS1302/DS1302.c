@@ -149,3 +149,45 @@ unsigned char DS1302ReadByte(unsigned char commandByte, uint8_t ramOrCk)
    return byte;
 }
 
+uint8_t DS1302ReadSeconds(void)
+{
+   unsigned char seconds = DS1302ReadByte(0x81, DS1302_CK);
+   uint8_t value = seconds & 0x0F;
+   value += (((seconds & 0x70) >> 4) * 10);
+
+   return value;
+}
+
+uint8_t DS1302ReadMinutes(void)
+{
+   unsigned char minutes = DS1302ReadByte(0x83, DS1302_CK);
+   uint8_t value = minutes & 0x0F;
+   value += (((minutes & 0x70) >> 4) * 10);
+
+   return value;
+}
+
+uint8_t DS1302ReadHours()
+{
+   unsigned char hours = DS1302ReadByte(0x85, DS1302_CK);
+   uint8_t value = hours & 0x0F;
+   value += (((hours & 0x30) >> 4) * 10);
+
+   return value;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

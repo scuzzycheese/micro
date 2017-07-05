@@ -4,16 +4,14 @@
 
 void drawTimePanel(struct timePanel *this) 
 {
-   unsigned char readSecondsCommandByte = (0x81);
-   unsigned char seconds = DS1302ReadByte(readSecondsCommandByte, DS1302_CK);
-   uint8_t value = seconds & 0x0F;
-   value += (((seconds & 0x70) >> 4) * 10);
-
+   uint8_t seconds = DS1302ReadSeconds();
+   uint8_t minutes = DS1302ReadMinutes();
+   uint8_t hours = DS1302ReadHours();
 
 
    this->lcdDriver->clearController(this->panelNumber);
 
-   this->lcdDriver->printf(68, 0, "value: %d", value);
+   this->lcdDriver->printf(68, 0, "%02d:%02d:%02d", hours, minutes, seconds);
 
    this->lcdDriver->flushVM();
 }
