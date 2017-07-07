@@ -12,7 +12,7 @@ void drawTimePanel(struct timePanel *this)
    uint8_t dayOfMonth = DS1302ReadDayOfMonth();
    uint8_t month = DS1302ReadMonth();
    uint8_t dayOfWeek = DS1302ReadDayOfWeek();
-   uint8_t year = DS1302ReadYear();
+   uint16_t year = DS1302ReadYear();
    uint8_t wb = DS1302ReadWP();
 
 
