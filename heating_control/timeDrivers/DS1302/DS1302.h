@@ -6,8 +6,16 @@
 #define _DS1302_H
 
 
-struct ds1302
+struct time
 {
+   uint8_t seconds;
+   uint8_t minutes;
+   uint8_t hours;
+   uint8_t dayOfMonth;
+   uint8_t month;
+   uint8_t dayOfWeek;
+   uint16_t year;
+   uint8_t wp;
 };
 
 void DS1302Init(void);
@@ -27,17 +35,27 @@ void DS1302Reset(void);
 #define DS1302_CE_PORT PORTC
 #define DS1302_CE_DDR DDRC
 
-#define DS1302_CLK_DELAY 5
+#define DS1302_CLK_DELAY 500
 
-#define DS1302_RAM 0x01
-#define DS1302_CK 0x00
-#define DS1302_RAM_CK_BIT 6
+
+
+
+
+void DS1302Stop(void);
+void DS1302Start(void); 
 
 
 void DS1302WriteByte(unsigned char commandByte, unsigned char byte);
-unsigned char DS1302ReadByte(unsigned char commandByte, uint8_t ramOrCk);
+unsigned char DS1302ReadByte(unsigned char commandByte);
 uint8_t DS1302ReadSeconds(void);
 uint8_t DS1302ReadMinutes(void);
+uint8_t DS1302ReadHours(void);
+uint8_t DS1302ReadDayOfMonth(void);
+uint8_t DS1302ReadMonth(void);
+uint8_t DS1302ReadDayOfWeek(void);
+uint16_t DS1302ReadYear(void);
+uint8_t DS1302ReadWP(void);
 
+struct time DS1302ReadClock(void);
 
 #endif

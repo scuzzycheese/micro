@@ -48,7 +48,7 @@ void DS1302WriteByteClock(unsigned char byte)
       //Pull the clock line high
       DS1302_CLK_PORT |= (1 << DS1302_CLK);
       //Wait for the chip to read the byte
-      _delay_ms(DS1302_CLK_DELAY);
+      _delay_us(DS1302_CLK_DELAY);
 
       //Pull the clock line low again
       DS1302_CLK_PORT &= ~(1 << DS1302_CLK);
@@ -57,17 +57,13 @@ void DS1302WriteByteClock(unsigned char byte)
       DS1302_IO_PORT &= ~(1 << DS1302_IO);
 
       //Give the chip time before the next read
-      _delay_ms(DS1302_CLK_DELAY);
+      _delay_us(DS1302_CLK_DELAY);
 
 
    }
 }
 void DS1302WriteByte(unsigned char commandByte, unsigned char byte)
 {
-   //Set up the command byte with the write flag
-   //commandByte &= ~1;
-   //commandByte |= (1 << 7);
-
    //pull CE/RST high
    DS1302_CE_PORT |= (1 << DS1302_CE);
 
@@ -104,14 +100,14 @@ unsigned char DS1302ReadByteClock(void)
       //Pull the clock line high
       DS1302_CLK_PORT |= (1 << DS1302_CLK);
       //Wait for the chip to read the byte
-      _delay_ms(DS1302_CLK_DELAY);
+      _delay_us(DS1302_CLK_DELAY);
 
 
       //Pull the clock line low again
       DS1302_CLK_PORT &= ~(1 << DS1302_CLK);
 
       //Give the chip time before the next read
-      _delay_ms(DS1302_CLK_DELAY);
+      _delay_us(DS1302_CLK_DELAY);
    }
    if(DS1302_IO_PIN & (1 << DS1302_IO)) 
    {
@@ -120,26 +116,21 @@ unsigned char DS1302ReadByteClock(void)
    return byte;
 }
 
-unsigned char DS1302ReadByte(unsigned char commandByte, uint8_t ramOrCk)
+unsigned char DS1302ReadByte(unsigned char commandByte)
 {
-   //Set up the command byte with the read flag
-   //commandByte |= 1;
-   //commandByte |= (1 << 7);
-   if(ramOrCk) 
-   {
-      commandByte |= (1 << DS1302_RAM_CK_BIT);
-   }
-
    //pull CE/RST high
    DS1302_CE_PORT |= (1 << DS1302_CE);
 
-   //Since we are reading, we set the IO pin to output
+   //Since we are writing first, we set the IO pin to output
    DS1302_IO_DDR |= (1 << DS1302_IO);
-   //Make sure the IO port pin is low
+   //Make sure the IO port pin is low for input
    DS1302_IO_PORT &= ~(1 << DS1302_IO);
 
    //Write the command byte
    DS1302WriteByteClock(commandByte);
+
+   //Now we are reading, we set the pin to input
+   DS1302_IO_DDR &= ~(1 << DS1302_IO);
 
    unsigned char byte = DS1302ReadByteClock();
 
@@ -149,31 +140,156 @@ unsigned char DS1302ReadByte(unsigned char commandByte, uint8_t ramOrCk)
    return byte;
 }
 
+
+
+uint8_t DS1302FormatSeconds(unsigned char input) 
+{
+   uint8_t value = input & 0x0F;
+   value += (((input & 0x70) >> 4) * 10);
+
+   return value;
+}
 uint8_t DS1302ReadSeconds(void)
 {
-   unsigned char seconds = DS1302ReadByte(0x81, DS1302_CK);
-   uint8_t value = seconds & 0x0F;
-   value += (((seconds & 0x70) >> 4) * 10);
+   unsigned char seconds = DS1302ReadByte(0x81);
+   return DS1302FormatSeconds(seconds);
+}
+
+
+
+
+uint8_t DS1302FormatMinutes(unsigned char input)
+{
+   uint8_t value = input & 0x0F;
+   value += (((input & 0x70) >> 4) * 10);
 
    return value;
 }
-
 uint8_t DS1302ReadMinutes(void)
 {
-   unsigned char minutes = DS1302ReadByte(0x83, DS1302_CK);
-   uint8_t value = minutes & 0x0F;
-   value += (((minutes & 0x70) >> 4) * 10);
+   unsigned char minutes = DS1302ReadByte(0x83);
+   return DS1302FormatMinutes(minutes);
+}
+
+
+
+
+uint8_t DS1302FormatHours(unsigned char input)
+{
+   uint8_t value = input & 0x0F;
+   value += (((input & 0x30) >> 4) * 10);
 
    return value;
 }
-
-uint8_t DS1302ReadHours()
+/**
+ * Consider puting in some arguments to specify 24 hour ot 12 hour
+ */
+uint8_t DS1302ReadHours(void)
 {
-   unsigned char hours = DS1302ReadByte(0x85, DS1302_CK);
-   uint8_t value = hours & 0x0F;
-   value += (((hours & 0x30) >> 4) * 10);
+   unsigned char hours = DS1302ReadByte(0x85);
+   return DS1302FormatHours(hours);
+}
+
+
+
+uint8_t DS1302FormatDayOfMonth(unsigned char input)
+{
+   uint8_t value = input & 0x0F;
+   value += (((input & 0x30) >> 4) * 10);
 
    return value;
+}
+uint8_t DS1302ReadDayOfMonth(void)
+{
+   unsigned char dayOfMonth = DS1302ReadByte(0x87);
+   return DS1302FormatDayOfMonth(dayOfMonth);
+}
+
+
+
+uint8_t DS1302FormatMonth(unsigned char input)
+{
+   uint8_t value = input & 0x0F;
+   value += (((input & 0x10) >> 4) * 10);
+
+   return value;
+}
+uint8_t DS1302ReadMonth(void)
+{
+   unsigned char month = DS1302ReadByte(0x89);
+   return DS1302FormatMonth(month);
+}
+
+
+
+uint8_t DS1302FormatDayOfWeek(unsigned char input)
+{
+   uint8_t value = input & 0x07;
+   return value;
+}
+uint8_t DS1302ReadDayOfWeek(void)
+{
+   unsigned char week = DS1302ReadByte(0x89);
+   return DS1302FormatDayOfWeek(week);
+}
+
+
+
+
+uint8_t DS1302FormatYear(unsigned char input)
+{
+   uint8_t value = input & 0x0F;
+   value += (((input & 0xF0) >> 4) * 10);
+
+   return value;
+}
+uint16_t DS1302ReadYear(void)
+{
+   unsigned char year = DS1302ReadByte(0x89);
+   return 2000 + DS1302FormatYear(year);
+}
+
+
+
+uint8_t DS1302FormatWP(unsigned char input)
+{
+   uint8_t value = input & 0x80;
+   return value;
+}
+uint8_t DS1302ReadWP(void)
+{
+   unsigned char wb = DS1302ReadByte(0x89);
+   return DS1302FormatWP(wb);
+}
+
+
+
+struct time DS1302ReadClock(void)
+{
+   //Send command and read first byte for clock burst mode
+   unsigned char seconds = DS1302ReadByte(0xBF);
+
+   unsigned char minutes = DS1302ReadByteClock();
+   unsigned char hours = DS1302ReadByteClock();
+   unsigned char dayOfMonth = DS1302ReadByteClock();
+   unsigned char month = DS1302ReadByteClock();
+   unsigned char dayOfWeek = DS1302ReadByteClock();
+   unsigned char year = DS1302ReadByteClock();
+   unsigned char writeProtection = DS1302ReadByteClock();
+
+   struct time time;
+
+   time.seconds = DS1302FormatSeconds(seconds);
+   time.minutes = DS1302FormatMinutes(minutes);
+   time.hours = DS1302FormatHours(hours);
+   time.dayOfMonth = DS1302FormatDayOfMonth(dayOfMonth);
+   time.month = DS1302FormatMonth(month);
+   time.dayOfWeek = DS1302FormatDayOfWeek(dayOfWeek);
+   time.year = DS1302FormatYear(year);
+   time.wp = DS1302FormatWP(writeProtection);
+
+   return time;
+
 }
 
 
