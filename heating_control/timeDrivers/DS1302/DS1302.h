@@ -58,4 +58,26 @@ uint8_t DS1302ReadWP(void);
 
 struct time DS1302ReadClock(void);
 
+
+//Valid values = 0-59
+void DS1302WriteSeconds(uint8_t seconds);
+//Valid values = 0-59
+void DS1302WriteMinutes(uint8_t minutes);
+//Only support 24 hours, not 12, at the moment
+//Valid values = 0-23
+void DS1302WriteHours(uint8_t hours);
+//Valid values = 1 - 31
+void DS1302WriteDayOfMonth(uint8_t dayOfMonth);
+//Valid values = 1 - 12
+void DS1302WriteMonth(uint8_t month);
+//Valid values = 1 - 7
+void DS1302WriteDayOfWeek(uint8_t dayOfWeek);
+//Valie values = 2000 - 2099
+void DS1302WriteYear(uint16_t year);
+
+//Set or clear the Write Protection (WP) bit
+void DS1302SetWPBit();
+void DS1302ClearWPBit();
+
+
 #endif

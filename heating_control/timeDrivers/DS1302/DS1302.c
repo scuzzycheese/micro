@@ -299,10 +299,83 @@ struct time DS1302ReadClock(void)
 
 }
 
+void DS1302WriteValueUtility(unsigned char writeAddress, uint8_t value, uint8_t maxValue)
+{
+   //This check should prevent the Clock Halt (CH) bit from being set
+   if(value > maxValue) 
+   {
+      value = maxValue;
+   }
 
+   uint8_t tenValue = value / 10;
+   uint8_t zerValue = value % 10;
 
+   DS1302WriteByte(writeAddress, zerValue | (tenValue << 4));
+}
 
+//Valid values = 0-59
+void DS1302WriteSeconds(uint8_t seconds)
+{
+   //This maxValue should prevent the Clock Halt (CH) bit from being set
+   DS1302WriteValueUtility(0x80, seconds, 59);
+}
 
+//Valid values = 0-59
+void DS1302WriteMinutes(uint8_t minutes)
+{
+   DS1302WriteValueUtility(0x82, minutes, 59);
+}
+
+//Only support 24 hours, not 12, at the moment
+//Valid values = 0-23
+void DS1302WriteHours(uint8_t hours)
+{
+   DS1302WriteValueUtility(0x84, hours, 23);
+}
+
+//Valid values = 1 - 31
+void DS1302WriteDayOfMonth(uint8_t dayOfMonth)
+{
+   if(dayOfMonth < 1)
+   {
+      dayOfMonth = 1;
+   }
+   DS1302WriteValueUtility(0x86, dayOfMonth, 31);
+}
+
+//Valid values = 1 - 12
+void DS1302WriteMonth(uint8_t month) 
+{
+   if(month < 1) 
+   {
+      month = 1;
+   }
+   DS1302WriteValueUtility(0x88, month, 12);
+}
+
+//Valid values = 1 - 7
+void DS1302WriteDayOfWeek(uint8_t dayOfWeek)
+{
+   //Simple (but unpredictable) way of making sure we only use the last 3 bits
+   dayOfWeek &= 7;
+   DS1302WriteByte(0x8A, dayOfWeek);
+}
+
+//Valie values = 2000 - 2099
+void DS1302WriteYear(uint16_t year)
+{
+   year -= 2000;
+   DS1302WriteValueUtility(0x8C, year, 99);
+}
+
+void DS1302SetWPBit()
+{
+   DS1302WriteByte(0x8E, (1 << 7));
+}
+void DS1302ClearWPBit()
+{
+   DS1302WriteByte(0x8E, 0x00);
+}
 
 
 

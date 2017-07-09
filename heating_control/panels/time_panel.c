@@ -4,6 +4,21 @@
 
 void drawTimePanel(struct timePanel *this) 
 {
+
+   //Make sure we can write time to the device
+   DS1302ClearWPBit();
+
+   //These are just test values
+   DS1302WriteSeconds(10);
+   DS1302WriteMinutes(10);
+   DS1302WriteHours(10);
+   DS1302WriteDayOfMonth(10);
+   DS1302WriteMonth(10);
+   DS1302WriteDayOfWeek(4);
+   DS1302WriteYear(2010);
+
+   DS1302SetWPBit();
+
    uint8_t seconds = DS1302ReadSeconds();
    uint8_t minutes = DS1302ReadMinutes();
    uint8_t hours = DS1302ReadHours();
