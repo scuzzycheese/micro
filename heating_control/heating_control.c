@@ -66,12 +66,23 @@ int main(void)
    temperaturePanel.lcdDriver = &lcdDriver;
    temperaturePanel.panelNumber = 0;
 
-   DS1302Init();
 
    struct timePanel timePanel;
    timePanel.lcdDriver = &lcdDriver;
    timePanel.panelNumber = 1;
 
+   DS1302Init();
+   //Make sure we can write time to the device
+   DS1302ClearWPBit();
+   //These are just test values
+   DS1302WriteSeconds(10);
+   DS1302WriteMinutes(10);
+   DS1302WriteHours(10);
+   DS1302WriteDayOfMonth(10);
+   DS1302WriteMonth(10);
+   DS1302WriteDayOfWeek(4);
+   DS1302WriteYear(2010);
+   DS1302SetWPBit();
 
 
    enableADC();
@@ -81,10 +92,9 @@ int main(void)
 
    while(true)
    {
-      _delay_ms(200);
       drawTemperaturePanel(&temperaturePanel);
       drawTimePanel(&timePanel);
-
+      _delay_ms(200);
    }
 
 /*

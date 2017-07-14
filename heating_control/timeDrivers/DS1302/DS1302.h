@@ -35,7 +35,7 @@ void DS1302Reset(void);
 #define DS1302_CE_PORT PORTC
 #define DS1302_CE_DDR DDRC
 
-#define DS1302_CLK_DELAY 500
+#define DS1302_CLK_DELAY 2 
 
 
 
@@ -76,8 +76,8 @@ void DS1302WriteDayOfWeek(uint8_t dayOfWeek);
 void DS1302WriteYear(uint16_t year);
 
 //Set or clear the Write Protection (WP) bit
-void DS1302SetWPBit();
-void DS1302ClearWPBit();
+void DS1302SetWPBit(void);
+void DS1302ClearWPBit(void);
 
 
 #endif

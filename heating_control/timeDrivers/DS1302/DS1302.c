@@ -368,11 +368,11 @@ void DS1302WriteYear(uint16_t year)
    DS1302WriteValueUtility(0x8C, year, 99);
 }
 
-void DS1302SetWPBit()
+void DS1302SetWPBit(void)
 {
    DS1302WriteByte(0x8E, (1 << 7));
 }
-void DS1302ClearWPBit()
+void DS1302ClearWPBit(void)
 {
    DS1302WriteByte(0x8E, 0x00);
 }

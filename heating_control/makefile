@@ -29,6 +29,7 @@ SRC          = $(TARGET).c \
                panels/temperature_panel.c \
                panels/time_panel.c \
                timeDrivers/DS1302/DS1302.c \
+               timeUtils/timeUtils.c \
 
 LUFA_PATH    = ../../LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -IConfig/ -IlcdDrivers/ -IlcdFramework/ -ItimeDrivers/
