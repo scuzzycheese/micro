@@ -61,6 +61,7 @@ extern "C"
       void (*flushVM)(void);
       void (*clearController)(uint8_t chip); 
       void (*clearBlock)(uint8_t chip, uint8_t page); 
+      void (*setBacklight)(uint8_t state);
 	};
 
 

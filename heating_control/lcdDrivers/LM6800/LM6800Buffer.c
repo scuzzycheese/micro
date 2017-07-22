@@ -34,11 +34,7 @@ void LM6800Init(void)
 	//Apparently setting CSC high disables access to the LCD
 	LM6800_CONTROL_PORT |= (1 << LM6800_CSC);
 
-	//set up the port that controls contrast
-	LM6800_CONT_DDR |= (1 << LM6800_CONT_UD);
 
-	//set contrast
-	LM6800SetBacklight(1);
 
 	//reset LCD
 	LM6800Reset();
@@ -56,6 +52,17 @@ void LM6800Init(void)
 	LM6800Write(2,0xc0, LM6800_COMMAND);
 	LM6800Write(3,0xc0, LM6800_COMMAND);
 
+
+   //Set up PWM for display brightness
+   //Set the pin for outwards
+	LM6800_CONT_DDR |= (1 << LM6800_CONT_UD);
+
+
+   //I don't think we can put these in macros, as they are very implementation specific
+   TCCR0A |= (1 << COM0A1) | (1 << COM0A0) | (1 << WGM01) | (1 << WGM00);
+   TCCR0B |= (1 << CS02);
+
+	LM6800SetBacklight(255);
 }
 
 void LM6800ClearVideoMemory(void) 
@@ -417,6 +424,7 @@ void LM6800Register(struct lcdDriver *driver)
    driver->readBlock = LM6800ReadBlock;
    driver->clearController = LM6800ClearController;
    driver->clearBlock = LM6800ClearBlock;
+   driver->setBacklight = LM6800SetBacklight;
 }
 
 void LM6800SelectChip(uint8_t chip)
@@ -446,6 +454,7 @@ void LM6800SelectChip(uint8_t chip)
 
 void LM6800SetBacklight(uint8_t state)
 {
-	if(state) LM6800_CONT_PORT &= ~(1 << LM6800_CONT_UD);
-	else LM6800_CONT_PORT |= (1 << LM6800_CONT_UD);
+   OCR0A = state;
+	//if(state) LM6800_CONT_PORT &= ~(1 << LM6800_CONT_UD);
+	//else LM6800_CONT_PORT |= (1 << LM6800_CONT_UD);
 }
