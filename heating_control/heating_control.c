@@ -8,6 +8,7 @@
 #include "panels/temperature_panel.h"
 #include "panels/time_panel.h"
 #include "DS1302/DS1302.h"
+#include "utils/utils.h"
 
 
 /** LUFA CDC Class driver interface configuration and state information. This structure is
@@ -45,6 +46,38 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
  */
 static FILE USBSerialStream;
 
+struct lcdDriver lcdDriver;
+uint8_t backlight_value = 255;
+uint8_t direction = 0;
+
+ISR(INT0_vect) 
+{
+   cli();
+   _delay_ms(1000);
+   
+   //Clear any interrupts that occured during this ISR
+   EIFR |= (0x0F);
+   sei();
+}
+
+ISR(INT1_vect) 
+{
+   cli();
+   _delay_ms(1);
+
+   if((PIND & ((1 << PORTD2) | (1 << PORTD1))) == 0)
+   {
+      lcdDriver.setBacklight(++backlight_value);
+   } 
+   else
+   {
+      lcdDriver.setBacklight(--backlight_value);
+   }
+   
+   //Clear any interrupts that occured during this ISR
+   EIFR |= (0x0F);
+   sei();
+}
 
 /** Main program entry point. This routine contains the overall program flow, including initial
  *  setup of all components and the main program loop.
@@ -54,13 +87,37 @@ int main(void)
 {
    SetupHardware();
 
+
+   //Disable interrupts while configuring the interrupt conditions
+   //as fiddling with the ISCnx registers can cause an interrupt
+   cli();
+   //Configure interrupts here
+   EIMSK &= ~(0x0F);
+
+   EICRA |= (1 << ISC01);
+   EICRA |= (1 << ISC11);
+   //EICRA |= (1 << ISC21);
+
+   EIMSK |= (1 << INT0);
+   EIMSK |= (1 << INT1);
+   //EIMSK |= (1 << INT2);
    sei();
 
-   struct lcdDriver lcdDriver;
+
+   disableIndexer();
+   //struct lcdDriver lcdDriver;
    //register the LCD driver with this driver interface
    registerDriver(&lcdDriver, LM6800Register);
    lcdDriver.init();
+
    lcdDriver.clearScreen();
+
+   //Blinky
+   lcdDriver.setBacklight(0);
+   _delay_ms(200);
+   lcdDriver.setBacklight(255);
+
+   enableIndexer();
 
    struct temperaturePanel temperaturePanel;
    temperaturePanel.lcdDriver = &lcdDriver;
@@ -89,12 +146,20 @@ int main(void)
    _delay_ms(2000);
 
 
-
    while(true)
    {
       drawTemperaturePanel(&temperaturePanel);
       drawTimePanel(&timePanel);
+
+      disableIndexer();
+      lcdDriver.clearController(3);
+      lcdDriver.printf(193, 0, "%d", backlight_value);
+      lcdDriver.flushVM();
+      enableIndexer();
+
       _delay_ms(200);
+
+
    }
 
 /*

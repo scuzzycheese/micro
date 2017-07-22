@@ -32,7 +32,7 @@ void LM6800Init(void)
 	LM6800_DOUT = 0x00;
 
 	//Apparently setting CSC high disables access to the LCD
-	LM6800_CONTROL_PORT |= (1 << LM6800_CSC);
+	LM6800_CONTROL_PORT |= (1 << LM6800_CS);
 
 
 
